@@ -60,8 +60,8 @@ export async function checkForUpdate(win:BrowserWindow, manual=true):Promise<str
     autoUpdater.autoDownload=false;
     autoUpdater.autoInstallOnAppQuit=false;
     autoUpdater.allowPrerelease=true;
-    autoUpdater.allowDowngrade=false;
     autoUpdater.channel='latest';
+    autoUpdater.allowDowngrade=false;
     autoUpdater.disableDifferentialDownload=true;
     autoUpdater.setFeedURL({provider:'generic',url:new URL('./',assetUrl('latest.yml')).href});
     // Pinned Ed25519 signatures verify the full installer before execution. No client-side GitHub token.

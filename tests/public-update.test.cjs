@@ -15,6 +15,7 @@ function setup({signed=true,tamper=false,restart=false,changedMetadata=false}={}
  const release=[{draft:false,tag_name:'v0.5.0-beta.2',assets:assetNames.map(name=>({name,browser_download_url:base+name}))}];
  const bodies={'scarrix-update.json':manifest,'scarrix-update.sig':signature,'latest.yml':meta};
  class Updater {
+  set channel(value){this.selectedChannel=value;this.allowDowngrade=true;}
   events={};on(k,cb){this.events[k]=cb;}setFeedURL(v){this.feed=v;}
   async checkForUpdates(){const info=require('js-yaml').load(meta.toString());if(changedMetadata)info.packages={x64:{path:'untrusted-package'}};return {updateInfo:info};}
   async downloadUpdate(){this.downloaded=true;const error=await this.verifyUpdateCodeSignature([],file);if(error)throw Error(error);await this.events['update-downloaded']();}
@@ -30,7 +31,7 @@ function setup({signed=true,tamper=false,restart=false,changedMetadata=false}={}
  return {api:load('public-updater',mocks),updater,win:{isDestroyed:()=>false,webContents:{send:()=>{}}},cleanup:()=>fs.rmSync(dir,{recursive:true,force:true})};
 }
 test('signed public update is downloaded and restarts after explicit confirmation',async()=>{
- const s=setup({restart:true});try{await s.api.checkForUpdate(s.win);assert.deepEqual(s.updater.install,[false,true]);assert.equal(s.updater.autoInstallOnAppQuit,false);}finally{s.cleanup();}
+ const s=setup({restart:true});try{await s.api.checkForUpdate(s.win);assert.deepEqual(s.updater.install,[false,true]);assert.equal(s.updater.autoInstallOnAppQuit,false);assert.equal(s.updater.allowDowngrade,false);}finally{s.cleanup();}
 });
 test('unsigned releases and altered installers cannot install',async()=>{
  for(const opts of [{signed:false},{tamper:true}]){const s=setup(opts);try{await assert.rejects(s.api.checkForUpdate(s.win));assert.equal(s.updater.install,undefined);}finally{s.cleanup();}}
