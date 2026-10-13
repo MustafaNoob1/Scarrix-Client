@@ -1,3 +1,4 @@
+import { memoryInfo } from './memory';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import fs from 'node:fs';
@@ -80,7 +81,7 @@ export async function startGame(modeId: string, notify: (message: string) => voi
       gameProfile: { id: profile.id, name: profile.name },
       accessToken: token,
       launcherName: 'Scarrix Client', launcherBrand: 'scarrix-client',
-      minMemory: 1024, maxMemory: minecraft.ramGB * 1024,
+      minMemory: 512, maxMemory: Math.min(minecraft.ramGB * 1024, memoryInfo().maxMB),
       server: { ip: cfg.server.address, port: cfg.server.port }
     });
     child.on('error', err => notify('Minecraft-Prozessfehler: ' + err.message));

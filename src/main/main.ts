@@ -7,6 +7,8 @@ import { javaVersion, startGame, prepareGame } from './game';
 import { serverStatus, modeStatuses } from './status';
 import { searchMods, installMod } from './mods';
 import { getLibrary, upload, applySavedSkin } from './skins';
+import { memoryInfo } from './memory';
+import { officialVersions } from './versions';
 import { checkForUpdate } from './updater';
 import type { Config } from './types';
 
@@ -37,6 +39,8 @@ function handlers() {
     const cfg = getConfig();
     return { ...cfg, microsoft: { clientId: '' }, curseforge: { apiKey: '' } };
   });
+  ipcMain.handle('system:memory', () => memoryInfo());
+  ipcMain.handle('minecraft:versions', () => officialVersions());
   ipcMain.handle('app:version', () => app.getVersion());
   ipcMain.handle('config:save', (_e, config: Config) => saveConfig(config));
   ipcMain.handle('auth:start', () => microsoftLogin(window));

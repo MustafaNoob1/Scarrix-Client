@@ -22,10 +22,12 @@ export interface Api {
   mods: { search(term: string, source: string): Promise<ModHit[]>; install(id: string, source: string): Promise<{ filename: string; dependencies: string[] }> };
   skins: { library(): Promise<SavedImage[]>; upload(model: string): Promise<{library: SavedImage[]; message: string}>; apply(id: string, model: string): Promise<Profile> };
   capes: { library(): Promise<SavedImage[]>; upload(): Promise<{library: SavedImage[]; message: string}>; select(id: string | null): Promise<Profile> };
+  memory(): Promise<{ maxMB: number; recommendedMB: number }>;
+  versions(): Promise<string[]>;
   version(): Promise<string>; paths(): Promise<{minecraft:string; instance:string}>; logs(): Promise<string>; update(): Promise<string>;
   openUrl(url: string): Promise<void>;
   onDevice(cb: (msg: { code: string; url: string; message: string }) => void): () => void;
   onNotice(cb: (msg: string) => void): () => void;
-  onProgress(cb: (pct: number) => void): () => void;
+  onProgress(cb: (pct: number | null) => void): () => void;
 }
 declare global { interface Window { scarrix: Api } }

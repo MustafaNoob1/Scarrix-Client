@@ -1,6 +1,8 @@
 import { app } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
+import { validMemory } from './memory';
+import { officialVersions } from './versions';
 import { Config, Instance } from './types';
 
 const defaults: Config = {
@@ -73,13 +75,15 @@ export function getConfig(): Config {
   };
 }
 
-export function saveConfig(value: Config): Config {
+export async function saveConfig(value: Config): Promise<Config> {
   // The renderer can only update launcher preferences and selected Minecraft instances.
   // Microsoft credentials, API keys and server endpoints stay under main-process control.
   const existing = getConfig();
   if (!['de', 'en'].includes(value.language)) throw new Error('Ungültige Sprache.');
   if (!['red', 'blue', 'purple', 'gold'].includes(value.launcher?.theme)) throw new Error('Unbekanntes Farbschema.');
   if (!Array.isArray(value.instances) || value.instances.length < 1 || value.instances.length > 16) throw new Error('Maximal 16 Instanzen sind erlaubt.');
+  const needsVersions = value.instances.some(item => !existing.instances.some(old => old.id === item.id && old.version === item.version));
+  const versions = needsVersions ? await officialVersions() : [];
   const ids = new Set<string>();
   for (const item of value.instances) {
     if (!/^[a-zA-Z0-9_-]{1,60}$/.test(item.id) || ids.has(item.id)) throw new Error('Ungültige oder doppelte Instanz-ID.');
@@ -87,7 +91,8 @@ export function saveConfig(value: Config): Config {
     if (!/^[a-zA-Z0-9 ._-]{1,50}$/.test(item.name)) throw new Error('Ungültiger Instanzname.');
     if (!/^\d+\.\d+(?:\.\d+)?(?:[.-][\w.]+)?$/.test(item.version)) throw new Error('Ungültige Minecraft-Version.');
     if (!['vanilla', 'fabric', 'forge'].includes(item.loader)) throw new Error('Unbekannter Mod-Loader.');
-    if (!Number.isInteger(item.ramGB) || item.ramGB < 2 || item.ramGB > 32) throw new Error('RAM muss zwischen 2 und 32 GB liegen.');
+    if (!validMemory(item.ramGB)) throw new Error('RAM muss zwischen 512 MB und dem physischen Systemspeicher liegen (256-MB-Schritte).');
+    if (!existing.instances.some(old => old.id === item.id && old.version === item.version) && !versions.includes(item.version)) throw new Error('Keine offizielle Minecraft-Release-Version.');
   }
   const active = value.instances.find(item => item.id === value.activeInstanceId);
   if (!active) throw new Error('Bitte wähle eine vorhandene Instanz.');

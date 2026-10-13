@@ -45,6 +45,11 @@ function App() {
   const [draftVersion, setDraftVersion] = useState('1.21.1');
   const [draftLoader, setDraftLoader] = useState<'vanilla' | 'fabric' | 'forge'>('vanilla');
   const [draftRam, setDraftRam] = useState(4);
+  const [versions, setVersions] = useState<string[]>([]);
+  const [memory, setMemory] = useState<{maxMB:number; recommendedMB:number} | null>(null);
+  const [versionError, setVersionError] = useState('');
+  const loadVersions = () => { setVersionError(''); window.scarrix.versions().then(setVersions).catch(() => setVersionError('Versionsliste nicht erreichbar. Bitte erneut laden.')); };
+  const formatRam = (mb: number) => mb < 1024 ? `${mb} MB` : `${mb / 1024} GB (${mb} MB)`;
   const [appVersion, setAppVersion] = useState('0.3.0');
   const t = config?.language === 'en' ? en : de;
 
@@ -63,6 +68,8 @@ function App() {
     window.scarrix.version().then(setAppVersion).catch(() => {});
     window.scarrix.auth.profile().then(setProfile).catch(() => {});
     window.scarrix.paths().then(setPaths).catch(() => {});
+    loadVersions();
+    window.scarrix.memory().then(setMemory).catch(e => setNotice(String(e)));
     refresh();
     const unDevice = window.scarrix.onDevice(setDevice);
     const unNotice = window.scarrix.onNotice(setNotice);
@@ -90,11 +97,11 @@ function App() {
   const createInstance = () => {
     if (!config) return;
     const version = draftVersion.trim();
-    if (!/^\d+\.\d+(?:\.\d+)?(?:[.-][\w.]+)?$/.test(version)) {
+    if (!versions.includes(version)) {
       setNotice('Bitte gib eine gültige Minecraft-Version an, z. B. 1.21.1.'); return;
     }
-    if (!Number.isInteger(draftRam) || draftRam < 2 || draftRam > 32) {
-      setNotice('Bitte wähle 2 bis 32 GB RAM.'); return;
+    if (!memory || draftRam * 1024 < 512 || draftRam * 1024 > memory.maxMB || draftRam * 1024 % 256 !== 0) {
+      setNotice('Bitte wähle RAM innerhalb des erkannten Systemspeichers.'); return;
     }
     if (config.instances.length >= 16) { setNotice('Maximal 16 Instanzen möglich.'); return; }
     const id = 'instance-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
@@ -149,7 +156,7 @@ function App() {
           <div className="launch-title"><div><p className="eyebrow">QUICK LAUNCH</p><h2>Bereit zum Spielen?</h2></div><span className="launch-destination">Ziel: {selectedMode?.group ? selectedMode.group + ' / ' : ''}{selectedMode?.name ?? 'Scarrix Lobby'}</span></div>
           <div className="launch-controls">
             <label className="instance-picker"><span>MINECRAFT-INSTANZ</span><select value={activeInstance?.id ?? ''} onChange={e => chooseInstance(e.target.value)} disabled={busy}>{config.instances.map(instance => <option key={instance.id} value={instance.id}>{instance.name}</option>)}</select></label>
-            <button className="btn outline create-btn" disabled={busy} onClick={() => { setDraftVersion(activeInstance?.version ?? '1.21.1'); setDraftLoader(activeInstance?.loader ?? 'vanilla'); setDraftRam(activeInstance?.ramGB ?? 4); setShowNewInstance(true); }}>+ Neue Instanz</button>
+            <button className="btn outline create-btn" disabled={busy} onClick={() => { setDraftVersion(activeInstance?.version ?? '1.21.1'); setDraftLoader(activeInstance?.loader ?? 'vanilla'); setDraftRam(memory ? memory.recommendedMB / 1024 : 0.5); setShowNewInstance(true); }}>+ Neue Instanz</button>
             <button className="btn primary play-button" disabled={busy || !profile || !selectedMode} onClick={() => run(() => window.scarrix.game(selectedMode!.id), setNotice)}><span className="play-arrow">▶</span> {profile ? 'JETZT SPIELEN' : 'MICROSOFT-LOGIN AUSSTEHEND'}</button>
           </div>
           <div className="launch-detail"><span>⏣ {activeInstance?.version} <span className="bullet">•</span> {activeInstance?.loader.toUpperCase()} <span className="bullet">•</span> {activeInstance?.ramGB} GB RAM</span><div className="launch-actions"><button className="text-btn" disabled={busy || config.instances.length <= 1} onClick={deleteInstance}>Instanz entfernen</button><button className="text-btn accent-text" disabled={busy} onClick={() => run(() => window.scarrix.gamePrepare(), setNotice)}>Dateien vorbereiten ↗</button></div></div>
@@ -194,8 +201,8 @@ function App() {
           </div>
         </section>
         <section className="panel launcher-settings update-section">
-          <div className="update-copy"><span className="update-symbol">↻</span><div><p className="eyebrow">SOFTWARE</p><h2>Launcher-Updates</h2><p>Installierte Version: <b>v{appVersion}</b></p><small>Bei einem privaten GitHub-Repository öffnet der Button die Releases-Seite. Automatische Updates erfordern einen öffentlichen Download-Kanal.</small></div></div>
-          <button className="btn primary" disabled={busy} onClick={() => run(() => window.scarrix.update(), setNotice)}>Nach Updates suchen ↗</button>
+          <div className="update-copy"><span className="update-symbol">↻</span><div><p className="eyebrow">SOFTWARE</p><h2>Launcher-Updates</h2><p>Installierte Version: <b>v{appVersion}</b></p><small>Updates werden im Launcher heruntergeladen und vor der Installation geprüft. Der sichere Distributionskanal muss vom Betreiber freigeschaltet werden.</small></div></div>
+          <button className="btn primary" disabled={busy} onClick={() => run(() => window.scarrix.update(), setNotice)}>Nach Updates suchen</button>
         </section>
         <section className="panel launcher-settings info-section">
           <div><h2>Über Scarrix Client</h2><p>Community Launcher für Minecraft: Java Edition. Entwickelt für das Scarrix-Netzwerk.</p><p className="hint">Microsoft-Authentifizierung wird im Hintergrund verwaltet; eine Freigabe durch Minecraft Services steht noch aus. Client-IDs sind bei Desktop-Apps technisch auslesbar und keine geheimen Schlüssel.</p></div>
@@ -207,11 +214,11 @@ function App() {
           <div className="modal-head"><div><p className="eyebrow">MINECRAFT</p><h2>Neue Instanz erstellen</h2></div><button className="close-modal" onClick={() => setShowNewInstance(false)} aria-label="Schließen">×</button></div>
           <p>Wähle deine Version, den Modloader und den verfügbaren RAM. Mods und Konfigurationen bleiben je Instanz getrennt.</p>
           <div className="modal-fields">
-            <label>MINECRAFT-VERSION<input value={draftVersion} onChange={e => setDraftVersion(e.target.value)} placeholder="z. B. 1.21.1"/><small>Die Version wird beim Vorbereiten gegen das offizielle Manifest geprüft.</small></label>
+            <label>MINECRAFT-VERSION<select value={versions.includes(draftVersion) ? draftVersion : ""} onChange={e => setDraftVersion(e.target.value)} disabled={!versions.length}><option value="" disabled>Version auswählen</option>{versions.map(v => <option key={v} value={v}>{v}</option>)}</select><small>{versionError || "Offizielle Minecraft-Releases"}</small>{versionError && <button className="text-btn" onClick={loadVersions}>Erneut laden</button>}</label>
             <label>MODLOADER<select value={draftLoader} onChange={e => setDraftLoader(e.target.value as typeof draftLoader)}><option value="vanilla">Vanilla – Ohne Mods</option><option value="fabric">Fabric</option><option value="forge">Forge</option></select></label>
-            <label>ARBEITSSPEICHER (RAM)<div className="ram-selector"><input type="range" min="2" max="32" step="1" value={draftRam} onChange={e => setDraftRam(Number(e.target.value))}/><strong>{draftRam} GB</strong></div></label>
+            <label>ARBEITSSPEICHER (RAM)<div className="ram-selector"><input type="range" min="512" max={memory?.maxMB ?? 512} step="256" disabled={!memory} value={draftRam * 1024} onChange={e => setDraftRam(Number(e.target.value) / 1024)}/><strong>{formatRam(draftRam * 1024)}</strong></div><small>{memory ? `512 MB bis ${formatRam(memory.maxMB)} physischer RAM · Empfohlen: ${formatRam(memory.recommendedMB)}. Die Hälfte bleibt für das System; Modpacks benötigen eventuell mehr.` : "Systemspeicher wird erkannt …"}</small></label>
           </div>
-          <div className="modal-footer"><button className="btn outline" onClick={() => setShowNewInstance(false)}>Abbrechen</button><button className="btn primary" disabled={busy} onClick={createInstance}>+ Instanz erstellen</button></div>
+          <div className="modal-footer"><button className="btn outline" onClick={() => setShowNewInstance(false)}>Abbrechen</button><button className="btn primary" disabled={busy || !memory || !versions.includes(draftVersion)} onClick={createInstance}>+ Instanz erstellen</button></div>
         </div>
       </div>}
       <footer>SCARRIX CLIENT · v{appVersion} · Nicht offiziell von Mojang Studios oder Microsoft unterstützt · <span>Open Source / MIT</span></footer>

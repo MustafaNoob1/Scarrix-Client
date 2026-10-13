@@ -1,7 +1,7 @@
 {
   "name": "scarrix-client",
   "private": true,
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Community Minecraft Java Launcher for Scarrix.net (unofficial)",
   "author": {
     "name": "Scarrix Community",
@@ -51,6 +51,10 @@
       {
         "from": "config.json",
         "to": "config.json"
+      },
+      {
+        "from": "update-channel.json",
+        "to": "update-channel.json"
       }
     ],
     "directories": {
@@ -67,7 +71,11 @@
     "win": {
       "target": [
         "nsis"
-      ]
+      ],
+      "publisherName": [
+        "Scarrix Update Publisher"
+      ],
+      "verifyUpdateCodeSignature": true
     },
     "mac": {
       "target": [

@@ -46,6 +46,8 @@ jobs:
             release/*.zip
             release/*.AppImage
             release/*.deb
+            release/*.yml
+            release/*.blockmap
           if-no-files-found: error
           retention-days: 30
 
@@ -69,9 +71,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          tag="preview-0.3.0-${GITHUB_RUN_NUMBER}"
+          tag="preview-0.3.1-${GITHUB_RUN_NUMBER}"
           gh release create "$tag" release-assets/* \
             --target "$GITHUB_SHA" \
-            --title "Scarrix Client 0.3.0 Preview #${GITHUB_RUN_NUMBER}" \
+            --title "Scarrix Client 0.3.1 Preview #${GITHUB_RUN_NUMBER}" \
             --prerelease \
             --notes "Automatisch gebauter TEST-Release für Windows (Setup EXE), macOS (DMG/ZIP) und Linux (AppImage/DEB). Microsoft/Minecraft-Login benötigt weiterhin die offizielle Freigabe. Nicht signiert. Privates Repository: Downloads nur für berechtigte GitHub-Nutzer."
