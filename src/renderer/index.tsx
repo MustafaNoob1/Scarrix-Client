@@ -90,7 +90,7 @@ function App() {
   const createInstance = () => {
     if (!config) return;
     const version = draftVersion.trim();
-    if (!/^\\d+\\.\\d+(?:\\.\\d+)?(?:[.-][\\w.]+)?$/.test(version)) {
+    if (!/^\d+\.\d+(?:\.\d+)?(?:[.-][\w.]+)?$/.test(version)) {
       setNotice('Bitte gib eine gültige Minecraft-Version an, z. B. 1.21.1.'); return;
     }
     if (!Number.isInteger(draftRam) || draftRam < 2 || draftRam > 32) {
