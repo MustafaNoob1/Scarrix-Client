@@ -27,7 +27,7 @@ export async function refreshProfile(): Promise<Profile> {
 export async function microsoftLogin(win: BrowserWindow): Promise<Profile> {
   if (authenticating) throw new Error('Eine Anmeldung läuft bereits.');
   const clientId = getConfig().microsoft.clientId.trim();
-  if (!/^[0-9a-f-]{36}$/i.test(clientId)) throw new Error('Zuerst die Microsoft Application (Client) ID in den Einstellungen eintragen.');
+  if (!/^[0-9a-f-]{36}$/i.test(clientId)) throw new Error('Microsoft-Anmeldung ist derzeit nicht eingerichtet. Bitte kontaktiere den Scarrix-Support.');
   authenticating = true;
   try {
     // No Microsoft password is ever entered into our client.

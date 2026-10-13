@@ -15,6 +15,7 @@ contextBridge.exposeInMainWorld('scarrix', {
   mods: { search: (query: string, source: string) => ipcRenderer.invoke('mods:search', query, source), install: (id: string, source: string) => ipcRenderer.invoke('mods:install', id, source) },
   skins: { library: () => ipcRenderer.invoke('skins:library'), upload: (model: string) => ipcRenderer.invoke('skins:upload', model), apply: (id: string, model: string) => ipcRenderer.invoke('skins:apply', id, model) },
   capes: { library: () => ipcRenderer.invoke('capes:library'), upload: () => ipcRenderer.invoke('capes:upload'), select: (id: string | null) => ipcRenderer.invoke('capes:select', id) },
+  version: () => ipcRenderer.invoke('app:version'),
   paths: () => ipcRenderer.invoke('paths:get'), logs: () => ipcRenderer.invoke('logs:export'), update: () => ipcRenderer.invoke('update:check'),
   openUrl: (url: string) => ipcRenderer.invoke('url:open', url),
   onDevice: (cb: (m: unknown) => void) => listen('auth:device', cb),

@@ -1,4 +1,5 @@
 export interface Mode { id: string; name: string; address: string; port: number; group?: string }
+export interface Instance { id: string; name: string; version: string; loader: 'vanilla' | 'fabric' | 'forge'; ramGB: number }
 export interface Config {
   server: { name: string; address: string; port: number; group?: string };
   minecraft: { version: string; loader: 'vanilla' | 'fabric' | 'forge' | 'quilt'; javaPath: string; ramGB: number };
@@ -6,6 +7,9 @@ export interface Config {
   github: { owner: string; repo: string; privateRepo?: boolean };
   modrinth: { userAgent: string };
   curseforge: { apiKey: string };
+  launcher: { theme: 'red' | 'blue' | 'purple' | 'gold' };
+  instances: Instance[];
+  activeInstanceId: string;
   language: 'de' | 'en';
   modes: Mode[];
   news: { title: string; text: string }[];

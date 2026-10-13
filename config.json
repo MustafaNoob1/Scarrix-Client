@@ -11,7 +11,7 @@
     "ramGB": 4
   },
   "microsoft": {
-    "clientId": ""
+    "clientId": "604d79e5-9f8c-4e1c-ab0f-6d8001175151"
   },
   "github": {
     "owner": "MustafaNoob1",
@@ -19,7 +19,7 @@
     "privateRepo": true
   },
   "modrinth": {
-    "userAgent": "MustafaNoob1/scarrix-client/0.1.1"
+    "userAgent": "MustafaNoob1/scarrix-client/0.3.0"
   },
   "curseforge": {
     "apiKey": ""
@@ -71,5 +71,18 @@
       "title": "Scarrix Client – Vorschau",
       "text": "Die News sind derzeit Beispielinhalte. Später kann hier deine Server-API angeschlossen werden."
     }
-  ]
+  ],
+  "launcher": {
+    "theme": "red"
+  },
+  "instances": [
+    {
+      "id": "default",
+      "name": "Standard",
+      "version": "1.21.1",
+      "loader": "vanilla",
+      "ramGB": 4
+    }
+  ],
+  "activeInstanceId": "default"
 }

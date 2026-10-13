@@ -1,11 +1,14 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, shell } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import { getConfig } from './config';
 let configured = false;
-export async function checkForUpdate(win: BrowserWindow): Promise<string> {
+export async function checkForUpdate(win: BrowserWindow, manual = true): Promise<string> {
   const cfg = getConfig();
   if (!app.isPackaged) return 'Updates funktionieren nur in einer installierten Release-Version.';
-  if (cfg.github.privateRepo !== false) return 'Dieses GitHub-Repository ist privat. Automatische Updates ohne öffentlichen Download-Kanal sind deaktiviert. Neue Versionen findest du als berechtigter Nutzer unter GitHub Releases.';
+  if (cfg.github.privateRepo !== false) {
+    if (manual) await shell.openExternal(`https://github.com/${encodeURIComponent(cfg.github.owner)}/${encodeURIComponent(cfg.github.repo)}/releases`);
+    return 'Das Repository ist privat: Der Download der neuesten Version öffnet sich in GitHub. Automatisches Update innerhalb der App braucht einen öffentlichen Update-Kanal.';
+  }
   if (!cfg.github.owner || cfg.github.owner === 'CHANGE_ME') return 'GitHub-Owner ist noch nicht eingerichtet.';
   if (!configured) {
     autoUpdater.autoDownload = true;

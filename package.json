@@ -1,7 +1,7 @@
 {
   "name": "scarrix-client",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Community Minecraft Java Launcher for Scarrix.net (unofficial)",
   "author": {
     "name": "Scarrix Community",

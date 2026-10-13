@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, Menu } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import { getConfig, saveConfig, instancePath, rootPath } from './config';
@@ -16,9 +16,10 @@ const notice = (text: string) => { if (window && !window.isDestroyed()) window.w
 function createWindow(): void {
   window = new BrowserWindow({
     width: 1200, height: 790, minWidth: 930, minHeight: 600,
-    backgroundColor: '#0d1220', title: 'Scarrix Client',
+    backgroundColor: '#09090b', title: 'Scarrix Client', autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true, sandbox: false }
   });
+  window.setMenuBarVisibility(false);
   window.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https:\/\/(login\.microsoftonline\.com|microsoft\.com|www\.microsoft\.com|github\.com|docs\.modrinth\.com)/i.test(url)) shell.openExternal(url);
     return { action: 'deny' };
@@ -27,11 +28,16 @@ function createWindow(): void {
   if (dev && !app.isPackaged) window.loadURL(dev);
   else window.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
   window.webContents.on('will-navigate', e => e.preventDefault());
-  window.webContents.once('did-finish-load', () => { if (app.isPackaged) void checkForUpdate(window).catch(e => notice(`Update: ${e.message}`)); });
+  window.webContents.once('did-finish-load', () => { if (app.isPackaged) void checkForUpdate(window, false).catch(e => notice(`Update: ${e.message}`)); });
 }
 
 function handlers() {
-  ipcMain.handle('config:get', () => getConfig());
+  // Never send app authentication configuration into the renderer process.
+  ipcMain.handle('config:get', () => {
+    const cfg = getConfig();
+    return { ...cfg, microsoft: { clientId: '' }, curseforge: { apiKey: '' } };
+  });
+  ipcMain.handle('app:version', () => app.getVersion());
   ipcMain.handle('config:save', (_e, config: Config) => saveConfig(config));
   ipcMain.handle('auth:start', () => microsoftLogin(window));
   ipcMain.handle('auth:profile', () => getPublicProfile());
@@ -69,6 +75,7 @@ function handlers() {
   });
 }
 app.whenReady().then(() => {
+  Menu.setApplicationMenu(null);
   app.setAppUserModelId('net.scarrix.client');
   handlers(); createWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
