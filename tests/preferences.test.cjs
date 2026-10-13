@@ -4,7 +4,9 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const ts = require('typescript');
 function setup() {
-  let config = JSON.stringify(JSON.parse(fs.readFileSync('config.json', 'utf8')));
+  const legacy = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+  legacy.launcher = {theme:'red'};
+  let config = JSON.stringify(legacy);
   let temp;
   const fakeFs = {existsSync:()=>true,readFileSync:()=>config,mkdirSync:()=>{},writeFileSync:(_p,c)=>temp=c,renameSync:()=>config=temp};
   const box={exports:{},process,require:id=>{
@@ -36,4 +38,13 @@ test('old installations gain appearance defaults',()=>{
   assert.equal(c.launcher.rotateSkin,true);
   assert.equal(c.launcher.animations,true);
   assert.equal(c.launcher.background,'grid');
+});
+test('animated backgrounds are saved and unknown options fall back safely',async()=>{
+  const api=setup();
+  for(const background of ['aurora','stars']){
+    const cfg=api.getConfig();cfg.launcher.background=background;
+    assert.equal((await api.saveConfig(cfg)).launcher.background,background);
+  }
+  const cfg=api.getConfig();cfg.launcher.background='unknown-background';
+  assert.equal((await api.saveConfig(cfg)).launcher.background,'grid');
 });

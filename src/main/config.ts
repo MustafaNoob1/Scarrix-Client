@@ -12,7 +12,7 @@ const defaults: Config = {
   microsoft: { clientId: '604d79e5-9f8c-4e1c-ab0f-6d8001175151' }, github: { owner: 'MustafaNoob1', repo: 'scarrix-client', privateRepo: false },
   modrinth: { userAgent: 'MustafaNoob1/scarrix-client/0.1.1' },
   curseforge: { apiKey: '' }, language: 'de',
-  launcher: { theme: 'red' },
+  launcher: { theme: 'red', background: 'aurora', animations: true, rotateSkin: true },
   instances: [{ id: 'default', name: 'Standard', version: '1.21.1', loader: 'vanilla', ramGB: 4 }],
   activeInstanceId: 'default',
   modes: [
@@ -74,7 +74,7 @@ export function getConfig(): Config {
   const selected = instances.find(item => item.id === custom.activeInstanceId) ?? instances[0];
   const theme = ['red', 'blue', 'purple', 'gold'].includes(custom.launcher?.theme ?? '') ? custom.launcher!.theme : 'red';
   return {
-    ...combined, instances, activeInstanceId: selected.id, launcher: { theme, rotateSkin: custom.launcher?.rotateSkin !== false, animations: custom.launcher?.animations !== false, background: ['grid','glow','plain'].includes(custom.launcher?.background ?? '') ? custom.launcher!.background : 'grid' },
+    ...combined, instances, activeInstanceId: selected.id, launcher: { theme, rotateSkin: custom.launcher?.rotateSkin !== false, animations: custom.launcher?.animations !== false, background: ['grid','glow','plain','aurora','stars'].includes(custom.launcher?.background ?? '') ? custom.launcher!.background : 'grid' },
     minecraft: { ...combined.minecraft, version: selected.version, loader: selected.loader, ramGB: selected.ramGB }
   };
 }
@@ -108,7 +108,7 @@ export async function saveConfig(value: Config, internal = false): Promise<Confi
   }
   const safe: Config = {
     ...existing, language: value.language,
-    launcher: { theme: value.launcher.theme, rotateSkin: value.launcher.rotateSkin !== false, animations: value.launcher.animations !== false, background: ['grid','glow','plain'].includes(value.launcher.background ?? '') ? value.launcher.background : 'grid' },
+    launcher: { theme: value.launcher.theme, rotateSkin: value.launcher.rotateSkin !== false, animations: value.launcher.animations !== false, background: ['grid','glow','plain','aurora','stars'].includes(value.launcher.background ?? '') ? value.launcher.background : 'grid' },
     instances: value.instances,
     activeInstanceId: active.id,
     minecraft: { ...existing.minecraft, version: active.version, loader: active.loader, ramGB: active.ramGB }

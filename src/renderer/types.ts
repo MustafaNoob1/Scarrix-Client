@@ -6,7 +6,7 @@ export interface Config {
   minecraft: { version: string; loader: 'vanilla' | 'fabric' | 'forge' | 'quilt'; javaPath: string; ramGB: number };
   microsoft: { clientId: string }; github: { owner: string; repo: string; privateRepo?: boolean };
   modrinth: { userAgent: string }; curseforge: { apiKey: string };
-  launcher: { theme: 'red' | 'blue' | 'purple' | 'gold'; rotateSkin?: boolean; animations?: boolean; background?: 'grid' | 'glow' | 'plain' };
+  launcher: { theme: 'red' | 'blue' | 'purple' | 'gold'; rotateSkin?: boolean; animations?: boolean; background?: 'grid' | 'glow' | 'plain' | 'aurora' | 'stars' };
   instances: Instance[];
   activeInstanceId: string;
   language: 'de' | 'en'; modes: Mode[]; news: { title: string; text: string }[];

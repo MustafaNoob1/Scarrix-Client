@@ -1,7 +1,7 @@
 {
   "name": "scarrix-client",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Community Minecraft Java Launcher for Scarrix.net (unofficial)",
   "author": {
     "name": "Scarrix Community",
@@ -63,6 +63,10 @@
       {
         "from": "update-channel.json",
         "to": "update-channel.json"
+      },
+      {
+        "from": "assets/icons/icon.png",
+        "to": "icon.png"
       }
     ],
     "directories": {
@@ -85,21 +89,24 @@
         "publisherName": [
           "Scarrix Update Publisher"
         ]
-      }
+      },
+      "icon": "assets/icons/icon.ico"
     },
     "mac": {
       "target": [
         "dmg",
         "zip"
       ],
-      "hardenedRuntime": false
+      "hardenedRuntime": false,
+      "icon": "assets/icons/icon.icns"
     },
     "linux": {
       "target": [
         "AppImage",
         "deb"
       ],
-      "category": "Game"
+      "category": "Game",
+      "icon": "assets/icons/icon.png"
     },
     "nsis": {
       "oneClick": false,

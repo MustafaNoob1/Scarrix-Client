@@ -23,6 +23,7 @@ const notice = (text: string) => { if (window && !window.isDestroyed()) window.w
 function createWindow(): void {
   window = new BrowserWindow({
     width: 1200, height: 790, minWidth: 930, minHeight: 600,
+    icon: app.isPackaged ? path.join(process.resourcesPath,'icon.png') : path.resolve('assets/icons/icon.png'),
     backgroundColor: '#09090b', title: 'Scarrix Client', autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true, sandbox: false }
   });

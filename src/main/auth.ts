@@ -3,6 +3,7 @@ import { PublicClientApplication } from '@azure/msal-node';
 import { MicrosoftAuthenticator, MojangClient } from '@xmcl/user';
 import { getConfig } from './config';
 import { Profile } from './types';
+import { publicMinecraftProfile } from './user-profile';
 
 let session: { token: string; profile: Profile; expires: number } | null = null;
 let authenticating = false;
@@ -16,11 +17,7 @@ export function getSessionToken(): string {
 export function logout(): void { session = null; }
 export async function refreshProfile(): Promise<Profile> {
   const raw = await mojang.getProfile(getSessionToken(), AbortSignal.timeout(20000));
-  const profile: Profile = {
-    id: raw.id, name: raw.name,
-    skins: (raw.skins ?? []).map(s => ({ id: s.id, url: s.url, variant: s.variant })),
-    capes: (raw.capes ?? []).map(c => ({ id: c.id, alias: c.alias, url: c.url, state: c.state }))
-  };
+  const profile = publicMinecraftProfile(raw);
   if (session) session.profile = profile;
   return profile;
 }
@@ -72,3 +69,4 @@ export async function selectCape(capeId: string | null): Promise<Profile> {
   }
   return refreshProfile();
 }
+

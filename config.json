@@ -73,7 +73,10 @@
     }
   ],
   "launcher": {
-    "theme": "red"
+    "theme": "red",
+    "background": "aurora",
+    "animations": true,
+    "rotateSkin": true
   },
   "instances": [
     {
