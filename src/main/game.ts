@@ -4,7 +4,8 @@ import { promisify } from 'node:util';
 import fs from 'node:fs';
 import { ensureJava } from './java';
 import { runInstallerTask, stepStatus } from './downloads';
-import { exclusive, setGameRunning } from './operations';
+import { exclusive } from './operations';
+import { trackGame } from './game-sessions';
 import { Version, launch } from '@xmcl/core';
 import { getVersionList, installTask, installDependenciesTask, getLoaderArtifactListFor, installFabric, getForgeVersionList, installForge } from '@xmcl/installer';
 import { getConfig, rootPath, instancePath } from './config';
@@ -94,9 +95,10 @@ async function doStartGame(modeId: string, notify: (message: string) => void): P
       server: { ip: cfg.server.address, port: cfg.server.port }
     });
     stepStatus('Minecraft gestartet', 'done');
-    setGameRunning(true);
-    child.on('error', err => {setGameRunning(false);notify('Minecraft-Prozessfehler: ' + err.message);});
-    child.on('exit', code => {setGameRunning(false);notify(`Minecraft beendet (Code ${code ?? 'unbekannt'}).`);});
+    const instance=cfg.instances.find(i=>i.id===cfg.activeInstanceId);
+    trackGame(child,{name:instance?.name??'Minecraft',version:minecraft.version,loader:minecraft.loader,player:profile.name,ramMB:Math.min(minecraft.ramGB*1024,memoryInfo().maxMB)},gameRoot,[token]);
+    child.on('error', err => {notify('Minecraft-Prozessfehler: ' + err.message);});
+    child.on('exit', code => {notify(`Minecraft beendet (Code ${code ?? 'unbekannt'}).`);});
     return `Minecraft gestartet für ${profile.name}. Verbinde über ${cfg.server.address}:${cfg.server.port}; wähle ${mode.group ? mode.group + " / " : ""}${mode.name} innerhalb des Netzwerks. Ein automatischer Wechsel zum Unterserver ist ohne Scarrix-Routing-API nicht möglich.`;
   } finally { launching = false; }
 }

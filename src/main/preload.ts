@@ -6,6 +6,7 @@ const listen = (channel: string, cb: (data: any) => void) => {
 };
 contextBridge.exposeInMainWorld('scarrix', {
   windowControl: (action: 'state'|'minimize'|'maximize'|'close') => ipcRenderer.invoke('window:control',action),
+  sessions: {list:()=>ipcRenderer.invoke('sessions:list'),logs:(id:string,since:number)=>ipcRenderer.invoke('sessions:logs',id,since),stop:(id:string)=>ipcRenderer.invoke('sessions:stop',id),folder:(id:string)=>ipcRenderer.invoke('sessions:folder',id),export:(id:string)=>ipcRenderer.invoke('sessions:export',id)},
   config: { get: () => ipcRenderer.invoke('config:get'), save: (cfg: unknown) => ipcRenderer.invoke('config:save', cfg) },
   auth: { start: () => ipcRenderer.invoke('auth:start'), profile: () => ipcRenderer.invoke('auth:profile'), refresh: () => ipcRenderer.invoke('auth:refresh'), logout: () => ipcRenderer.invoke('auth:logout') },
   status: () => ipcRenderer.invoke('status:get'),

@@ -2,9 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { app, shell, dialog } from 'electron';
 import { appData, instancePath } from './config';
-function redact(text:string) {
-  return text.replace(/(?:Bearer\s+)[A-Za-z0-9._~-]+/gi,'Bearer [entfernt]').replace(/(--accessToken\s+|access[_-]?token["']?[=:]\s*["']?)[^\s"'&]+/gi,'$1[entfernt]').replace(/[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]+/g,'[Token entfernt]');
-}
+import { redact } from './log-redaction';
 export function recordError(error:unknown) {
   fs.mkdirSync(appData(),{recursive:true});
   const file=path.join(appData(),'launcher.log');

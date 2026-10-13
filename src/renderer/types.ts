@@ -1,3 +1,5 @@
+export interface GameSession {id:string;name:string;version:string;loader:string;player:string;startedAt:number;endedAt:number|null;pid:number|null;ramMB:number;state:'running'|'stopping'|'exited';exitCode:number|null}
+export interface GameLogLine {sequence:number;time:number;level:'ERROR'|'WARN'|'INFO'|'DEBUG'|'TRACE';text:string}
 export interface Profile { id: string; name: string; skins: { id?: string; url: string; variant?: string }[]; capes: { id: string; alias?: string; url: string; state?: string }[] }
 export interface Mode { id: string; name: string; address: string; port: number; group?: string }
 export interface Instance { id: string; name: string; version: string; loader: 'vanilla' | 'fabric' | 'forge'; ramGB: number }
@@ -17,6 +19,7 @@ export interface DownloadStatus {step:string;percent:number|null;downloaded:numb
 export interface JavaDetails {required:number;version:string|null;path:string|null;compatible:boolean}
 export interface InstalledMod {filename:string;enabled:boolean;size:number}
 export interface Api {
+  sessions:{list():Promise<GameSession[]>;logs(id:string,since:number):Promise<{lines:GameLogLine[];lastSequence:number;truncated:boolean}>;stop(id:string):Promise<void>;folder(id:string):Promise<void>;export(id:string):Promise<string>};
   windowControl(action:'state'|'minimize'|'maximize'|'close'):Promise<boolean>;
   javaDetails():Promise<JavaDetails>; javaInstall():Promise<JavaDetails>;
   profiles:{duplicate(id:string):Promise<Config>;export(id:string):Promise<string>;import():Promise<Config|null>};

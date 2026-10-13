@@ -15,6 +15,7 @@ import { setDownloadSink, downloadStatus, stepStatus } from './downloads';
 import { exclusive } from './operations';
 import { duplicateProfile, importProfile, exportProfile } from './profile-files';
 import { recordError, friendlyError, readLogs, openLogs, exportLogs } from './diagnostics';
+import { listGameSessions, gameSessionLogs, stopGameSession, openGameSessionFolder, exportGameSessionLogs } from './game-sessions';
 import { controlWindow } from './window-controls';
 import type { Config } from './types';
 
@@ -45,6 +46,11 @@ function handle(channel:string, action:(event:Electron.IpcMainInvokeEvent,...arg
   ipcMain.handle(channel, async(event,...args)=>{try{return await action(event,...args);}catch(error){try{recordError(error);}catch{}if(['game:prepare','game:start','java:install','mods:install','update:check'].includes(channel))stepStatus(friendlyError(error),'error');throw new Error(friendlyError(error));}});
 }
 function handlers() {
+  handle('sessions:list',()=>listGameSessions());
+  handle('sessions:logs',(_e,id:unknown,since:unknown)=>gameSessionLogs(id,since));
+  handle('sessions:stop',(_e,id:unknown)=>stopGameSession(id));
+  handle('sessions:folder',(_e,id:unknown)=>openGameSessionFolder(id));
+  handle('sessions:export',(_e,id:unknown)=>exportGameSessionLogs(id));
   handle('window:control',(event,action:unknown)=>{if(event.sender!==window.webContents)throw new Error('Unzulässiges Fenster.');return controlWindow(window,action);});
   setDownloadSink(status=>{if(window&&!window.isDestroyed())window.webContents.send('download:status',status);});
   handle('download:get',()=>downloadStatus());
