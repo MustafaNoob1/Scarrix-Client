@@ -5,6 +5,7 @@ const listen = (channel: string, cb: (data: any) => void) => {
   return () => ipcRenderer.removeListener(channel, listener);
 };
 contextBridge.exposeInMainWorld('scarrix', {
+  windowControl: (action: 'state'|'minimize'|'maximize'|'close') => ipcRenderer.invoke('window:control',action),
   config: { get: () => ipcRenderer.invoke('config:get'), save: (cfg: unknown) => ipcRenderer.invoke('config:save', cfg) },
   auth: { start: () => ipcRenderer.invoke('auth:start'), profile: () => ipcRenderer.invoke('auth:profile'), refresh: () => ipcRenderer.invoke('auth:refresh'), logout: () => ipcRenderer.invoke('auth:logout') },
   status: () => ipcRenderer.invoke('status:get'),

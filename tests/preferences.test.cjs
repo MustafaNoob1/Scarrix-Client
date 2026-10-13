@@ -48,3 +48,8 @@ test('animated backgrounds are saved and unknown options fall back safely',async
   const cfg=api.getConfig();cfg.launcher.background='unknown-background';
   assert.equal((await api.saveConfig(cfg)).launcher.background,'grid');
 });
+test('background motion is independent of other animations and validates saved values',async()=>{
+ const api=setup();
+ for(const motion of ['on','off','system']){const c=api.getConfig();c.launcher.animations=false;c.launcher.backgroundMotion=motion;const saved=await api.saveConfig(c);assert.equal(saved.launcher.backgroundMotion,motion);assert.equal(saved.launcher.animations,false);}
+ const c=api.getConfig();c.launcher.backgroundMotion='invalid';assert.equal((await api.saveConfig(c)).launcher.backgroundMotion,'on');
+});

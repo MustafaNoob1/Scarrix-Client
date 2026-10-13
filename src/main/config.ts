@@ -74,7 +74,7 @@ export function getConfig(): Config {
   const selected = instances.find(item => item.id === custom.activeInstanceId) ?? instances[0];
   const theme = ['red', 'blue', 'purple', 'gold'].includes(custom.launcher?.theme ?? '') ? custom.launcher!.theme : 'red';
   return {
-    ...combined, instances, activeInstanceId: selected.id, launcher: { theme, rotateSkin: custom.launcher?.rotateSkin !== false, animations: custom.launcher?.animations !== false, background: ['grid','glow','plain','aurora','stars'].includes(custom.launcher?.background ?? '') ? custom.launcher!.background : 'grid' },
+    ...combined, instances, activeInstanceId: selected.id, launcher: { theme, rotateSkin: custom.launcher?.rotateSkin !== false, animations: custom.launcher?.animations !== false, backgroundMotion: ['on','off','system'].includes(custom.launcher?.backgroundMotion ?? '') ? custom.launcher?.backgroundMotion : 'on', background: ['grid','glow','plain','aurora','stars'].includes(custom.launcher?.background ?? '') ? custom.launcher!.background : 'grid' },
     minecraft: { ...combined.minecraft, version: selected.version, loader: selected.loader, ramGB: selected.ramGB }
   };
 }
@@ -108,7 +108,7 @@ export async function saveConfig(value: Config, internal = false): Promise<Confi
   }
   const safe: Config = {
     ...existing, language: value.language,
-    launcher: { theme: value.launcher.theme, rotateSkin: value.launcher.rotateSkin !== false, animations: value.launcher.animations !== false, background: ['grid','glow','plain','aurora','stars'].includes(value.launcher.background ?? '') ? value.launcher.background : 'grid' },
+    launcher: { theme: value.launcher.theme, rotateSkin: value.launcher.rotateSkin !== false, animations: value.launcher.animations !== false, backgroundMotion: ['on','off','system'].includes(value.launcher.backgroundMotion ?? '') ? value.launcher.backgroundMotion : 'on', background: ['grid','glow','plain','aurora','stars'].includes(value.launcher.background ?? '') ? value.launcher.background : 'grid' },
     instances: value.instances,
     activeInstanceId: active.id,
     minecraft: { ...existing.minecraft, version: active.version, loader: active.loader, ramGB: active.ramGB }

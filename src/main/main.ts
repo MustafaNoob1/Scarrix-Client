@@ -15,6 +15,7 @@ import { setDownloadSink, downloadStatus, stepStatus } from './downloads';
 import { exclusive } from './operations';
 import { duplicateProfile, importProfile, exportProfile } from './profile-files';
 import { recordError, friendlyError, readLogs, openLogs, exportLogs } from './diagnostics';
+import { controlWindow } from './window-controls';
 import type { Config } from './types';
 
 let window: BrowserWindow;
@@ -22,7 +23,7 @@ const notice = (text: string) => { if (window && !window.isDestroyed()) window.w
 
 function createWindow(): void {
   window = new BrowserWindow({
-    width: 1200, height: 790, minWidth: 930, minHeight: 600,
+    frame: false, width: 1200, height: 790, minWidth: 930, minHeight: 600,
     icon: app.isPackaged ? path.join(process.resourcesPath,'icon.png') : path.resolve('assets/icons/icon.png'),
     backgroundColor: '#09090b', title: 'Scarrix Client', autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true, sandbox: false }
@@ -44,6 +45,7 @@ function handle(channel:string, action:(event:Electron.IpcMainInvokeEvent,...arg
   ipcMain.handle(channel, async(event,...args)=>{try{return await action(event,...args);}catch(error){try{recordError(error);}catch{}if(['game:prepare','game:start','java:install','mods:install','update:check'].includes(channel))stepStatus(friendlyError(error),'error');throw new Error(friendlyError(error));}});
 }
 function handlers() {
+  handle('window:control',(event,action:unknown)=>{if(event.sender!==window.webContents)throw new Error('Unzulässiges Fenster.');return controlWindow(window,action);});
   setDownloadSink(status=>{if(window&&!window.isDestroyed())window.webContents.send('download:status',status);});
   handle('download:get',()=>downloadStatus());
   handle('java:details',()=>javaDetails());

@@ -6,7 +6,7 @@ export interface Config {
   minecraft: { version: string; loader: 'vanilla' | 'fabric' | 'forge' | 'quilt'; javaPath: string; ramGB: number };
   microsoft: { clientId: string }; github: { owner: string; repo: string; privateRepo?: boolean };
   modrinth: { userAgent: string }; curseforge: { apiKey: string };
-  launcher: { theme: 'red' | 'blue' | 'purple' | 'gold'; rotateSkin?: boolean; animations?: boolean; background?: 'grid' | 'glow' | 'plain' | 'aurora' | 'stars' };
+  launcher: { theme: 'red' | 'blue' | 'purple' | 'gold'; rotateSkin?: boolean; animations?: boolean; backgroundMotion?: 'on' | 'off' | 'system'; background?: 'grid' | 'glow' | 'plain' | 'aurora' | 'stars' };
   instances: Instance[];
   activeInstanceId: string;
   language: 'de' | 'en'; modes: Mode[]; news: { title: string; text: string }[];
@@ -17,6 +17,7 @@ export interface DownloadStatus {step:string;percent:number|null;downloaded:numb
 export interface JavaDetails {required:number;version:string|null;path:string|null;compatible:boolean}
 export interface InstalledMod {filename:string;enabled:boolean;size:number}
 export interface Api {
+  windowControl(action:'state'|'minimize'|'maximize'|'close'):Promise<boolean>;
   javaDetails():Promise<JavaDetails>; javaInstall():Promise<JavaDetails>;
   profiles:{duplicate(id:string):Promise<Config>;export(id:string):Promise<string>;import():Promise<Config|null>};
   diagnostics:{read():Promise<{launcher:string;minecraft:string}>;open():Promise<void>;export():Promise<string>};
