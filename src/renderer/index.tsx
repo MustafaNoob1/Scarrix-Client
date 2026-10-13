@@ -28,6 +28,7 @@ function App() {
   const [tab, setTab] = useState<Tab>('home');
   const [profile, setProfile] = useState<Profile | null>(null);
   const [status, setStatus] = useState<{online: boolean; players:number | null; maxPlayers: number | null; version:string | null} | null>(null);
+  const [backendStatuses, setBackendStatuses] = useState<Array<{id: string; online: boolean | null; players: number | null; maxPlayers: number | null}> | null>(null);
   const [device, setDevice] = useState<{code: string;url:string;message:string} | null>(null);
   const [notice, setNotice] = useState('');
   const [progress, setProgress] = useState<number | null>(null);
@@ -47,7 +48,10 @@ function App() {
     catch (e) { setNotice(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
   };
-  const refresh = () => window.scarrix.status().then(setStatus).catch(e => setNotice(String(e)));
+  const refresh = () => {
+    window.scarrix.status().then(setStatus).catch(e => setNotice(String(e)));
+    window.scarrix.statusModes().then(setBackendStatuses).catch(() => setBackendStatuses([]));
+  };
   useEffect(() => {
     window.scarrix.config.get().then(setConfig).catch(e => setNotice(String(e)));
     window.scarrix.auth.profile().then(setProfile).catch(() => {});
@@ -97,7 +101,7 @@ function App() {
         <div className="summary"><div className="stat panel"><span className="dot" style={{background: status?.online ? '#59df9c' : '#eb7c7c'}}></span><div><small>Scarrix.net</small><b>{status ? (status.online ? 'Online' : 'Offline') : '—'}</b></div></div><div className="stat panel"><span className="stat-symbol">♟</span><div><small>{t.players}</small><b>{status?.players ?? '—'} / {status?.maxPlayers ?? '—'}</b></div></div><div className="stat panel"><span className="stat-symbol">▣</span><div><small>Minecraft</small><b>{status?.version ?? config.minecraft.version}</b></div></div></div>
         <div className="section-row"><h2>Spielmodi</h2><small>Die Spielerzahl gilt aktuell nur für das gesamte Netzwerk.</small></div>
         <p className="backend-notice">Unterserver-IP und Port: nur zur Information (nicht bearbeitbar). Der Spielstart erfolgt über Scarrix.net; wähle deinen Spielmodus anschließend in der Lobby. Direkte Unterserver-Verbindungen wurden nicht bestätigt.</p>
-        <div className="mode-grid">{config.modes.map((m, i) => <div className="mode-card panel" key={m.id}><div className="mode-icon">{['⛏','⚔','▦','✦'][i % 4]}</div>{m.group && <small className="mode-group">{m.group} · 3 Untermodi</small>}<h3>{m.name}</h3><p className="mode-endpoint" title="Nur Anzeige; diese Backend-Adresse wird nicht zum Spielstart verwendet">Backend (nur Anzeige): <code>{m.address}:{m.port}</code></p><button className="btn outline" disabled={busy || !profile} onClick={() => run(() => window.scarrix.game(m.id), setNotice)}>Lobby starten →</button></div>)}</div>
+        <div className="mode-grid">{config.modes.map((m, i) => <div className="mode-card panel" key={m.id}><div className="mode-icon">{['⛏','⚔','▦','✦'][i % 4]}</div>{m.group && <small className="mode-group">{m.group} · 3 Untermodi</small>}<h3>{m.name}</h3><p className="mode-endpoint" title="Nur Anzeige; diese Backend-Adresse wird nicht zum Spielstart verwendet">Backend (nur Anzeige): <code>{m.address}:{m.port}</code></p><div className="mode-availability">{(() => { const state = backendStatuses?.find(s => s.id === m.id); return !backendStatuses ? "Prüfe Erreichbarkeit …" : state?.online ? `Extern erreichbar · ${state.players ?? "?"} Spieler` : "Extern nicht prüfbar (privater Backend-Port möglich)"; })()}</div><button className="btn outline" disabled={busy || !profile} onClick={() => run(() => window.scarrix.game(m.id), setNotice)}>Lobby starten →</button></div>)}</div>
         <div className="section-row"><h2>{t.news}</h2></div><div className="news-grid">{config.news.length ? config.news.map((n,i) => <article className="panel news" key={i}><span className="eyebrow">NEWS</span><h3>{n.title}</h3><p>{n.text}</p></article>) : <article className="panel news">Noch keine Server-News konfiguriert.</article>}</div>
       </>}
 
@@ -117,7 +121,7 @@ function App() {
         <label>Microsoft Application (Client) ID<input value={config.microsoft.clientId} onChange={e => patch('microsoft','clientId',e.target.value)} placeholder="00000000-0000-0000-0000-000000000000"/></label><label>GitHub-Benutzer / Organisation<input value={config.github.owner} onChange={e => patch('github','owner',e.target.value)}/></label>
         <label>Serveradresse<input value={config.server.address} onChange={e => patch('server','address',e.target.value)}/></label><label>CurseForge API-Key (optional)<input type="password" value={config.curseforge.apiKey} onChange={e => patch('curseforge','apiKey',e.target.value)} placeholder="Nicht im öffentlichen Repository ablegen"/></label>
         <label>Sprache / Language<select value={config.language} onChange={e => setConfig({...config,language:e.target.value as 'de'|'en'})}><option value="de">Deutsch</option><option value="en">English</option></select></label></div>
-        <div className="buttons"><button className="btn primary" disabled={busy} onClick={() => run(() => window.scarrix.config.save(config), res => {setConfig(res);setNotice('Einstellungen gespeichert.');window.scarrix.paths().then(setPaths);})}>{t.save}</button><button className="btn outline" onClick={() => run(() => window.scarrix.java(), setNotice)}>Java prüfen</button><button className="btn outline" disabled={busy} onClick={() => run(() => window.scarrix.gamePrepare(), setNotice)}>Minecraft-Dateien vorbereiten</button><button className="btn outline" onClick={() => run(() => window.scarrix.update(), setNotice)}>Updates prüfen</button><button className="btn outline" onClick={() => run(() => window.scarrix.logs(), setNotice)}>Logs anzeigen</button></div>
+        <div className="buttons"><button className="btn primary" disabled={busy} onClick={() => run(() => window.scarrix.config.save(config), res => {setConfig(res);setNotice('Einstellungen gespeichert.');window.scarrix.paths().then(setPaths);})}>{t.save}</button><button className="btn outline" onClick={() => run(() => window.scarrix.java(), setNotice)}>Java prüfen</button><button className="btn ghost" onClick={() => window.scarrix.openUrl("https://adoptium.net/").catch(e => setNotice(String(e)))}>Java herunterladen ↗</button><button className="btn outline" disabled={busy} onClick={() => run(() => window.scarrix.gamePrepare(), setNotice)}>Minecraft-Dateien vorbereiten</button><button className="btn outline" onClick={() => run(() => window.scarrix.update(), setNotice)}>Updates prüfen</button><button className="btn outline" onClick={() => run(() => window.scarrix.logs(), setNotice)}>Logs anzeigen</button></div>
       </div><div className="panel paths"><h2>Dateiordner</h2><p>Gemeinsame Minecraft-Downloads: <code>{paths?.minecraft}</code></p><p>Aktuelle Instanz mit Mods: <code>{paths?.instance}</code></p><p className="hint">Die Vorlage config.json im Projekt ist die Erstkonfiguration; spätere Änderungen liegen im Benutzerprofil. Microsoft- und Minecraft-Token werden nicht dauerhaft gespeichert.</p></div></>}
       <footer>SCARRIX CLIENT · Nicht offiziell von Mojang Studios oder Microsoft unterstützt · <span>Open Source / MIT</span></footer>
     </main>

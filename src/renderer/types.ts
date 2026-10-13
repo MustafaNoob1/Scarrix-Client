@@ -13,6 +13,7 @@ export interface Api {
   config: { get(): Promise<Config>; save(c: Config): Promise<Config> };
   auth: { start(): Promise<Profile>; profile(): Promise<Profile | null>; refresh(): Promise<Profile>; logout(): Promise<void> };
   status(): Promise<{ online: boolean; players: number | null; maxPlayers: number | null; version: string | null }>;
+  statusModes(): Promise<Array<{ id: string; online: boolean | null; players: number | null; maxPlayers: number | null }>>;
   java(): Promise<string>; game(mode: string): Promise<string>; gamePrepare(): Promise<string>;
   mods: { search(term: string, source: string): Promise<ModHit[]>; install(id: string, source: string): Promise<{ filename: string; dependencies: string[] }> };
   skins: { library(): Promise<SavedImage[]>; upload(model: string): Promise<{library: SavedImage[]; message: string}>; apply(id: string, model: string): Promise<Profile> };

@@ -262,3 +262,9 @@ Die CI-Pipeline baut auf jedem Push nach `main` Installationspakete für Windows
 Ohne Microsoft-Login können Minecraft-Versionsdateien jetzt über **„Minecraft-Dateien vorbereiten“** im Client heruntergeladen/geprüft werden. Dafür sind eine passende Java-Installation und Internetzugang erforderlich. Der Minecraft-Login und Spielstart bleiben von der Microsoft/Minecraft-Freigabe abhängig. Eine erfolgreich vorbereitete Spielversion beweist noch nicht, dass ein echter Online-Spielstart funktioniert.
 
 **Hinweis:** Private GitHub-Releases stehen nur berechtigten Benutzern zur Verfügung. Auto-Updates an öffentliche Spieler sind damit ohne einen eigenen öffentlichen Update-Kanal nicht möglich. Windows- und macOS-Installer sind derzeit nicht signiert.
+
+## Vorschau für Unterserver-Status und Java-Download
+
+Die Startseite führt für jeden konfigurierten Unterserver eine zusätzliche **best-effort**-Abfrage über mcstatus.io aus. Nur erfolgreich erreichbare Backends werden mit einer Spielerzahl als erreichbar markiert. Eine fehlgeschlagene Abfrage bedeutet **nicht**, dass der Unterserver offline ist: interne/private Ports können von außen nicht abgefragt werden. Der direkte Spielbeitritt funktioniert weiterhin ausschließlich über den Scarrix-Proxy.
+
+Unter **Einstellungen** gibt es außerdem einen Link zu [Eclipse Temurin / Adoptium](https://adoptium.net/) für den Download der benötigten Java-Version. Java wird weiterhin nicht ungefragt automatisch installiert.

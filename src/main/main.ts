@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import { getConfig, saveConfig, instancePath, rootPath } from './config';
 import { microsoftLogin, getPublicProfile, logout, refreshProfile, selectCape } from './auth';
 import { javaVersion, startGame, prepareGame } from './game';
-import { serverStatus } from './status';
+import { serverStatus, modeStatuses } from './status';
 import { searchMods, installMod } from './mods';
 import { getLibrary, upload, applySavedSkin } from './skins';
 import { checkForUpdate } from './updater';
@@ -38,6 +38,7 @@ function handlers() {
   ipcMain.handle('auth:refresh', () => refreshProfile());
   ipcMain.handle('auth:logout', () => { logout(); return true; });
   ipcMain.handle('status:get', () => serverStatus());
+  ipcMain.handle('status:modes', () => modeStatuses());
   ipcMain.handle('java:version', () => javaVersion());
   ipcMain.handle('game:start', (_e, id: string) => startGame(String(id), notice));
   ipcMain.handle('game:prepare', () => prepareGame(notice));
@@ -63,7 +64,7 @@ function handlers() {
     return `Logs bleiben lokal: ${folder}. Automatischer Upload ist absichtlich deaktiviert.`;
   });
   ipcMain.handle('url:open', async (_e, url: string) => {
-    if (!/^https:\/\/(github\.com|microsoft\.com|www\.microsoft\.com|login\.microsoftonline\.com|modrinth\.com|docs\.curseforge\.com)/i.test(url)) throw new Error('URL ist nicht freigegeben.');
+    if (!/^https:\/\/(github\.com|microsoft\.com|www\.microsoft\.com|login\.microsoftonline\.com|modrinth\.com|docs\.curseforge\.com|adoptium\.net|www\.adoptium\.net)/i.test(url)) throw new Error('URL ist nicht freigegeben.');
     await shell.openExternal(url); return true;
   });
 }

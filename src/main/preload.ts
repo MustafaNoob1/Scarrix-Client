@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('scarrix', {
   config: { get: () => ipcRenderer.invoke('config:get'), save: (cfg: unknown) => ipcRenderer.invoke('config:save', cfg) },
   auth: { start: () => ipcRenderer.invoke('auth:start'), profile: () => ipcRenderer.invoke('auth:profile'), refresh: () => ipcRenderer.invoke('auth:refresh'), logout: () => ipcRenderer.invoke('auth:logout') },
   status: () => ipcRenderer.invoke('status:get'),
+  statusModes: () => ipcRenderer.invoke('status:modes'),
   java: () => ipcRenderer.invoke('java:version'),
   game: (mode: string) => ipcRenderer.invoke('game:start', mode),
   gamePrepare: () => ipcRenderer.invoke('game:prepare'),

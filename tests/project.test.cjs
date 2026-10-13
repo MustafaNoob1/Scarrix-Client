@@ -43,3 +43,10 @@ test('Minecraft files can be prepared without an approved Microsoft account', ()
   assert.match(game, /export async function prepareGame/);
   assert.match(main, /ipcMain.handle\('game:prepare'/);
 });
+
+test('backend status does not claim private backends are offline', () => {
+  const status = fs.readFileSync(path.join(root, 'src/main/status.ts'), 'utf8');
+  assert.match(status, /export async function modeStatuses/);
+  assert.match(status, /data\.online !== true/);
+  assert.match(status, /online: null/);
+});
