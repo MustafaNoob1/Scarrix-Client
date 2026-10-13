@@ -81,3 +81,19 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{ou
 .rail-brand{-webkit-app-region:drag}.play-layout{min-height:calc(100vh - 80px)}
 .ambient-aurora .ambient-ribbon{opacity:.28;animation-duration:9s;filter:blur(45px)}.ambient-aurora .ribbon-b{opacity:.22;animation-duration:12s}.ambient-aurora .ribbon-c{opacity:.20;animation-duration:11s}.ambient-vignette{background:radial-gradient(ellipse at 45% 45%,transparent 25%,#070a1280 100%)}.ambient-grid .ambient-grid-lines{animation-duration:8s;opacity:1;background-size:46px 46px}.ambient-glow .ambient-wash{animation-duration:7s}.background-motion{display:flex;align-items:center;justify-content:space-between;gap:15px;width:100%;font-size:12px}.background-motion select{max-width:260px}
 @media(max-width:1050px){.topbar-actions{gap:6px}.instance-chip{padding:0 10px}.account-chip{min-width:130px;padding:0 10px}.topbar-brand b{font-size:16px}.window-buttons{margin-left:3px}}
+
+/* Fast layered plasma, orbital light trails and drifting embers. */
+.ambient-aurora .ambient-ribbon{animation-name:scarrix-plasma;animation-duration:4.8s;opacity:.38;filter:blur(38px);height:35%;background:linear-gradient(110deg,transparent,var(--accent),var(--accent-strong),transparent)}
+.ambient-aurora .ribbon-b{animation-duration:6.5s;opacity:.26;background:linear-gradient(110deg,transparent,#7461de,#bf66dc,transparent)}.ambient-aurora .ribbon-c{animation-duration:5.7s;opacity:.32;animation-direction:alternate-reverse}
+.ambient-orbit{position:absolute;width:70vw;height:34vw;left:10%;top:24%;border:1px solid transparent;border-top-color:var(--accent);border-right-color:var(--accent-strong);border-radius:50%;opacity:0;transform:rotate(-25deg);box-shadow:0 -2px 25px var(--accent-faint);animation:scarrix-orbit 9s linear infinite}
+.ambient-aurora .ambient-orbit{opacity:.24}.ambient-aurora .orbit-two{width:58vw;height:25vw;top:31%;left:18%;animation-direction:reverse;animation-duration:13s;opacity:.16}
+.ambient-sparks i{position:absolute;width:var(--spark-size);height:var(--spark-size);border-radius:50%;background:var(--accent-strong);box-shadow:0 0 10px var(--accent);animation:scarrix-ember 4s linear infinite;opacity:0}.ambient-stars .ambient-sparks i{background:#d1dfff;box-shadow:0 0 10px #859bff}
+.ambient-meteors i{position:absolute;width:130px;height:1px;background:linear-gradient(90deg,transparent,#aebfff);box-shadow:0 0 9px #b3bfff;animation:scarrix-meteor 5s linear infinite;opacity:0;transform:rotate(-32deg)}
+.ambient-grid .ambient-grid-lines{animation-duration:3s;background-image:linear-gradient(var(--accent-faint) 1px,transparent 1px),linear-gradient(90deg,var(--accent-faint) 1px,transparent 1px);mask-image:linear-gradient(transparent,#000 35%,#000 70%,transparent)}
+.ambient-scan{position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,var(--accent-faint) 50%,transparent 55%);opacity:0}.ambient-grid .ambient-scan{opacity:.8;animation:scarrix-scan 4s linear infinite}
+.ambient-glow .ambient-wash{animation-duration:4s;background:radial-gradient(ellipse at 35% 45%,var(--accent-glow),transparent 60%),radial-gradient(ellipse at 75% 20%,var(--accent-faint),transparent 55%)}
+@keyframes scarrix-plasma{0%{transform:translate3d(-16%,-15%,0) rotate(-32deg) scale(.95)}50%{transform:translate3d(5%,4%,0) rotate(-12deg) scale(1.18)}100%{transform:translate3d(14%,22%,0) rotate(10deg) scale(1.08)}}
+@keyframes scarrix-orbit{from{transform:rotate(-25deg)}to{transform:rotate(335deg)}}
+@keyframes scarrix-ember{0%{transform:translate3d(0,50px,0);opacity:0}15%{opacity:.65}80%{opacity:.45}100%{transform:translate3d(45px,-130px,0);opacity:0}}
+@keyframes scarrix-meteor{0%,50%{transform:translate3d(160px,-100px,0) rotate(-32deg);opacity:0}55%{opacity:.6}75%,100%{transform:translate3d(-350px,220px,0) rotate(-32deg);opacity:0}}
+@keyframes scarrix-scan{from{transform:translateY(-100%)}to{transform:translateY(100%)}}
