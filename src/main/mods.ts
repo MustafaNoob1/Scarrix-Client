@@ -37,7 +37,7 @@ export async function searchMods(term: string, source: 'modrinth' | 'curseforge'
 
 function safeJar(name: string): string {
   const file = path.basename(name).replace(/[^\w.() -]/g, '_');
-  if (!file.toLowerCase().endsWith('.jar') || file.length > 180) throw new Error('Die Mod-Datei ist keine zulässige JAR-Datei.');
+  if (!file.toLowerCase().endsWith('.jar') || file.length > 180 || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(file)) throw new Error('Die Mod-Datei ist keine zulässige JAR-Datei.');
   return file;
 }
 async function downloadJar(url: string, fileName: string, expectedSha512: string | undefined, notify: (percent: number) => void): Promise<string> {

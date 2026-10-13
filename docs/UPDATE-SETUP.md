@@ -4,6 +4,7 @@
 2. Name: SCARRIX_UPDATE_PRIVATE_KEY
 3. Wert: kompletter PEM-Inhalt des lokal bereitgestellten privaten Signierschlüssels, inklusive BEGIN/END-Zeilen.
 4. Die Pipeline „Public installers and signed preview updates“ erneut starten oder eine Änderung veröffentlichen.
+   Secrets werden beim Start eines Workflow-Laufs eingelesen. Wenn das Secret erst während eines laufenden Builds eingerichtet wurde, einen neuen Lauf starten.
 5. Im veröffentlichten Release müssen scarrix-update.json und scarrix-update.sig vorhanden sein.
 
 Der öffentliche Schlüssel ist in update-channel.json eingebaut. Der private Schlüssel wird ausschließlich im Signierschritt als GitHub-Secret verwendet. Nicht als Repository-Datei, Release-Anhang, Nachricht oder Build-Artefakt veröffentlichen.
