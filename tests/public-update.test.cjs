@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),crypto=require('node:crypto'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
 const load=require('./load-main.cjs');
-function setup({signed=true,tamper=false,restart=false}={}){
+function setup({signed=true,tamper=false,restart=false,changedMetadata=false}={}){
  const keys=crypto.generateKeyPairSync('ed25519');
  const publicKey=keys.publicKey.export({format:'pem',type:'spki'});
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'scarrix-update-test-'));
@@ -16,7 +16,7 @@ function setup({signed=true,tamper=false,restart=false}={}){
  const bodies={'scarrix-update.json':manifest,'scarrix-update.sig':signature,'latest.yml':meta};
  class Updater {
   events={};on(k,cb){this.events[k]=cb;}setFeedURL(v){this.feed=v;}
-  async checkForUpdates(){return {updateInfo:{version:'0.5.0-beta.2'}};}
+  async checkForUpdates(){const info=require('js-yaml').load(meta.toString());if(changedMetadata)info.packages={x64:{path:'untrusted-package'}};return {updateInfo:info};}
   async downloadUpdate(){this.downloaded=true;const error=await this.verifyUpdateCodeSignature([],file);if(error)throw Error(error);await this.events['update-downloaded']();}
   quitAndInstall(...args){this.install=args;}
  }
@@ -37,6 +37,9 @@ test('unsigned releases and altered installers cannot install',async()=>{
 });
 test('later leaves verified update ready without restarting',async()=>{
  const s=setup();try{await s.api.checkForUpdate(s.win);assert.equal(s.updater.downloaded,true);assert.equal(s.updater.install,undefined);await s.api.checkForUpdate(s.win);assert.equal(s.updater.install,undefined);}finally{s.cleanup();}
+});
+test('metadata changed between signature check and SDK fetch cannot download or install',async()=>{
+ const s=setup({changedMetadata:true});try{await assert.rejects(s.api.checkForUpdate(s.win),/zwischenzeitlich/);assert.equal(s.updater.downloaded,undefined);assert.equal(s.updater.install,undefined);}finally{s.cleanup();}
 });
 test('manifest signature rejects a different signing key and changed payload',()=>{
  const {verifyRelease}=load('update-trust');const a=crypto.generateKeyPairSync('ed25519'),b=crypto.generateKeyPairSync('ed25519');

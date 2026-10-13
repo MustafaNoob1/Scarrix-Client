@@ -73,7 +73,8 @@ export async function checkForUpdate(win:BrowserWindow, manual=true):Promise<str
       configured=true;
     }
     const result=await autoUpdater.checkForUpdates();
-    if(!result||result.updateInfo.version!==manifest.version)throw new Error('Update wurde zwischenzeitlich geändert. Bitte erneut prüfen.');
+    const refreshed=result?.updateInfo as any;
+    if(!refreshed||refreshed.version!==manifest.version||refreshed.packages||refreshed.path!==info.path||JSON.stringify(refreshed.files)!==JSON.stringify(info.files))throw new Error('Update wurde zwischenzeitlich geändert. Bitte erneut prüfen.');
     updateProgress=progressReporter('Launcher-Update herunterladen');
     send('app:notice','Signiertes Update '+publishedVersion+' wird heruntergeladen …');
     await autoUpdater.downloadUpdate();
