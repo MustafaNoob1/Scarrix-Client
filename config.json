@@ -1,0 +1,74 @@
+{
+  "server": {
+    "name": "Scarrix.net",
+    "address": "Scarrix.net",
+    "port": 25565
+  },
+  "minecraft": {
+    "version": "1.21.1",
+    "loader": "vanilla",
+    "javaPath": "java",
+    "ramGB": 4
+  },
+  "microsoft": {
+    "clientId": ""
+  },
+  "github": {
+    "owner": "MustafaNoob1",
+    "repo": "scarrix-client"
+  },
+  "modrinth": {
+    "userAgent": "MustafaNoob1/scarrix-client/0.1.1"
+  },
+  "curseforge": {
+    "apiKey": ""
+  },
+  "language": "de",
+  "modes": [
+    {
+      "id": "survival",
+      "name": "Survival",
+      "address": "135.181.19.35",
+      "port": 24241
+    },
+    {
+      "id": "hardcoreffa",
+      "name": "Hardcore FFA",
+      "group": "ModernFFA",
+      "address": "135.181.19.35",
+      "port": 25568
+    },
+    {
+      "id": "smpffa",
+      "name": "SMPFFA",
+      "group": "ModernFFA",
+      "address": "135.181.19.35",
+      "port": 25570
+    },
+    {
+      "id": "maceffa",
+      "name": "MaceFFA",
+      "group": "ModernFFA",
+      "address": "135.181.19.35",
+      "port": 25569
+    },
+    {
+      "id": "citybuild",
+      "name": "CityBuild",
+      "address": "135.181.19.35",
+      "port": 12112
+    },
+    {
+      "id": "primemines",
+      "name": "PrimeMines",
+      "address": "135.181.19.35",
+      "port": 65455
+    }
+  ],
+  "news": [
+    {
+      "title": "Scarrix Client – Vorschau",
+      "text": "Die News sind derzeit Beispielinhalte. Später kann hier deine Server-API angeschlossen werden."
+    }
+  ]
+}

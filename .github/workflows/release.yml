@@ -1,0 +1,41 @@
+name: Build and release Scarrix Client
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install
+        run: npm install --no-audit --no-fund
+      - name: Check
+        run: |
+          npm run typecheck
+          npm test
+      - name: Package and publish on tags
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            npm run dist -- --publish always
+          else
+            npm run dist -- --publish never
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scarrix-${{ matrix.os }}
+          path: release/*
+          if-no-files-found: error
