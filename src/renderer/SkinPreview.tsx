@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { SkinViewer, IdleAnimation } from 'skinview3d';
-export function SkinPreview({ skin, rotate, animate }: { skin?: string; rotate: boolean; animate: boolean }) {
+export function SkinPreview({ skin, rotate, animate, model }: { skin?: string; rotate: boolean; animate: boolean; model?: 'classic' | 'slim' }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
@@ -27,11 +27,11 @@ export function SkinPreview({ skin, rotate, animate }: { skin?: string; rotate: 
       ctx.fillStyle = '#24252c'; ctx.fillRect(0, 16, 16, 16); ctx.fillRect(16, 48, 16, 16);
       ctx.fillStyle = '#eee'; ctx.fillRect(9, 11, 2, 1); ctx.fillRect(13, 11, 2, 1);
       const current = viewer;
-      void current.loadSkin(skin || placeholder.toDataURL()).catch(() => {
+      void current.loadSkin(skin || placeholder.toDataURL(), { model: model === 'classic' ? 'default' : model }).catch(() => {
         if (!disposed) void current.loadSkin(placeholder.toDataURL()).catch(() => setFailed(true));
       });
     } catch { setFailed(true); }
     return () => { disposed = true; viewer?.dispose(); };
-  }, [skin, rotate, animate]);
+  }, [skin, rotate, animate, model]);
   return <div className="skin-preview"><canvas ref={canvas} aria-label="Minecraft-Skin, mit der Maus drehbar" hidden={failed}/>{failed && <div className="skin-unavailable">◈<small>3D-Vorschau nicht verfügbar</small></div>}</div>;
 }
