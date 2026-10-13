@@ -6,7 +6,8 @@ const root = path.join(__dirname, '..');
 test('valid example configuration with no secrets', () => {
   const cfg = JSON.parse(fs.readFileSync(path.join(root, 'config.json'), 'utf8'));
   assert.equal(cfg.server.address.toLowerCase(), 'scarrix.net');
-  assert.equal(cfg.microsoft.clientId, '');
+  // OAuth public client IDs are identifiers, not passwords or client secrets.
+  assert.match(cfg.microsoft.clientId, /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i);
   assert.equal(cfg.curseforge.apiKey, '');
   assert.equal(cfg.modes[0].id, 'survival');
   assert.equal(cfg.modes.length, 6);
