@@ -3,7 +3,10 @@
   "private": true,
   "version": "0.2.0",
   "description": "Community Minecraft Java Launcher for Scarrix.net (unofficial)",
-  "author": "Scarrix Community",
+  "author": {
+    "name": "Scarrix Community",
+    "email": "100511650+MustafaNoob1@users.noreply.github.com"
+  },
   "license": "MIT",
   "main": "dist-electron/main.js",
   "scripts": {
