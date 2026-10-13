@@ -16,7 +16,7 @@
   "github": {
     "owner": "MustafaNoob1",
     "repo": "scarrix-client",
-    "privateRepo": true
+    "privateRepo": false
   },
   "modrinth": {
     "userAgent": "MustafaNoob1/scarrix-client/0.3.0"
@@ -68,8 +68,8 @@
   ],
   "news": [
     {
-      "title": "Scarrix Client – Vorschau",
-      "text": "Die News sind derzeit Beispielinhalte. Später kann hier deine Server-API angeschlossen werden."
+      "title": "Scarrix Client \u2013 Vorschau",
+      "text": "Die News sind derzeit Beispielinhalte. Sp\u00e4ter kann hier deine Server-API angeschlossen werden."
     }
   ],
   "launcher": {

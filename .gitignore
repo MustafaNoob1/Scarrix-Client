@@ -8,3 +8,7 @@ release/
 .DS_Store
 coverage/
 config.local.json
+qa-runtime/
+*.pem
+work/
+

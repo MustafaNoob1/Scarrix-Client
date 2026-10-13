@@ -22,8 +22,8 @@ test('all necessary source files exist', () => {
 });
 
 test('electron-updater uses the named CommonJS export (fix for the Electron startup crash)', () => {
-  const code = fs.readFileSync(path.join(root, 'src/main/updater.ts'), 'utf8');
-  assert.match(code, /import\s*\{\s*autoUpdater\s*\}\s*from\s*['"]electron-updater['"]/);
+  const code = fs.readFileSync(path.join(root, 'src/main/public-updater.ts'), 'utf8');
+  assert.match(code, /import\s*\{\s*autoUpdater(?:,\s*NsisUpdater)?\s*\}\s*from\s*['"]electron-updater['"]/);
   assert.doesNotMatch(code, /import\s+electronUpdater\s+from/);
 });
 test('launcher connects to the public Scarrix proxy instead of inaccessible backend ports', () => {
@@ -42,7 +42,7 @@ test('Minecraft files can be prepared without an approved Microsoft account', ()
   const game = fs.readFileSync(path.join(root, 'src/main/game.ts'), 'utf8');
   const main = fs.readFileSync(path.join(root, 'src/main/main.ts'), 'utf8');
   assert.match(game, /export async function prepareGame/);
-  assert.match(main, /ipcMain.handle\('game:prepare'/);
+  assert.match(main, /handle\('game:prepare'/);
 });
 
 test('backend status does not claim private backends are offline', () => {

@@ -8,6 +8,7 @@ function setup() {
   let temp;
   const fakeFs = {existsSync:()=>true,readFileSync:()=>config,mkdirSync:()=>{},writeFileSync:(_p,c)=>temp=c,renameSync:()=>config=temp};
   const box={exports:{},process,require:id=>{
+    if(id==='./operations')return {assertIdle:()=>{}};
     if(id==='electron')return {app:{getPath:()=>'/fake',isPackaged:false}};
     if(id==='node:fs')return fakeFs;
     if(id==='./memory')return {validMemory:gb=>gb>=.5 && gb<=16 && gb*1024%256===0};

@@ -5,6 +5,8 @@ import { pipeline } from 'node:stream/promises';
 import { Readable, Transform } from 'node:stream';
 import { getConfig, instancePath } from './config';
 import { ModHit, ModInstallResult } from './types';
+import { assertIdle } from './operations';
+import { progressReporter } from './downloads';
 
 const base = 'https://api.modrinth.com/v2';
 async function json(url: string, headers: Record<string, string> = {}): Promise<any> {
@@ -56,11 +58,13 @@ async function downloadJar(url: string, fileName: string, expectedSha512: string
     if (length > limit) throw new Error('Mod-Datei ist zu groß (maximal 150 MB).');
     const digest = crypto.createHash('sha512');
     let count = 0;
+    const detailedProgress=progressReporter('Mod herunterladen: '+fileName);
     const progress = new Transform({
       transform(chunk: Buffer, _enc, cb) {
         count += chunk.length;
         if (count > limit) return cb(new Error('Dateigrößenlimit überschritten.'));
         digest.update(chunk);
+        detailedProgress(count,length||null);
         if (length) notify(Math.round(count / length * 100));
         cb(null, chunk);
       }
@@ -73,6 +77,29 @@ async function downloadJar(url: string, fileName: string, expectedSha512: string
     return path.basename(dest);
   } catch (err) { if (fs.existsSync(temp)) fs.unlinkSync(temp); throw err; }
   finally { clearTimeout(timeout); }
+}
+export function installedMods(): Array<{filename:string;enabled:boolean;size:number}> {
+  const folder=path.join(instancePath(),'mods');
+  if(!fs.existsSync(folder))return [];
+  return fs.readdirSync(folder).filter(n=>/\.jar(?:\.disabled)?$/i.test(n)).filter(n=>!fs.lstatSync(path.join(folder,n)).isSymbolicLink()).map(filename=>({filename,enabled:!filename.endsWith('.disabled'),size:fs.statSync(path.join(folder,filename)).size})).sort((a,b)=>a.filename.localeCompare(b.filename));
+}
+function managedMod(filename:string) {
+  if(typeof filename!=='string'||path.basename(filename)!==filename||filename.includes('\\')||!/^.{1,190}\.jar(?:\.disabled)?$/i.test(filename))throw new Error('Ungültige Mod-Datei.');
+  const file=path.join(instancePath(),'mods',filename);
+  if(!fs.existsSync(file)||fs.lstatSync(file).isSymbolicLink()||!fs.statSync(file).isFile())throw new Error('Mod-Datei nicht gefunden.');
+  return file;
+}
+export function toggleMod(filename:string,enabled:boolean) {
+  assertIdle();const file=managedMod(filename);
+  const dest=enabled?file.replace(/\.disabled$/,''):file.endsWith('.disabled')?file:file+'.disabled';
+  if(file!==dest){if(fs.existsSync(dest))throw new Error('Eine Mod-Datei mit diesem Namen existiert bereits.');fs.renameSync(file,dest);}
+  return installedMods();
+}
+export function removeMod(filename:string) {
+  assertIdle();const file=managedMod(filename);
+  const folder=path.join(instancePath(),'removed-mods');fs.mkdirSync(folder,{recursive:true});
+  fs.renameSync(file,path.join(folder,Date.now()+'-'+crypto.randomUUID()+'-'+filename));
+  return installedMods();
 }
 
 export async function installMod(source: 'modrinth' | 'curseforge', id: string, notify: (percent: number) => void): Promise<ModInstallResult> {
@@ -103,3 +130,4 @@ export async function installMod(source: 'modrinth' | 'curseforge', id: string, 
   const dependencies = (selected.dependencies ?? []).filter((d: any) => d.relationType === 3).map((d: any) => String(d.modId));
   return { filename, dependencies };
 }
+

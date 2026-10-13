@@ -1,15 +1,13 @@
-# Sicherer Update-Kanal
-Preview 0.3.1 bleibt ohne automatisches Update, bis ein Betreiber den Kanal bereitstellt.
-Private GitHub-Releases sind nicht anonym herunterladbar. Keine GitHub-Zugangsdaten im Client.
-## Betrieb
-HTTPS-Dateiserver/CDN für veröffentlichte Installer, latest.yml und blockmap bereitstellen. Stabile Updates und Preview getrennt halten.
-Windows-EXE mit Authenticode signieren. In update-channel.json den vollständigen Zertifikat-Subject als publisher pinnen, HTTPS-Basis-URL setzen und enabled aktivieren. Danach Client neu bauen. Die Datei liegt in den App-Ressourcen und kann nicht durch Launcher-Einstellungen verändert werden.
-CI kopiert die Dateien mit ausschließlich serverseitigen Secrets auf den Kanal; Metadaten zuletzt atomar austauschen. SHA512 prüft Download-Integrität; zusätzlich muss Authenticode gültig sein und exakt der gepinnte Subject passen.
-Alternativ privater Backend-Dienst: GitHub-App-Zugriff ausschließlich auf dem Server, mit kurzlebigen URLs nach Benutzeranmeldung. Noch nicht implementiert; Microsoft-Login allein berechtigt nicht zum GitHub-Repository.
-## Grenzen und Abnahme
-Windows NSIS: Download, Fortschritt, Signaturprüfung, expliziter Installations-/Neustartdialog. Später installiert nicht beim Beenden.
-macOS/Linux bleiben gesperrt, bis ihre Signaturprüfung und Verteilung eingerichtet sind.
-Zertifikat, Hosting und Serverzugang fehlen. Daher ist der Live-Kanal deaktiviert. Vor Freigabe zwei installierte signierte Versionen testen: Upgrade, falscher Herausgeber, beschädigter Download, Netzwerkunterbrechung, späterer Neustart. Die unsignierten Preview-Installer bleiben manuell installierbar.
-https://www.electron.build/v26/docs/win/
+# Einmalige Einrichtung der Update-Signierung
 
-Auch build.win.signtoolOptions.publisherName auf den Zertifikat-Herausgeber setzen (der Platzhalter erzwingt im unsignierten Preview die Verifier-Ausführung, ist keine echte Signatur). Signier-Secrets nur in CI, niemals im Repository.
+1. In GitHub: Repository Settings → Secrets and variables → Actions → New repository secret.
+2. Name: SCARRIX_UPDATE_PRIVATE_KEY
+3. Wert: kompletter PEM-Inhalt des lokal bereitgestellten privaten Signierschlüssels, inklusive BEGIN/END-Zeilen.
+4. Die Pipeline „Public installers and signed preview updates“ erneut starten oder eine Änderung veröffentlichen.
+5. Im veröffentlichten Release müssen scarrix-update.json und scarrix-update.sig vorhanden sein.
+
+Der öffentliche Schlüssel ist in update-channel.json eingebaut. Der private Schlüssel wird ausschließlich im Signierschritt als GitHub-Secret verwendet. Nicht als Repository-Datei, Release-Anhang, Nachricht oder Build-Artefakt veröffentlichen.
+Alte Clients bis 0.4.1 einmal manuell auf 0.5 aktualisieren. Danach funktionieren neuere signierte Windows-Updates in der App.
+Die Signatur authentifiziert die Metadaten und den vollständigen Installer. Ein Authenticode-Zertifikat ist dafür nicht erforderlich; Windows SmartScreen kann bei einer Erstinstallation weiterhin eine Meldung anzeigen.
+Bei Schlüsselwechsel müssen bestehende Clients erst mit dem alten Schlüssel eine Version mit dem neuen Vertrauen erhalten. Nicht einfach den öffentlichen Schlüssel austauschen.
+Release-Dateien nach Veröffentlichung nicht ändern. Eine neue Version veröffentlichen.

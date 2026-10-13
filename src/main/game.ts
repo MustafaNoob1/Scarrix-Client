@@ -2,8 +2,11 @@ import { memoryInfo } from './memory';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import fs from 'node:fs';
+import { ensureJava } from './java';
+import { runInstallerTask, stepStatus } from './downloads';
+import { exclusive, setGameRunning } from './operations';
 import { Version, launch } from '@xmcl/core';
-import { getVersionList, install, installDependencies, getLoaderArtifactListFor, installFabric, getForgeVersionList, installForge } from '@xmcl/installer';
+import { getVersionList, installTask, installDependenciesTask, getLoaderArtifactListFor, installFabric, getForgeVersionList, installForge } from '@xmcl/installer';
 import { getConfig, rootPath, instancePath } from './config';
 import { getSessionToken, getPublicProfile } from './auth';
 const execFileAsync = promisify(execFile);
@@ -17,7 +20,7 @@ export async function javaVersion(): Promise<string> {
 // Download and check Minecraft files without requiring an approved Microsoft application.
 async function doPrepare(notify: (message: string) => void) {
   const cfg = getConfig();
-    await javaVersion();
+    const javaPath = await ensureJava(cfg.minecraft.version);
     const mcRoot = rootPath();
     const gameRoot = instancePath();
     fs.mkdirSync(mcRoot, { recursive: true });
@@ -27,26 +30,28 @@ async function doPrepare(notify: (message: string) => void) {
     const vanilla = versions.find(v => v.id === minecraft.version && v.type === 'release');
     if (!vanilla) throw new Error('Minecraft-Version nicht im offiziellen Manifest gefunden.');
     notify(`Prüfe Minecraft ${minecraft.version} …`);
-    await install(vanilla, mcRoot);
+    await runInstallerTask(installTask(vanilla, mcRoot), 'Minecraft-Dateien herunterladen');
     let launchVersion = minecraft.version;
     if (minecraft.loader === 'fabric') {
+      stepStatus('Fabric installieren');
       notify('Installiere Fabric …');
       const loaders = await getLoaderArtifactListFor(minecraft.version);
       const selected = loaders[0];
       if (!selected) throw new Error('Keine Fabric-Version verfügbar.');
       launchVersion = await installFabric(selected, mcRoot);
     } else if (minecraft.loader === 'forge') {
+      stepStatus('Forge installieren');
       notify('Installiere Forge …');
       const list = await getForgeVersionList({ minecraft: minecraft.version });
       const selected = list.versions?.[0];
       if (!selected) throw new Error('Kein Forge-Loader für diese Version gefunden.');
-      launchVersion = await installForge(selected, mcRoot, { java: minecraft.javaPath });
+      launchVersion = await installForge(selected, mcRoot, { java: javaPath });
     } else if (minecraft.loader === 'quilt') {
       throw new Error('Quilt-Installation ist noch nicht implementiert. Wähle vorerst Vanilla, Fabric oder Forge.');
     }
     const resolved = await Version.parse(mcRoot, launchVersion);
-    await installDependencies(resolved);
-  return { resolved, gameRoot, mcRoot };
+    await runInstallerTask(installDependenciesTask(resolved), 'Bibliotheken und Spieldaten prüfen');
+  return { resolved, gameRoot, mcRoot, javaPath };
 }
 let preparing: ReturnType<typeof doPrepare> | null = null;
 function prepareMinecraft(notify: (message: string) => void) {
@@ -54,13 +59,17 @@ function prepareMinecraft(notify: (message: string) => void) {
   return preparing;
 }
 export async function prepareGame(notify: (message: string) => void): Promise<string> {
-  await prepareMinecraft(notify);
+  await exclusive('Minecraft vorbereiten', () => prepareMinecraft(notify));
+  stepStatus('Minecraft ist vorbereitet', 'done');
   return 'Minecraft-Dateien vorbereitet. Zum echten Spielstart ist weiterhin die Microsoft-/Minecraft-Anmeldung erforderlich.';
 }
 
 let launching = false;
 
 export async function startGame(modeId: string, notify: (message: string) => void): Promise<string> {
+  return exclusive('Minecraft starten', () => doStartGame(modeId, notify));
+}
+async function doStartGame(modeId: string, notify: (message: string) => void): Promise<string> {
   if (launching) throw new Error('Minecraft wird bereits vorbereitet.');
   launching = true;
   try {
@@ -70,11 +79,11 @@ export async function startGame(modeId: string, notify: (message: string) => voi
     const profile = getPublicProfile();
     const token = getSessionToken();
     if (!profile) throw new Error('Bitte zuerst mit Microsoft anmelden.');
-    const { resolved, gameRoot, mcRoot } = await prepareMinecraft(notify);
+    const { resolved, gameRoot, mcRoot, javaPath } = await prepareMinecraft(notify);
     const minecraft = cfg.minecraft;
     notify('Minecraft wird gestartet …');
     const child = await launch({
-      javaPath: minecraft.javaPath || 'java',
+      javaPath,
       gamePath: gameRoot,
       resourcePath: mcRoot,
       version: resolved,
@@ -84,8 +93,11 @@ export async function startGame(modeId: string, notify: (message: string) => voi
       minMemory: 512, maxMemory: Math.min(minecraft.ramGB * 1024, memoryInfo().maxMB),
       server: { ip: cfg.server.address, port: cfg.server.port }
     });
-    child.on('error', err => notify('Minecraft-Prozessfehler: ' + err.message));
-    child.on('exit', code => notify(`Minecraft beendet (Code ${code ?? 'unbekannt'}).`));
+    stepStatus('Minecraft gestartet', 'done');
+    setGameRunning(true);
+    child.on('error', err => {setGameRunning(false);notify('Minecraft-Prozessfehler: ' + err.message);});
+    child.on('exit', code => {setGameRunning(false);notify(`Minecraft beendet (Code ${code ?? 'unbekannt'}).`);});
     return `Minecraft gestartet für ${profile.name}. Verbinde über ${cfg.server.address}:${cfg.server.port}; wähle ${mode.group ? mode.group + " / " : ""}${mode.name} innerhalb des Netzwerks. Ein automatischer Wechsel zum Unterserver ist ohne Scarrix-Routing-API nicht möglich.`;
   } finally { launching = false; }
 }
+

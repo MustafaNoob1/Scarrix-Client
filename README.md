@@ -281,3 +281,8 @@ Unter **Einstellungen** gibt es außerdem einen Link zu [Eclipse Temurin / Adopt
 - Unter Launcher-Einstellungen führt **Nach Updates suchen** bei diesem privaten Repository auf die GitHub-Releases-Seite. Direkte automatische Installation aus einem privaten Repository ist ohne sicheren öffentlichen Update-Kanal nicht möglich.
 - Benutzer mit bestehender `config.json` werden automatisch auf die neue Instanzverwaltung migriert.
 
+
+
+
+## Version 0.5
+Profilbearbeitung, Import/Export, Java-Automatik, installierte Mods, Download-Anzeige und lokale Logs: [Funktionsübersicht](docs/FEATURES-0.5.md). Öffentliche Updates: [einmalige Signiereinrichtung](docs/UPDATE-SETUP.md).

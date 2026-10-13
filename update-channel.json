@@ -1,5 +1,4 @@
 {
-  "enabled": false,
-  "url": "",
-  "publisher": ""
+  "enabled": true,
+  "publicKey": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEAouL5WAvU/8vxkWENr26GyiGJMIaYonynr3Gw+3L270Q=\n-----END PUBLIC KEY-----\n"
 }

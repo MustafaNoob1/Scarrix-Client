@@ -3,12 +3,13 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { validMemory } from './memory';
 import { officialVersions } from './versions';
+import { assertIdle } from './operations';
 import { Config, Instance } from './types';
 
 const defaults: Config = {
   server: { name: 'Scarrix.net', address: 'Scarrix.net', port: 25565 },
   minecraft: { version: '1.21.1', loader: 'vanilla', javaPath: 'java', ramGB: 4 },
-  microsoft: { clientId: '604d79e5-9f8c-4e1c-ab0f-6d8001175151' }, github: { owner: 'MustafaNoob1', repo: 'scarrix-client', privateRepo: true },
+  microsoft: { clientId: '604d79e5-9f8c-4e1c-ab0f-6d8001175151' }, github: { owner: 'MustafaNoob1', repo: 'scarrix-client', privateRepo: false },
   modrinth: { userAgent: 'MustafaNoob1/scarrix-client/0.1.1' },
   curseforge: { apiKey: '' }, language: 'de',
   launcher: { theme: 'red' },
@@ -32,7 +33,10 @@ export function instancePath(): string {
   // Different version/loader combinations have different mods and configs.
   const safe = `${instance.version}-${instance.loader}`.replace(/[^a-zA-Z0-9._-]/g, '_');
   const suffix = config.activeInstanceId === 'default' ? '' : `-${config.activeInstanceId}`;
-  return path.join(rootPath(), 'instances', safe + suffix);
+  const destination=path.join(rootPath(),'instances',config.activeInstanceId);
+  const legacy=path.join(rootPath(),'instances',safe+suffix);
+  if(!fs.existsSync(destination)&&fs.existsSync(legacy))fs.renameSync(legacy,destination);
+  return destination;
 }
 function location(): string { return path.join(appData(), 'config.json'); }
 
@@ -75,7 +79,8 @@ export function getConfig(): Config {
   };
 }
 
-export async function saveConfig(value: Config): Promise<Config> {
+export async function saveConfig(value: Config, internal = false): Promise<Config> {
+  if(!internal)assertIdle();
   // The renderer can only update launcher preferences and selected Minecraft instances.
   // Microsoft credentials, API keys and server endpoints stay under main-process control.
   const existing = getConfig();
@@ -96,6 +101,11 @@ export async function saveConfig(value: Config): Promise<Config> {
   }
   const active = value.instances.find(item => item.id === value.activeInstanceId);
   if (!active) throw new Error('Bitte wähle eine vorhandene Instanz.');
+  for (const old of existing.instances) {
+    const legacy=path.join(rootPath(),'instances',old.version+'-'+old.loader+(old.id==='default'?'':'-'+old.id));
+    const target=path.join(rootPath(),'instances',old.id);
+    if(fs.existsSync(legacy)&&!fs.existsSync(target))fs.renameSync(legacy,target);
+  }
   const safe: Config = {
     ...existing, language: value.language,
     launcher: { theme: value.launcher.theme, rotateSkin: value.launcher.rotateSkin !== false, animations: value.launcher.animations !== false, background: ['grid','glow','plain'].includes(value.launcher.background ?? '') ? value.launcher.background : 'grid' },

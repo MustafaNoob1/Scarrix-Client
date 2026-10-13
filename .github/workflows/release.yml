@@ -1,43 +1,40 @@
-name: Scarrix Client installers and preview release
-
+name: Public installers and signed preview updates
 on:
   push:
     branches: [main]
   workflow_dispatch:
-
 permissions:
   contents: write
-
 concurrency:
-  group: scarrix-preview-${{ github.ref }}
+  group: scarrix-public-release
   cancel-in-progress: true
-
 jobs:
   build:
-    name: Installer (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
+    name: Installer (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-      - name: Install locked dependencies
-        run: npm ci --no-audit --no-fund
+      - run: npm ci --no-audit --no-fund
+      - name: Stamp unique preview version
+        run: node scripts/prepare-release.cjs
       - name: Check TypeScript and run tests
         run: |
           npm run typecheck
           npm test
-      - name: Package installable client
+      - name: Build installer and update metadata
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         run: npm run dist -- --publish never
-      - name: Store installer artifacts
-        uses: actions/upload-artifact@v4
+      - run: node scripts/update-metadata.cjs
+      - uses: actions/upload-artifact@v4
         with:
           name: scarrix-installer-${{ matrix.os }}
           path: |
@@ -50,31 +47,36 @@ jobs:
             release/*.blockmap
           if-no-files-found: error
           retention-days: 30
-
-  publish-preview:
-    name: Create downloadable private GitHub preview
-    needs: [build]
+  publish:
+    needs: build
     runs-on: ubuntu-latest
-    if: ${{ needs.build.result == 'success' }}
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - uses: actions/download-artifact@v4
         with:
           pattern: scarrix-installer-*
           path: release-assets
           merge-multiple: true
-      - name: List installers
-        run: ls -lah release-assets/
-      - name: Publish prerelease
+      - name: Cryptographically sign released files
+        env:
+          SCARRIX_UPDATE_PRIVATE_KEY: ${{ secrets.SCARRIX_UPDATE_PRIVATE_KEY }}
+        run: node scripts/sign-updates.cjs release-assets
+      - name: Publish public preview
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         shell: bash
         run: |
           set -euo pipefail
-          tag="preview-0.4.1-${GITHUB_RUN_NUMBER}"
-          gh release create "$tag" release-assets/* \
-            --target "$GITHUB_SHA" \
-            --title "Scarrix Client 0.4.1 Preview #${GITHUB_RUN_NUMBER}" \
-            --prerelease \
-            --notes "Automatisch gebauter TEST-Release für Windows (Setup EXE), macOS (DMG/ZIP) und Linux (AppImage/DEB). Microsoft/Minecraft-Login benötigt weiterhin die offizielle Freigabe. Nicht signiert. Privates Repository: Downloads nur für berechtigte GitHub-Nutzer."
-
+          base=$(node -p "require('./package.json').version.split('-')[0]")
+          tag="v${base}-beta.${GITHUB_RUN_NUMBER}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release already exists; published update files remain immutable."
+            exit 0
+          fi
+          gh release create "$tag" release-assets/* --target "$GITHUB_SHA" --title "Scarrix Client ${base} Preview #${GITHUB_RUN_NUMBER}" --prerelease --notes "Öffentliche Preview. Windows EXE, macOS DMG/ZIP, Linux AppImage/DEB. Microsoft-Freigabe steht aus. In-App-Installation nur bei vorhandener, gültiger scarrix-update.sig. Installer haben kein kostenpflichtiges Authenticode-Zertifikat; Windows kann SmartScreen anzeigen."
