@@ -12,4 +12,4 @@ macOS/Linux bleiben gesperrt, bis ihre Signaturprüfung und Verteilung eingerich
 Zertifikat, Hosting und Serverzugang fehlen. Daher ist der Live-Kanal deaktiviert. Vor Freigabe zwei installierte signierte Versionen testen: Upgrade, falscher Herausgeber, beschädigter Download, Netzwerkunterbrechung, späterer Neustart. Die unsignierten Preview-Installer bleiben manuell installierbar.
 https://www.electron.build/v26/docs/win/
 
-Auch build.win.publisherName auf den Zertifikat-Herausgeber setzen (der Platzhalter erzwingt im unsignierten Preview die Verifier-Ausführung, ist keine echte Signatur). Signier-Secrets nur in CI, niemals im Repository.
+Auch build.win.signtoolOptions.publisherName auf den Zertifikat-Herausgeber setzen (der Platzhalter erzwingt im unsignierten Preview die Verifier-Ausführung, ist keine echte Signatur). Signier-Secrets nur in CI, niemals im Repository.

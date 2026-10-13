@@ -72,10 +72,12 @@
       "target": [
         "nsis"
       ],
-      "publisherName": [
-        "Scarrix Update Publisher"
-      ],
-      "verifyUpdateCodeSignature": true
+      "verifyUpdateCodeSignature": true,
+      "signtoolOptions": {
+        "publisherName": [
+          "Scarrix Update Publisher"
+        ]
+      }
     },
     "mac": {
       "target": [
