@@ -7,7 +7,7 @@ export interface Config {
   github: { owner: string; repo: string; privateRepo?: boolean };
   modrinth: { userAgent: string };
   curseforge: { apiKey: string };
-  launcher: { theme: 'red' | 'blue' | 'purple' | 'gold' };
+  launcher: { theme: 'red' | 'blue' | 'purple' | 'gold'; rotateSkin?: boolean; animations?: boolean; background?: 'grid' | 'glow' | 'plain' };
   instances: Instance[];
   activeInstanceId: string;
   language: 'de' | 'en';
@@ -18,3 +18,4 @@ export interface Profile { id: string; name: string; skins: Array<{ id?: string;
 export interface ModHit { id: string; name: string; description: string; downloads: number; source: 'modrinth' | 'curseforge'; icon?: string }
 export interface DeviceMessage { code: string; url: string; message: string }
 export interface ModInstallResult { filename: string; dependencies: string[] }
+

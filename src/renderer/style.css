@@ -86,3 +86,6 @@
 @media(max-width:1150px){.shell .main{padding:30px 25px}.launch-controls{flex-wrap:wrap}.launch-controls .play-button{flex:1}.shell .mode-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:820px){.shell .sidebar{width:75px;padding:17px 8px}.shell .brand{padding:0 7px 22px}.shell .brand>div:nth-child(2){display:none}.shell .nav{font-size:0;justify-content:center;padding:14px}.shell .symbol{font-size:21px}.shell .account>div:nth-child(2),.shell .account-btn{display:none}.shell .main{width:calc(100% - 75px);padding:24px 18px}.shell .hero-copy{max-width:100%}.shell .hero-art{opacity:.15}.shell .summary{grid-template-columns:1fr 1fr}.preferences-grid{grid-template-columns:1fr}.launch-detail{flex-direction:column;align-items:flex-start}.update-section,.info-section{align-items:flex-start;flex-direction:column}.shell .mode-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.shell .summary,.shell .mode-grid,.shell .news-grid{grid-template-columns:1fr}.shell .hero-copy{padding:25px}.shell .hero-tags{display:none}.launch-title{flex-direction:column;align-items:flex-start}.launch-controls>*{width:100%}.shell .main header .header-chip{display:none}}
+
+
+

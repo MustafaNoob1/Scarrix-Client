@@ -70,7 +70,7 @@ export function getConfig(): Config {
   const selected = instances.find(item => item.id === custom.activeInstanceId) ?? instances[0];
   const theme = ['red', 'blue', 'purple', 'gold'].includes(custom.launcher?.theme ?? '') ? custom.launcher!.theme : 'red';
   return {
-    ...combined, instances, activeInstanceId: selected.id, launcher: { theme },
+    ...combined, instances, activeInstanceId: selected.id, launcher: { theme, rotateSkin: custom.launcher?.rotateSkin !== false, animations: custom.launcher?.animations !== false, background: ['grid','glow','plain'].includes(custom.launcher?.background ?? '') ? custom.launcher!.background : 'grid' },
     minecraft: { ...combined.minecraft, version: selected.version, loader: selected.loader, ramGB: selected.ramGB }
   };
 }
@@ -88,7 +88,7 @@ export async function saveConfig(value: Config): Promise<Config> {
   for (const item of value.instances) {
     if (!/^[a-zA-Z0-9_-]{1,60}$/.test(item.id) || ids.has(item.id)) throw new Error('Ungültige oder doppelte Instanz-ID.');
     ids.add(item.id);
-    if (!/^[a-zA-Z0-9 ._-]{1,50}$/.test(item.name)) throw new Error('Ungültiger Instanzname.');
+    if (typeof item.name !== 'string' || !item.name.trim() || item.name.length > 50 || /[\u0000-\u001f\u007f]/.test(item.name)) throw new Error('Ungültiger Instanzname.');
     if (!/^\d+\.\d+(?:\.\d+)?(?:[.-][\w.]+)?$/.test(item.version)) throw new Error('Ungültige Minecraft-Version.');
     if (!['vanilla', 'fabric', 'forge'].includes(item.loader)) throw new Error('Unbekannter Mod-Loader.');
     if (!validMemory(item.ramGB)) throw new Error('RAM muss zwischen 512 MB und dem physischen Systemspeicher liegen (256-MB-Schritte).');
@@ -98,7 +98,7 @@ export async function saveConfig(value: Config): Promise<Config> {
   if (!active) throw new Error('Bitte wähle eine vorhandene Instanz.');
   const safe: Config = {
     ...existing, language: value.language,
-    launcher: { theme: value.launcher.theme },
+    launcher: { theme: value.launcher.theme, rotateSkin: value.launcher.rotateSkin !== false, animations: value.launcher.animations !== false, background: ['grid','glow','plain'].includes(value.launcher.background ?? '') ? value.launcher.background : 'grid' },
     instances: value.instances,
     activeInstanceId: active.id,
     minecraft: { ...existing.minecraft, version: active.version, loader: active.loader, ramGB: active.ramGB }
@@ -110,3 +110,4 @@ export async function saveConfig(value: Config): Promise<Config> {
   fs.renameSync(temp, file);
   return getConfig();
 }
+

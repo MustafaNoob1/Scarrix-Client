@@ -69,5 +69,6 @@ test('instances and themes are configured through main process', () => {
   assert.match(cfg, /activeInstanceId/);
   assert.match(cfg, /instances: value\.instances/);
   assert.match(ui, /Neue Instanz erstellen/);
-  assert.match(ui, /theme: e\.target\.value/);
+  assert.match(ui, /launcher:\{\.\.\.config\.launcher,theme\}/);
 });
+
