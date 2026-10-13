@@ -5,7 +5,7 @@ import './style.css';
 
 type Tab = 'home' | 'mods' | 'skins' | 'capes' | 'settings';
 const de = {
-  home: 'Startseite', mods: 'Mods', skins: 'Skins', capes: 'Capes', settings: 'Einstellungen',
+  home: 'Spielen', mods: 'Mods', skins: 'Skins', capes: 'Capes', settings: 'Einstellungen',
   account: 'Minecraft-Konto', login: 'Mit Microsoft anmelden', logout: 'Abmelden',
   server: 'Serverübersicht', players: 'Spieler online', play: 'Spielen', check: 'Aktualisieren',
   news: 'Ankündigungen', search: 'Mods suchen', install: 'Installieren',
@@ -14,7 +14,7 @@ const de = {
   guest: 'Nicht angemeldet', required: 'Für Minecraft Java ist ein gültiges Microsoft-Konto nötig.'
 };
 const en: typeof de = {
-  home: 'Home', mods: 'Mods', skins: 'Skins', capes: 'Capes', settings: 'Settings',
+  home: 'Play', mods: 'Mods', skins: 'Skins', capes: 'Capes', settings: 'Settings',
   account: 'Minecraft account', login: 'Sign in with Microsoft', logout: 'Sign out',
   server: 'Server status', players: 'Online players', play: 'Play', check: 'Refresh',
   news: 'Announcements', search: 'Search mods', install: 'Install',
@@ -40,6 +40,12 @@ function App() {
   const [skins, setSkins] = useState<SavedImage[]>([]);
   const [capes, setCapes] = useState<SavedImage[]>([]);
   const [paths, setPaths] = useState<{minecraft: string; instance: string} | null>(null);
+  const [selectedModeId, setSelectedModeId] = useState('survival');
+  const [showNewInstance, setShowNewInstance] = useState(false);
+  const [draftVersion, setDraftVersion] = useState('1.21.1');
+  const [draftLoader, setDraftLoader] = useState<'vanilla' | 'fabric' | 'forge'>('vanilla');
+  const [draftRam, setDraftRam] = useState(4);
+  const [appVersion, setAppVersion] = useState('0.3.0');
   const t = config?.language === 'en' ? en : de;
 
   const run = async <T,>(job: () => Promise<T>, done?: (result:T) => void) => {
@@ -54,6 +60,7 @@ function App() {
   };
   useEffect(() => {
     window.scarrix.config.get().then(setConfig).catch(e => setNotice(String(e)));
+    window.scarrix.version().then(setAppVersion).catch(() => {});
     window.scarrix.auth.profile().then(setProfile).catch(() => {});
     window.scarrix.paths().then(setPaths).catch(() => {});
     refresh();
@@ -67,18 +74,49 @@ function App() {
     if (tab === 'capes') window.scarrix.capes.library().then(setCapes).catch(e => setNotice(String(e)));
     if (tab === 'settings') window.scarrix.paths().then(setPaths).catch(() => {});
   }, [tab]);
-  const patch = (section: keyof Config, name: string, value: string | number) => {
+  const activeInstance = config?.instances.find(i => i.id === config.activeInstanceId) ?? config?.instances[0];
+  const selectedMode = config?.modes.find(m => m.id === selectedModeId) ?? config?.modes[0];
+  const save = (next: Config, success?: () => void) => run(() => window.scarrix.config.save(next), saved => {
+    setConfig(saved);
+    success?.();
+    window.scarrix.paths().then(setPaths).catch(() => {});
+  });
+  const chooseInstance = (id: string) => {
     if (!config) return;
-    const group = config[section];
-    if (!group || Array.isArray(group) || typeof group !== 'object') return;
-    setConfig({ ...config, [section]: { ...group, [name]: value } });
+    const target = config.instances.find(i => i.id === id);
+    if (!target) return;
+    save({ ...config, activeInstanceId: target.id, minecraft: { ...config.minecraft, version: target.version, loader: target.loader, ramGB: target.ramGB } });
+  };
+  const createInstance = () => {
+    if (!config) return;
+    const version = draftVersion.trim();
+    if (!/^\\d+\\.\\d+(?:\\.\\d+)?(?:[.-][\\w.]+)?$/.test(version)) {
+      setNotice('Bitte gib eine gültige Minecraft-Version an, z. B. 1.21.1.'); return;
+    }
+    if (!Number.isInteger(draftRam) || draftRam < 2 || draftRam > 32) {
+      setNotice('Bitte wähle 2 bis 32 GB RAM.'); return;
+    }
+    if (config.instances.length >= 16) { setNotice('Maximal 16 Instanzen möglich.'); return; }
+    const id = 'instance-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7);
+    const instance = { id, name: version + ' · ' + draftLoader.toUpperCase(), version, loader: draftLoader, ramGB: draftRam };
+    save({ ...config, instances: [...config.instances, instance], activeInstanceId: id,
+      minecraft: { ...config.minecraft, version, loader: draftLoader, ramGB: draftRam } },
+      () => { setShowNewInstance(false); setNotice('Instanz erstellt und ausgewählt.'); });
+  };
+  const deleteInstance = () => {
+    if (!config || !activeInstance || config.instances.length < 2) return;
+    const instances = config.instances.filter(i => i.id !== activeInstance.id);
+    const target = instances[0];
+    save({ ...config, instances, activeInstanceId: target.id,
+      minecraft: { ...config.minecraft, version: target.version, loader: target.loader, ramGB: target.ramGB } },
+      () => setNotice('Instanz aus der Auswahl entfernt. Vorhandene Minecraft-Dateien bleiben erhalten.'));
   };
   const connect = () => run(() => window.scarrix.auth.start(), res => { setProfile(res); setDevice(null); setNotice(`Angemeldet als ${res.name}`); });
   if (!config) return <main className="loading">Scarrix Client wird vorbereitet …</main>;
 
-  return <div className="shell">
+  return <div className="shell" data-theme={config.launcher.theme}>
     <aside className="sidebar">
-      <div className="brand"><div className="logo">S</div><div><b>SCARRIX</b><small>CLIENT · PREVIEW 0.2</small></div></div>
+      <div className="brand"><div className="logo">S</div><div><b>SCARRIX</b><small>CLIENT · v{appVersion}</small></div></div>
       <div className="divider"></div>
       <nav>{(['home', 'mods', 'skins', 'capes', 'settings'] as Tab[]).map(item =>
         <button key={item} className={tab === item ? 'nav active' : 'nav'} onClick={() => setTab(item)}>
@@ -90,19 +128,50 @@ function App() {
       <button className="btn outline account-btn" disabled={busy} onClick={profile ? () => run(() => window.scarrix.auth.logout(), () => setProfile(null)) : connect}>{profile ? t.logout : t.login}</button>
     </aside>
     <main className="main">
-      <header><div><p className="overline">SCARRIX.NET / LAUNCHER</p><h1>{t[tab]}</h1></div><span className="header-chip">Minecraft Java</span></header>
+      <header><div><p className="overline">SCARRIX NETWORK <span className="overline-separator">/</span> DESKTOP LAUNCHER</p><h1>{t[tab]}</h1></div><span className="header-chip"><span className="live-dot"></span> MINECRAFT JAVA EDITION</span></header>
       {notice && <div className="alert" role="status"><b>{t.notice}:</b> {notice}<button aria-label="Schließen" onClick={() => setNotice('')}>×</button></div>}
       {progress !== null && <div className="progress"><div style={{width: `${progress}%`}}></div><span>{progress}%</span></div>}
       {device && <section className="device panel"><h2>Microsoft-Anmeldung</h2><p>Öffne die Microsoft-Seite im Browser und gib dort den Code ein. Dein Passwort gehört ausschließlich auf die offizielle Microsoft-Seite.</p><div className="device-row"><code>{device.code}</code><button className="btn" onClick={() => window.scarrix.openUrl(device.url).catch(e => setNotice(String(e)))}>Microsoft-Anmeldeseite öffnen ↗</button></div><small>{device.url}</small></section>}
 
+
       {tab === 'home' && <>
-        <section className="hero"><div className="hero-copy"><p className="eyebrow">DEIN MINECRAFT · DEIN SERVER</p><h2>Dein Abenteuer<br/><span>beginnt hier.</span></h2><p>Verbinde dich direkt mit {config.server.name}. Wähle deinen Modus und starte Minecraft.</p><button className="btn primary" disabled={busy || !profile} onClick={() => run(() => window.scarrix.game(config.modes[0].id), setNotice)}>{profile ? '▶  Scarrix-Lobby starten' : 'Zuerst mit Microsoft anmelden'}</button><button className="btn outline" disabled={busy} onClick={() => run(() => window.scarrix.gamePrepare(), setNotice)}>Minecraft-Dateien ohne Login vorbereiten</button></div><div className="hero-art"><div className="pixel p1"></div><div className="pixel p2"></div><div className="pixel p3"></div><div className="hero-emblem">S</div></div></section>
-        <div className="section-row"><h2>{t.server}</h2><button className="btn ghost" onClick={refresh}>{t.check} ↻</button></div>
-        <div className="summary"><div className="stat panel"><span className="dot" style={{background: status?.online ? '#59df9c' : '#eb7c7c'}}></span><div><small>Scarrix.net</small><b>{status ? (status.online ? 'Online' : 'Offline') : '—'}</b></div></div><div className="stat panel"><span className="stat-symbol">♟</span><div><small>{t.players}</small><b>{status?.players ?? '—'} / {status?.maxPlayers ?? '—'}</b></div></div><div className="stat panel"><span className="stat-symbol">▣</span><div><small>Minecraft</small><b>{status?.version ?? config.minecraft.version}</b></div></div></div>
-        <div className="section-row"><h2>Spielmodi</h2><small>Die Spielerzahl gilt aktuell nur für das gesamte Netzwerk.</small></div>
-        <p className="backend-notice">Unterserver-IP und Port: nur zur Information (nicht bearbeitbar). Der Spielstart erfolgt über Scarrix.net; wähle deinen Spielmodus anschließend in der Lobby. Direkte Unterserver-Verbindungen wurden nicht bestätigt.</p>
-        <div className="mode-grid">{config.modes.map((m, i) => <div className="mode-card panel" key={m.id}><div className="mode-icon">{['⛏','⚔','▦','✦'][i % 4]}</div>{m.group && <small className="mode-group">{m.group} · 3 Untermodi</small>}<h3>{m.name}</h3><p className="mode-endpoint" title="Nur Anzeige; diese Backend-Adresse wird nicht zum Spielstart verwendet">Backend (nur Anzeige): <code>{m.address}:{m.port}</code></p><div className="mode-availability">{(() => { const state = backendStatuses?.find(s => s.id === m.id); return !backendStatuses ? "Prüfe Erreichbarkeit …" : state?.online ? `Extern erreichbar · ${state.players ?? "?"} Spieler` : "Extern nicht prüfbar (privater Backend-Port möglich)"; })()}</div><button className="btn outline" disabled={busy || !profile} onClick={() => run(() => window.scarrix.game(m.id), setNotice)}>Lobby starten →</button></div>)}</div>
-        <div className="section-row"><h2>{t.news}</h2></div><div className="news-grid">{config.news.length ? config.news.map((n,i) => <article className="panel news" key={i}><span className="eyebrow">NEWS</span><h3>{n.title}</h3><p>{n.text}</p></article>) : <article className="panel news">Noch keine Server-News konfiguriert.</article>}</div>
+        <section className="hero">
+          <div className="hero-copy">
+            <p className="eyebrow">SCARRIX.NET / DEIN NETZWERK</p>
+            <h2>Eine Welt.<br/><span>Unendliche Möglichkeiten.</span></h2>
+            <p>Alles bereit für dein nächstes Abenteuer. Wähle deine Minecraft-Instanz und starte direkt ins Netzwerk.</p>
+            <div className="hero-tags"><span>JAVA EDITION</span><span>MULTIPLAYER</span><span>COMMUNITY</span></div>
+          </div>
+          <div className="hero-art" aria-hidden="true"><div className="hero-ring ring-one"></div><div className="hero-ring ring-two"></div><div className="hero-emblem">S</div></div>
+        </section>
+
+        <section className="launch-card panel">
+          <div className="launch-title"><div><p className="eyebrow">QUICK LAUNCH</p><h2>Bereit zum Spielen?</h2></div><span className="launch-destination">Ziel: {selectedMode?.group ? selectedMode.group + ' / ' : ''}{selectedMode?.name ?? 'Scarrix Lobby'}</span></div>
+          <div className="launch-controls">
+            <label className="instance-picker"><span>MINECRAFT-INSTANZ</span><select value={activeInstance?.id ?? ''} onChange={e => chooseInstance(e.target.value)} disabled={busy}>{config.instances.map(instance => <option key={instance.id} value={instance.id}>{instance.name}</option>)}</select></label>
+            <button className="btn outline create-btn" disabled={busy} onClick={() => { setDraftVersion(activeInstance?.version ?? '1.21.1'); setDraftLoader(activeInstance?.loader ?? 'vanilla'); setDraftRam(activeInstance?.ramGB ?? 4); setShowNewInstance(true); }}>+ Neue Instanz</button>
+            <button className="btn primary play-button" disabled={busy || !profile || !selectedMode} onClick={() => run(() => window.scarrix.game(selectedMode!.id), setNotice)}><span className="play-arrow">▶</span> {profile ? 'JETZT SPIELEN' : 'MICROSOFT-LOGIN AUSSTEHEND'}</button>
+          </div>
+          <div className="launch-detail"><span>⏣ {activeInstance?.version} <span className="bullet">•</span> {activeInstance?.loader.toUpperCase()} <span className="bullet">•</span> {activeInstance?.ramGB} GB RAM</span><div className="launch-actions"><button className="text-btn" disabled={busy || config.instances.length <= 1} onClick={deleteInstance}>Instanz entfernen</button><button className="text-btn accent-text" disabled={busy} onClick={() => run(() => window.scarrix.gamePrepare(), setNotice)}>Dateien vorbereiten ↗</button></div></div>
+        </section>
+
+        <div className="section-row"><div><p className="eyebrow">LIVE STATUS</p><h2>Netzwerkübersicht</h2></div><button className="btn ghost" onClick={refresh}>↻ Aktualisieren</button></div>
+        <div className="summary">
+          <div className="stat panel"><span className={'dot' + (status?.online ? ' online' : '')}></span><div><small>SCARRIX.NET</small><b>{status ? (status.online ? 'Online' : 'Nicht erreichbar') : 'Wird geprüft'}</b></div></div>
+          <div className="stat panel"><span className="stat-symbol">♟</span><div><small>SPIELER ONLINE</small><b>{status?.players ?? '—'} <span className="subtle-text">/ {status?.maxPlayers ?? '—'}</span></b></div></div>
+          <div className="stat panel"><span className="stat-symbol">▣</span><div><small>SERVER-VERSION</small><b>{status?.version ?? 'Minecraft Java'}</b></div></div>
+        </div>
+        <div className="section-row"><div><p className="eyebrow">DEIN SPIELMODUS</p><h2>Wohin geht's?</h2></div><small>Modus wählen, dann oben auf Spielen klicken</small></div>
+        <div className="mode-grid">{config.modes.map((m, i) => <button type="button" className={'mode-card panel' + (selectedMode?.id === m.id ? ' selected' : '')} key={m.id} onClick={() => setSelectedModeId(m.id)}>
+          <div className="mode-card-top"><span className="mode-icon">{['⛏','⚔','◆','✦','▦','◈'][i % 6]}</span><span className="mode-select-indicator">{selectedMode?.id === m.id ? '✓' : '↗'}</span></div>
+          {m.group && <small className="mode-group">{m.group}</small>}
+          <h3>{m.name}</h3>
+          <div className="mode-availability">{(() => { const state = backendStatuses?.find(s => s.id === m.id); return !backendStatuses ? 'Prüfe Erreichbarkeit …' : state?.online ? `Erreichbar · ${state.players ?? '?'} Spieler` : 'Status nicht prüfbar'; })()}</div>
+          <p className="mode-endpoint" title="Backend-Adresse nur zur Information – der Spielstart erfolgt über Scarrix.net"><code>{m.address}:{m.port}</code></p>
+        </button>)}</div>
+        <p className="backend-notice">Die Backend-Ports werden nur zur Information angezeigt. Zum Spielen wird das öffentliche Scarrix-Netzwerk geöffnet; der Untermodus muss derzeit noch in der Lobby ausgewählt werden.</p>
+        <div className="section-row"><div><p className="eyebrow">UPDATES AUS DER COMMUNITY</p><h2>Ankündigungen</h2></div></div>
+        <div className="news-grid">{config.news.length ? config.news.map((n,i) => <article className="panel news" key={i}><span className="eyebrow">NEWS</span><h3>{n.title}</h3><p>{n.text}</p></article>) : <article className="panel news"><span className="eyebrow">NEWS</span><h3>Willkommen auf Scarrix</h3><p>Neuigkeiten aus der Community erscheinen bald hier.</p></article>}</div>
       </>}
 
       {tab === 'mods' && <><div className="panel intro"><h2>Mod-Browser</h2><p>Finde kompatible Mods für {config.minecraft.version} / {config.minecraft.loader}. Mods werden nur in der aktuellen Instanz installiert.</p><form className="search" onSubmit={e => {e.preventDefault();run(() => window.scarrix.mods.search(modQuery, source), setMods);}}><input value={modQuery} onChange={e => setModQuery(e.target.value)} placeholder="Sodium, Iris, JEI …"/><select value={source} onChange={e => setSource(e.target.value as typeof source)}><option value="modrinth">Modrinth</option><option value="curseforge">CurseForge</option></select><button className="btn primary" disabled={busy || !modQuery.trim()}>{t.search}</button></form></div>
@@ -115,15 +184,37 @@ function App() {
 
       {tab === 'capes' && <><div className="panel intro"><h2>{t.official}</h2><p>Hier werden die Capes angezeigt, die dein offizielles Minecraft-Konto bereits besitzt.</p><div className="cape-list">{profile?.capes?.length ? profile.capes.map(c => <div key={c.id} className="cape panel"><img src={c.url} alt="Cape"/><b>{c.alias || c.id}</b><button className="btn outline" disabled={busy} onClick={() => run(() => window.scarrix.capes.select(c.id), setProfile)}>Ausrüsten</button></div>) : <p>Keine Capes geladen. Bitte anmelden.</p>}</div><button className="btn ghost" disabled={!profile || busy} onClick={() => run(() => window.scarrix.capes.select(null), setProfile)}>Cape ablegen</button></div><div className="panel intro"><h2>Eigene Cape-Vorschauen</h2><p>Ein eigenes Cape kann lokal gespeichert und angezeigt werden. Offizielle Minecraft-Capes lassen sich damit nicht neu erstellen oder auf Mojangs Server hochladen.</p><button className="btn primary" disabled={busy} onClick={() => run(() => window.scarrix.capes.upload(), result => {setCapes(result.library);setNotice(result.message);})}>{t.capeUpload}</button><div className="skin-grid">{capes.map(c => <div key={c.id} className="panel skin-item"><img src={c.dataUrl} alt="Eigene Cape-Vorschau"/></div>)}</div></div></>}
 
-      {tab === 'settings' && <><div className="panel intro settings"><h2>Launcher konfigurieren</h2><p>Du kannst alle Einstellungen hier anpassen. Die Microsoft Client-ID ist <b>kein</b> Passwort.</p>
-        <div className="fields"><label>Minecraft-Version<input value={config.minecraft.version} onChange={e => patch('minecraft', 'version', e.target.value)}/></label><label>Mod-Loader<select value={config.minecraft.loader} onChange={e => patch('minecraft','loader',e.target.value)}><option value="vanilla">Vanilla</option><option value="fabric">Fabric</option><option value="forge">Forge</option><option value="quilt">Quilt (noch nicht implementiert)</option></select></label>
-        <label>RAM (GB)<input type="number" min="2" max="32" value={config.minecraft.ramGB} onChange={e => patch('minecraft','ramGB',Number(e.target.value))}/></label><label>Java-Pfad<input value={config.minecraft.javaPath} onChange={e => patch('minecraft','javaPath',e.target.value)}/></label>
-        <label>Microsoft Application (Client) ID<input value={config.microsoft.clientId} onChange={e => patch('microsoft','clientId',e.target.value)} placeholder="00000000-0000-0000-0000-000000000000"/></label><label>GitHub-Benutzer / Organisation<input value={config.github.owner} onChange={e => patch('github','owner',e.target.value)}/></label>
-        <label>Serveradresse<input value={config.server.address} onChange={e => patch('server','address',e.target.value)}/></label><label>CurseForge API-Key (optional)<input type="password" value={config.curseforge.apiKey} onChange={e => patch('curseforge','apiKey',e.target.value)} placeholder="Nicht im öffentlichen Repository ablegen"/></label>
-        <label>Sprache / Language<select value={config.language} onChange={e => setConfig({...config,language:e.target.value as 'de'|'en'})}><option value="de">Deutsch</option><option value="en">English</option></select></label></div>
-        <div className="buttons"><button className="btn primary" disabled={busy} onClick={() => run(() => window.scarrix.config.save(config), res => {setConfig(res);setNotice('Einstellungen gespeichert.');window.scarrix.paths().then(setPaths);})}>{t.save}</button><button className="btn outline" onClick={() => run(() => window.scarrix.java(), setNotice)}>Java prüfen</button><button className="btn ghost" onClick={() => window.scarrix.openUrl("https://adoptium.net/").catch(e => setNotice(String(e)))}>Java herunterladen ↗</button><button className="btn outline" disabled={busy} onClick={() => run(() => window.scarrix.gamePrepare(), setNotice)}>Minecraft-Dateien vorbereiten</button><button className="btn outline" onClick={() => run(() => window.scarrix.update(), setNotice)}>Updates prüfen</button><button className="btn outline" onClick={() => run(() => window.scarrix.logs(), setNotice)}>Logs anzeigen</button></div>
-      </div><div className="panel paths"><h2>Dateiordner</h2><p>Gemeinsame Minecraft-Downloads: <code>{paths?.minecraft}</code></p><p>Aktuelle Instanz mit Mods: <code>{paths?.instance}</code></p><p className="hint">Die Vorlage config.json im Projekt ist die Erstkonfiguration; spätere Änderungen liegen im Benutzerprofil. Microsoft- und Minecraft-Token werden nicht dauerhaft gespeichert.</p></div></>}
-      <footer>SCARRIX CLIENT · Nicht offiziell von Mojang Studios oder Microsoft unterstützt · <span>Open Source / MIT</span></footer>
+
+      {tab === 'settings' && <>
+        <section className="panel launcher-settings">
+          <div className="settings-heading"><span className="settings-icon">⚙</span><div><p className="eyebrow">PERSONALISIERUNG</p><h2>Launcher-Einstellungen</h2><p>Gestalte Scarrix Client nach deinem Geschmack. Minecraft-Version und RAM verwaltest du direkt beim Spielen.</p></div></div>
+          <div className="preferences-grid">
+            <label className="preference"><span>FARBDESIGN</span><small>Wähle deine Akzentfarbe. Der dunkle Hintergrund bleibt erhalten.</small><select value={config.launcher.theme} disabled={busy} onChange={e => save({ ...config, launcher: { theme: e.target.value as Config['launcher']['theme'] } })}><option value="red">Scarrix Rot · Standard</option><option value="blue">Electric Blue</option><option value="purple">Royal Purple</option><option value="gold">Amber Gold</option></select><div className="theme-dots"><i className="red"></i><i className="blue"></i><i className="purple"></i><i className="gold"></i></div></label>
+            <label className="preference"><span>SPRACHE / LANGUAGE</span><small>Sprache der Launcher-Oberfläche.</small><select value={config.language} disabled={busy} onChange={e => save({ ...config, language: e.target.value as 'de' | 'en' })}><option value="de">Deutsch</option><option value="en">English</option></select></label>
+          </div>
+        </section>
+        <section className="panel launcher-settings update-section">
+          <div className="update-copy"><span className="update-symbol">↻</span><div><p className="eyebrow">SOFTWARE</p><h2>Launcher-Updates</h2><p>Installierte Version: <b>v{appVersion}</b></p><small>Bei einem privaten GitHub-Repository öffnet der Button die Releases-Seite. Automatische Updates erfordern einen öffentlichen Download-Kanal.</small></div></div>
+          <button className="btn primary" disabled={busy} onClick={() => run(() => window.scarrix.update(), setNotice)}>Nach Updates suchen ↗</button>
+        </section>
+        <section className="panel launcher-settings info-section">
+          <div><h2>Über Scarrix Client</h2><p>Community Launcher für Minecraft: Java Edition. Entwickelt für das Scarrix-Netzwerk.</p><p className="hint">Microsoft-Authentifizierung wird im Hintergrund verwaltet; eine Freigabe durch Minecraft Services steht noch aus. Client-IDs sind bei Desktop-Apps technisch auslesbar und keine geheimen Schlüssel.</p></div>
+          <button className="btn outline" onClick={() => run(() => window.scarrix.logs(), setNotice)}>Diagnose / Logs</button>
+        </section>
+      </>}
+      {showNewInstance && <div className="modal-backdrop" role="presentation" onClick={() => setShowNewInstance(false)}>
+        <div className="instance-modal panel" role="dialog" aria-modal="true" aria-label="Neue Minecraft-Instanz erstellen" onClick={e => e.stopPropagation()}>
+          <div className="modal-head"><div><p className="eyebrow">MINECRAFT</p><h2>Neue Instanz erstellen</h2></div><button className="close-modal" onClick={() => setShowNewInstance(false)} aria-label="Schließen">×</button></div>
+          <p>Wähle deine Version, den Modloader und den verfügbaren RAM. Mods und Konfigurationen bleiben je Instanz getrennt.</p>
+          <div className="modal-fields">
+            <label>MINECRAFT-VERSION<input value={draftVersion} onChange={e => setDraftVersion(e.target.value)} placeholder="z. B. 1.21.1"/><small>Die Version wird beim Vorbereiten gegen das offizielle Manifest geprüft.</small></label>
+            <label>MODLOADER<select value={draftLoader} onChange={e => setDraftLoader(e.target.value as typeof draftLoader)}><option value="vanilla">Vanilla – Ohne Mods</option><option value="fabric">Fabric</option><option value="forge">Forge</option></select></label>
+            <label>ARBEITSSPEICHER (RAM)<div className="ram-selector"><input type="range" min="2" max="32" step="1" value={draftRam} onChange={e => setDraftRam(Number(e.target.value))}/><strong>{draftRam} GB</strong></div></label>
+          </div>
+          <div className="modal-footer"><button className="btn outline" onClick={() => setShowNewInstance(false)}>Abbrechen</button><button className="btn primary" disabled={busy} onClick={createInstance}>+ Instanz erstellen</button></div>
+        </div>
+      </div>}
+      <footer>SCARRIX CLIENT · v{appVersion} · Nicht offiziell von Mojang Studios oder Microsoft unterstützt · <span>Open Source / MIT</span></footer>
     </main>
   </div>;
 }

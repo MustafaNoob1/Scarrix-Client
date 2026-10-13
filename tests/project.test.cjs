@@ -50,3 +50,23 @@ test('backend status does not claim private backends are offline', () => {
   assert.match(status, /data\.online !== true/);
   assert.match(status, /online: null/);
 });
+
+test('native Electron File/Edit/View menu removed', () => {
+  const main = fs.readFileSync(path.join(root, 'src/main/main.ts'), 'utf8');
+  assert.match(main, /Menu\.setApplicationMenu\(null\)/);
+  assert.match(main, /setMenuBarVisibility\(false\)/);
+});
+test('Microsoft client ID stays out of renderer configuration and settings', () => {
+  const ui = fs.readFileSync(path.join(root, 'src/renderer/index.tsx'), 'utf8');
+  const main = fs.readFileSync(path.join(root, 'src/main/main.ts'), 'utf8');
+  assert.doesNotMatch(ui, /Microsoft Application \(Client\) ID/);
+  assert.match(main, /microsoft: \{ clientId: '' \}/);
+});
+test('instances and themes are configured through main process', () => {
+  const cfg = fs.readFileSync(path.join(root, 'src/main/config.ts'), 'utf8');
+  const ui = fs.readFileSync(path.join(root, 'src/renderer/index.tsx'), 'utf8');
+  assert.match(cfg, /activeInstanceId/);
+  assert.match(cfg, /instances: value\.instances/);
+  assert.match(ui, /Neue Instanz erstellen/);
+  assert.match(ui, /theme: e\.target\.value/);
+});

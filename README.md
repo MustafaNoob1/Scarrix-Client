@@ -268,3 +268,16 @@ Ohne Microsoft-Login können Minecraft-Versionsdateien jetzt über **„Minecraf
 Die Startseite führt für jeden konfigurierten Unterserver eine zusätzliche **best-effort**-Abfrage über mcstatus.io aus. Nur erfolgreich erreichbare Backends werden mit einer Spielerzahl als erreichbar markiert. Eine fehlgeschlagene Abfrage bedeutet **nicht**, dass der Unterserver offline ist: interne/private Ports können von außen nicht abgefragt werden. Der direkte Spielbeitritt funktioniert weiterhin ausschließlich über den Scarrix-Proxy.
 
 Unter **Einstellungen** gibt es außerdem einen Link zu [Eclipse Temurin / Adoptium](https://adoptium.net/) für den Download der benötigten Java-Version. Java wird weiterhin nicht ungefragt automatisch installiert.
+
+## Scarrix Client v0.3.0 – Clean UI und Instanzen
+
+- Neue dunkle Oberfläche mit rotem Scarrix-Design und wählbaren Farben Rot, Blau, Violett und Gold (Launcher-Einstellungen).
+- Electron-Menüleiste (File / Edit / View) entfernt.
+- Auf der Startseite gibt es einen zentralen Play-Button mit Instanzauswahl und **Neue Instanz**.
+- Neue Instanzen erfordern nur Minecraft-Version, Vanilla/Fabric/Forge und RAM. Name wird automatisch vergeben; Version wird beim Download überprüft.
+- Jede neue Instanz besitzt einen getrennten Spieleordner für Mods/Konfigurationen; Bibliotheken und Assets werden gemeinsam genutzt. Alte Standardinstanzen behalten ihr Verzeichnis.
+- Launcher-Einstellungen enthalten **keine** Microsoft Client-ID, Server-, RAM- oder Java-Felder. Java wird derzeit über den vorhandenen Standardbefehl `java` gefunden.
+- Microsoft Client-ID ist Bestandteil der App-Konfiguration und wird nicht an die Oberfläche übergeben. **Achtung:** Eine OAuth Public-Client-ID ist nicht geheim und kann prinzipiell aus einem Desktop-Programm extrahiert werden. Eine Minecraft-Services-Freigabe ist weiterhin erforderlich.
+- Unter Launcher-Einstellungen führt **Nach Updates suchen** bei diesem privaten Repository auf die GitHub-Releases-Seite. Direkte automatische Installation aus einem privaten Repository ist ohne sicheren öffentlichen Update-Kanal nicht möglich.
+- Benutzer mit bestehender `config.json` werden automatisch auf die neue Instanzverwaltung migriert.
+
