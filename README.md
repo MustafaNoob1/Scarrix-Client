@@ -254,3 +254,11 @@ Ohne diese Angaben werden **keine ausgedachten Spielerzahlen** angezeigt.
 ## Lizenz & Hinweise
 
 Der eigene Scarrix-Client-Quellcode in diesem Repository steht unter der MIT-Lizenz (siehe `LICENSE`). Die Abhängigkeiten stehen unter ihren jeweiligen Lizenzen. Minecraft und Minecraft Java Edition unterliegen den Bedingungen von Mojang/Microsoft. Keine Spielkopien, Passwörter oder Tokens veröffentlichen.
+
+## Preview 0.2.0: Installationspakete und Minecraft-Vorbereitung
+
+Die CI-Pipeline baut auf jedem Push nach `main` Installationspakete für Windows, macOS und Linux. Nach erfolgreicher Prüfung **aller Plattformen** erstellt sie einen privaten **Preview-Release** mit den Installationsdateien. Details und Einschränkungen: [Release-Anleitung](docs/RELEASES.md).
+
+Ohne Microsoft-Login können Minecraft-Versionsdateien jetzt über **„Minecraft-Dateien vorbereiten“** im Client heruntergeladen/geprüft werden. Dafür sind eine passende Java-Installation und Internetzugang erforderlich. Der Minecraft-Login und Spielstart bleiben von der Microsoft/Minecraft-Freigabe abhängig. Eine erfolgreich vorbereitete Spielversion beweist noch nicht, dass ein echter Online-Spielstart funktioniert.
+
+**Hinweis:** Private GitHub-Releases stehen nur berechtigten Benutzern zur Verfügung. Auto-Updates an öffentliche Spieler sind damit ohne einen eigenen öffentlichen Update-Kanal nicht möglich. Windows- und macOS-Installer sind derzeit nicht signiert.

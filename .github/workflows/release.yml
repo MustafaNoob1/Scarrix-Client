@@ -1,41 +1,77 @@
-name: Build and release Scarrix Client
+name: Scarrix Client installers and preview release
+
 on:
   push:
     branches: [main]
-    tags: ['v*']
   workflow_dispatch:
+
 permissions:
   contents: write
+
+concurrency:
+  group: scarrix-preview-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build:
+    name: Installer (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
-    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install
-        run: npm install --no-audit --no-fund
-      - name: Check
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Check TypeScript and run tests
         run: |
           npm run typecheck
           npm test
-      - name: Package and publish on tags
+      - name: Package installable client
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: npm run dist -- --publish never
+      - name: Store installer artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: scarrix-installer-${{ matrix.os }}
+          path: |
+            release/*.exe
+            release/*.dmg
+            release/*.zip
+            release/*.AppImage
+            release/*.deb
+          if-no-files-found: error
+          retention-days: 30
+
+  publish-preview:
+    name: Create downloadable private GitHub preview
+    needs: [build]
+    runs-on: ubuntu-latest
+    if: ${{ needs.build.result == 'success' }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: scarrix-installer-*
+          path: release-assets
+          merge-multiple: true
+      - name: List installers
+        run: ls -lah release-assets/
+      - name: Publish prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         shell: bash
         run: |
-          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
-            npm run dist -- --publish always
-          else
-            npm run dist -- --publish never
-          fi
-      - uses: actions/upload-artifact@v4
-        with:
-          name: scarrix-${{ matrix.os }}
-          path: release/*
-          if-no-files-found: error
+          set -euo pipefail
+          tag="preview-0.2.0-${GITHUB_RUN_NUMBER}"
+          gh release create "$tag" release-assets/* \
+            --target "$GITHUB_SHA" \
+            --title "Scarrix Client 0.2.0 Preview #${GITHUB_RUN_NUMBER}" \
+            --prerelease \
+            --notes "Automatisch gebauter TEST-Release für Windows (Setup EXE), macOS (DMG/ZIP) und Linux (AppImage/DEB). Microsoft/Minecraft-Login benötigt weiterhin die offizielle Freigabe. Nicht signiert. Privates Repository: Downloads nur für berechtigte GitHub-Nutzer."

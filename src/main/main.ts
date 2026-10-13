@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { getConfig, saveConfig, instancePath, rootPath } from './config';
 import { microsoftLogin, getPublicProfile, logout, refreshProfile, selectCape } from './auth';
-import { javaVersion, startGame } from './game';
+import { javaVersion, startGame, prepareGame } from './game';
 import { serverStatus } from './status';
 import { searchMods, installMod } from './mods';
 import { getLibrary, upload, applySavedSkin } from './skins';
@@ -40,6 +40,7 @@ function handlers() {
   ipcMain.handle('status:get', () => serverStatus());
   ipcMain.handle('java:version', () => javaVersion());
   ipcMain.handle('game:start', (_e, id: string) => startGame(String(id), notice));
+  ipcMain.handle('game:prepare', () => prepareGame(notice));
   ipcMain.handle('mods:search', (_e, term: string, source: 'modrinth' | 'curseforge') => {
     if (!['modrinth','curseforge'].includes(source)) throw new Error('Unbekannte Modquelle');
     return searchMods(String(term), source);

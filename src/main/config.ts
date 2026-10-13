@@ -6,7 +6,7 @@ import { Config } from './types';
 const defaults: Config = {
   server: { name: 'Scarrix.net', address: 'Scarrix.net', port: 25565 },
   minecraft: { version: '1.21.1', loader: 'vanilla', javaPath: 'java', ramGB: 4 },
-  microsoft: { clientId: '' }, github: { owner: 'MustafaNoob1', repo: 'scarrix-client' },
+  microsoft: { clientId: '' }, github: { owner: 'MustafaNoob1', repo: 'scarrix-client', privateRepo: true },
   modrinth: { userAgent: 'MustafaNoob1/scarrix-client/0.1.1' },
   curseforge: { apiKey: '' }, language: 'de',
   modes: [

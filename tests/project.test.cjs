@@ -29,3 +29,17 @@ test('launcher connects to the public Scarrix proxy instead of inaccessible back
   const code = fs.readFileSync(path.join(root, 'src/main/game.ts'), 'utf8');
   assert.match(code, /server:\s*\{\s*ip:\s*cfg\.server\.address,\s*port:\s*cfg\.server\.port\s*\}/);
 });
+
+test('preview workflow creates downloadable installers for three platforms', () => {
+  const workflow = fs.readFileSync(path.join(root, '.github/workflows/release.yml'), 'utf8');
+  for (const os of ['windows-latest', 'macos-latest', 'ubuntu-latest']) assert.ok(workflow.includes(os));
+  assert.match(workflow, /npm ci/);
+  assert.match(workflow, /gh release create/);
+  assert.match(workflow, /--prerelease/);
+});
+test('Minecraft files can be prepared without an approved Microsoft account', () => {
+  const game = fs.readFileSync(path.join(root, 'src/main/game.ts'), 'utf8');
+  const main = fs.readFileSync(path.join(root, 'src/main/main.ts'), 'utf8');
+  assert.match(game, /export async function prepareGame/);
+  assert.match(main, /ipcMain.handle\('game:prepare'/);
+});

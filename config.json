@@ -15,7 +15,8 @@
   },
   "github": {
     "owner": "MustafaNoob1",
-    "repo": "scarrix-client"
+    "repo": "scarrix-client",
+    "privateRepo": true
   },
   "modrinth": {
     "userAgent": "MustafaNoob1/scarrix-client/0.1.1"

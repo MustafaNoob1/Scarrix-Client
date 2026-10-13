@@ -13,18 +13,9 @@ export async function javaVersion(): Promise<string> {
     return (stderr || stdout).split(/\r?\n/)[0];
   } catch { throw new Error('Java wurde nicht gefunden. Installiere Java (für Minecraft 1.21.x normalerweise Java 21) und trage den Pfad in Einstellungen ein.'); }
 }
-let launching = false;
-
-export async function startGame(modeId: string, notify: (message: string) => void): Promise<string> {
-  if (launching) throw new Error('Minecraft wird bereits vorbereitet.');
-  launching = true;
-  try {
-    const cfg = getConfig();
-    const mode = cfg.modes.find(m => m.id === modeId);
-    if (!mode) throw new Error('Dieser Spielmodus ist nicht konfiguriert.');
-    const profile = getPublicProfile();
-    const token = getSessionToken();
-    if (!profile) throw new Error('Bitte zuerst mit Microsoft anmelden.');
+// Download and check Minecraft files without requiring an approved Microsoft application.
+async function doPrepare(notify: (message: string) => void) {
+  const cfg = getConfig();
     await javaVersion();
     const mcRoot = rootPath();
     const gameRoot = instancePath();
@@ -54,6 +45,32 @@ export async function startGame(modeId: string, notify: (message: string) => voi
     }
     const resolved = await Version.parse(mcRoot, launchVersion);
     await installDependencies(resolved);
+  return { resolved, gameRoot, mcRoot };
+}
+let preparing: ReturnType<typeof doPrepare> | null = null;
+function prepareMinecraft(notify: (message: string) => void) {
+  if (!preparing) preparing = doPrepare(notify).finally(() => { preparing = null; });
+  return preparing;
+}
+export async function prepareGame(notify: (message: string) => void): Promise<string> {
+  await prepareMinecraft(notify);
+  return 'Minecraft-Dateien vorbereitet. Zum echten Spielstart ist weiterhin die Microsoft-/Minecraft-Anmeldung erforderlich.';
+}
+
+let launching = false;
+
+export async function startGame(modeId: string, notify: (message: string) => void): Promise<string> {
+  if (launching) throw new Error('Minecraft wird bereits vorbereitet.');
+  launching = true;
+  try {
+    const cfg = getConfig();
+    const mode = cfg.modes.find(m => m.id === modeId);
+    if (!mode) throw new Error('Dieser Spielmodus ist nicht konfiguriert.');
+    const profile = getPublicProfile();
+    const token = getSessionToken();
+    if (!profile) throw new Error('Bitte zuerst mit Microsoft anmelden.');
+    const { resolved, gameRoot, mcRoot } = await prepareMinecraft(notify);
+    const minecraft = cfg.minecraft;
     notify('Minecraft wird gestartet …');
     const child = await launch({
       javaPath: minecraft.javaPath || 'java',

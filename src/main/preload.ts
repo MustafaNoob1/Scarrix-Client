@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('scarrix', {
   status: () => ipcRenderer.invoke('status:get'),
   java: () => ipcRenderer.invoke('java:version'),
   game: (mode: string) => ipcRenderer.invoke('game:start', mode),
+  gamePrepare: () => ipcRenderer.invoke('game:prepare'),
   mods: { search: (query: string, source: string) => ipcRenderer.invoke('mods:search', query, source), install: (id: string, source: string) => ipcRenderer.invoke('mods:install', id, source) },
   skins: { library: () => ipcRenderer.invoke('skins:library'), upload: (model: string) => ipcRenderer.invoke('skins:upload', model), apply: (id: string, model: string) => ipcRenderer.invoke('skins:apply', id, model) },
   capes: { library: () => ipcRenderer.invoke('capes:library'), upload: () => ipcRenderer.invoke('capes:upload'), select: (id: string | null) => ipcRenderer.invoke('capes:select', id) },

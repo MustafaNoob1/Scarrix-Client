@@ -3,7 +3,7 @@ export interface Mode { id: string; name: string; address: string; port: number;
 export interface Config {
   server: { name: string; address: string; port: number; group?: string };
   minecraft: { version: string; loader: 'vanilla' | 'fabric' | 'forge' | 'quilt'; javaPath: string; ramGB: number };
-  microsoft: { clientId: string }; github: { owner: string; repo: string };
+  microsoft: { clientId: string }; github: { owner: string; repo: string; privateRepo?: boolean };
   modrinth: { userAgent: string }; curseforge: { apiKey: string };
   language: 'de' | 'en'; modes: Mode[]; news: { title: string; text: string }[];
 }
