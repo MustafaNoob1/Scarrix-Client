@@ -1,5 +1,5 @@
 import { BrowserWindow } from 'electron';
-import { PublicClientApplication } from '@azure/msal-node';
+import { acquireMicrosoftToken } from './microsoft-token';
 import { MicrosoftAuthenticator, MojangClient } from '@xmcl/user';
 import { getConfig } from './config';
 import { Profile } from './types';
@@ -27,17 +27,9 @@ export async function microsoftLogin(win: BrowserWindow): Promise<Profile> {
   if (!/^[0-9a-f-]{36}$/i.test(clientId)) throw new Error('Microsoft-Anmeldung ist derzeit nicht eingerichtet. Bitte kontaktiere den Scarrix-Support.');
   authenticating = true;
   try {
-    // No Microsoft password is ever entered into our client.
-    const client = new PublicClientApplication({ auth: { clientId, authority: 'https://login.microsoftonline.com/consumers' } });
-    const result = await client.acquireTokenByDeviceCode({
-      scopes: ['XboxLive.signin', 'offline_access'],
-      deviceCodeCallback: info => win.webContents.send('auth:device', {
-        url: info.verificationUri, code: info.userCode, message: info.message
-      })
-    });
-    if (!result?.accessToken) throw new Error('Microsoft hat kein gültiges Token zurückgegeben.');
+    const microsoftToken = await acquireMicrosoftToken(win, clientId);
     const auth = new MicrosoftAuthenticator({});
-    const xbox = await auth.acquireXBoxToken(result.accessToken, AbortSignal.timeout(30000));
+    const xbox = await auth.acquireXBoxToken(microsoftToken, AbortSignal.timeout(30000));
     const claim = xbox.minecraftXstsResponse.DisplayClaims.xui[0];
     const mc = await auth.loginMinecraftWithXBox(claim.uhs, xbox.minecraftXstsResponse.Token, AbortSignal.timeout(30000));
     // getProfile rejects accounts without a valid Minecraft Java profile.

@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@azure/msal-node": "^3.7.0",
+    "@azure/msal-node-extensions": "^5.5.2",
     "@xmcl/core": "2.13.0",
     "@xmcl/installer": "5.4.0",
     "@xmcl/user": "4.4.2",
@@ -113,7 +114,12 @@
       "allowToChangeInstallationDirectory": true
     },
     "artifactName": "Scarrix-Client-${version}-${os}-${arch}.${ext}",
-    "generateUpdatesFilesForAllChannels": true
+    "generateUpdatesFilesForAllChannels": true,
+    "asarUnpack": [
+      "node_modules/@azure/msal-node-runtime/**/*",
+      "node_modules/@azure/msal-node-extensions/bin/**/*",
+      "node_modules/keytar/**/*"
+    ]
   },
   "engines": {
     "node": ">=22.12.0"
