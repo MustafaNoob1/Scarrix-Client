@@ -1,7 +1,8 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),yaml=require('js-yaml');
 const dir=process.argv[2]||'release-assets';
-const privateKey=process.env.SCARRIX_UPDATE_PRIVATE_KEY;
-if(!privateKey){console.log('Update signing is not configured. Preview installers remain manually installable.');process.exit(0);}
+const secret=process.env.SCARRIX_UPDATE_PRIVATE_KEY;
+if(!secret){console.log('Update signing is not configured. Preview installers remain manually installable.');process.exit(0);}
+const privateKey=require('./signing-key.cjs')(secret);
 const publicKey=JSON.parse(fs.readFileSync('update-channel.json','utf8')).publicKey;
 const derived=crypto.createPublicKey(privateKey).export({type:'spki',format:'pem'});
 if(derived.trim()!==publicKey.trim())throw Error('Update signing key does not match pinned public key.');
