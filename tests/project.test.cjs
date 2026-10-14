@@ -28,7 +28,7 @@ test('electron-updater uses the named CommonJS export (fix for the Electron star
 });
 test('launcher connects to the public Scarrix proxy instead of inaccessible backend ports', () => {
   const code = fs.readFileSync(path.join(root, 'src/main/game.ts'), 'utf8');
-  assert.match(code, /server:\s*\{\s*ip:\s*cfg\.server\.address,\s*port:\s*cfg\.server\.port\s*\}/);
+  assert.match(code, /server:[^\r\n]*ip:\s*cfg\.server\.address,\s*port:\s*cfg\.server\.port/);
 });
 
 test('preview workflow creates downloadable installers for three platforms', () => {

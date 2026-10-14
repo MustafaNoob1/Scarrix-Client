@@ -5,6 +5,8 @@ import { validMemory } from './memory';
 import { officialVersions } from './versions';
 import { assertIdle } from './operations';
 import { Config, Instance } from './types';
+import crypto from 'node:crypto';
+import {validateProfileOptions} from './profile-options';
 
 const defaults: Config = {
   server: { name: 'Scarrix.net', address: 'Scarrix.net', port: 25565 },
@@ -27,6 +29,7 @@ const defaults: Config = {
 
 export function appData(): string { return app.getPath('userData'); }
 export function rootPath(): string { return path.join(appData(), 'minecraft'); }
+export function sharedProfilePath(instance:Instance){return instance.sharedGroup&&instance.group?.trim()?path.join(rootPath(),'groups',crypto.createHash('sha256').update(instance.group.trim().toLowerCase()).digest('hex').slice(0,24)):null;}
 export function instancePath(): string {
   const config = getConfig();
   const instance = config.minecraft;
@@ -36,7 +39,7 @@ export function instancePath(): string {
   const destination=path.join(rootPath(),'instances',config.activeInstanceId);
   const legacy=path.join(rootPath(),'instances',safe+suffix);
   if(!fs.existsSync(destination)&&fs.existsSync(legacy))fs.renameSync(legacy,destination);
-  return destination;
+  return sharedProfilePath(config.instances.find(i=>i.id===config.activeInstanceId)!)??destination;
 }
 function location(): string { return path.join(appData(), 'config.json'); }
 
@@ -91,6 +94,7 @@ export async function saveConfig(value: Config, internal = false): Promise<Confi
   const versions = needsVersions ? await officialVersions() : [];
   const ids = new Set<string>();
   for (const item of value.instances) {
+    validateProfileOptions(item);
     if (!/^[a-zA-Z0-9_-]{1,60}$/.test(item.id) || ids.has(item.id)) throw new Error('Ungültige oder doppelte Instanz-ID.');
     ids.add(item.id);
     if (typeof item.name !== 'string' || !item.name.trim() || item.name.length > 50 || /[\u0000-\u001f\u007f]/.test(item.name)) throw new Error('Ungültiger Instanzname.');
@@ -101,6 +105,8 @@ export async function saveConfig(value: Config, internal = false): Promise<Confi
     if (!existing.instances.some(old => old.id === item.id && old.version === item.version) && !versions.includes(item.version)) throw new Error('Keine offizielle Minecraft-Release-Version.');
   }
   const active = value.instances.find(item => item.id === value.activeInstanceId);
+  const groups=new Map<string,string>();
+  for(const item of value.instances.filter(i=>i.sharedGroup)){const group=item.group!.trim().toLowerCase(),signature=item.version+':'+item.loader+':'+(item.loaderVersion??'auto');if(groups.has(group)&&groups.get(group)!==signature)throw new Error('Profile mit gemeinsamem Gruppenordner müssen dieselbe Minecraft- und Loader-Version verwenden.');groups.set(group,signature);}
   if (!active) throw new Error('Bitte wähle eine vorhandene Instanz.');
   for (const old of existing.instances) {
     const legacy=path.join(rootPath(),'instances',old.version+'-'+old.loader+(old.id==='default'?'':'-'+old.id));

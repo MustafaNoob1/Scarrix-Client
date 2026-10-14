@@ -10,6 +10,7 @@ function setup() {
   let temp;
   const fakeFs = {existsSync:()=>true,readFileSync:()=>config,mkdirSync:()=>{},writeFileSync:(_p,c)=>temp=c,renameSync:()=>config=temp};
   const box={exports:{},process,require:id=>{
+    if(id==='./profile-options')return require('./load-main.cjs')('profile-options');
     if(id==='./operations')return {assertIdle:()=>{}};
     if(id==='electron')return {app:{getPath:()=>'/fake',isPackaged:false}};
     if(id==='node:fs')return fakeFs;
@@ -55,3 +56,4 @@ test('background motion is independent of other animations and validates saved v
 });
 
 test('remember preference and exact modpack loader version survive config round trips',async()=>{const api=setup();const c=api.getConfig();c.launcher.rememberAccount=false;c.instances[0].loader='fabric';c.instances[0].loaderVersion='0.16.10';const saved=await api.saveConfig(c);assert.equal(saved.launcher.rememberAccount,false);assert.equal(saved.minecraft.loaderVersion,'0.16.10');assert.equal(api.getConfig().instances[0].loaderVersion,'0.16.10');c.instances[0].loaderVersion='../invalid';await assert.rejects(api.saveConfig(c),/Loader-Version/);});
+test('per-profile preferences persist and shared groups reject incompatible installations',async()=>{const api=setup(),c=api.getConfig();c.instances[0]={...c.instances[0],group:'Modpacks',sharedGroup:true,window:{width:1920,height:1080,fullscreen:true},jvmArgs:['-XX:+UseG1GC'],javaPath:require('node:path').resolve('java-test')};const saved=await api.saveConfig(c);assert.equal(saved.instances[0].window.width,1920);assert.equal(saved.instances[0].sharedGroup,true);assert.equal(saved.instances[0].jvmArgs[0],'-XX:+UseG1GC');c.instances.push({...c.instances[0],id:'second',loader:'fabric'});await assert.rejects(api.saveConfig(c),/gemeinsamem Gruppenordner/);});

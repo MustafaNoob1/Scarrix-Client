@@ -29,12 +29,13 @@ function findJava(folder: string, depth=0): string | null {
   for(const entry of fs.readdirSync(folder,{withFileTypes:true}))if(entry.isDirectory()&&!entry.isSymbolicLink()){const found=findJava(path.join(folder,entry.name),depth+1);if(found)return found;}
   return null;
 }
-export async function ensureJava(version: string): Promise<string> {
+export async function ensureJava(version: string, override?:string): Promise<string> {
   stepStatus('Passende Java-Version prüfen');
   const major=await requiredJava(version);
-  const configured=getConfig().minecraft.javaPath || 'java';
+  const configured=override||getConfig().minecraft.javaPath || 'java';
   const found=await resolveJava(configured);
   if(found?.majorVersion===major)return found.path;
+  if(override)throw new Error('Das gewählte Java passt nicht. Dieses Profil benötigt Java '+major+'.');
   const dir=path.join(appData(),'runtime',String(major)+'-'+process.platform+'-'+process.arch);
   if(fs.existsSync(dir)){const candidate=findJava(dir);if(candidate&&(await resolveJava(candidate))?.majorVersion===major)return candidate;}
   const os={win32:'windows',darwin:'mac',linux:'linux'}[process.platform as 'win32'|'darwin'|'linux'];

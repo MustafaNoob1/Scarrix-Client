@@ -7,6 +7,7 @@ import './clean.css';
 import { SkinLibrary } from './SkinLibrary';
 import { CapeLibrary } from './CapeLibrary';
 import { CatalogBrowser } from './CatalogBrowser';
+import {ProfileStudio} from './ProfileStudio';
 import { ProfilePicker } from './ProfilePicker';
 import './studio.css';
 import { InstanceLogs } from './InstanceLogs';
@@ -75,6 +76,7 @@ function App() {
   const [capes, setCapes] = useState<SavedImage[]>([]);
   const [paths, setPaths] = useState<{minecraft: string; instance: string} | null>(null);
   const [selectedModeId, setSelectedModeId] = useState('survival');
+  const [catalogTarget,setCatalogTarget]=useState<string|undefined>();
   const [playView, setPlayView] = useState<'play' | 'profiles'>('play');
   const [settingsSection, setSettingsSection] = useState('general');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -171,7 +173,7 @@ function App() {
       <nav>
         <button className={'nav ' + (tab === 'home' && playView === 'play' ? 'active' : '')} onClick={() => {setTab('home');setPlayView('play');}}><span>▶</span><small>Spielen</small></button>
         <button className={'nav ' + (tab === 'home' && playView === 'profiles' ? 'active' : '')} onClick={() => {setTab('home');setPlayView('profiles');}}><span>▣</span><small>Profile</small></button>
-        {(['mods','skins','capes'] as Tab[]).map(item => <button key={item} className={'nav ' + (tab === item ? 'active' : '')} onClick={() => setTab(item)}><span>{{mods:'⬡',skins:'◈',capes:'✧'}[item as 'mods'|'skins'|'capes']}</span><small>{t[item]}</small></button>)}
+        {(['mods','skins','capes'] as Tab[]).map(item => <button key={item} className={'nav ' + (tab === item ? 'active' : '')} onClick={() => {if(item==='mods')setCatalogTarget(undefined);setTab(item);}}><span>{{mods:'⬡',skins:'◈',capes:'✧'}[item as 'mods'|'skins'|'capes']}</span><small>{t[item]}</small></button>)}
       </nav>
       <div className="grow"/>
       <button className={'nav ' + (tab === 'settings' ? 'active' : '')} onClick={() => setTab('settings')}><span>⚙</span><small>Optionen</small></button>
@@ -193,10 +195,10 @@ function App() {
       {device && <section className="device panel"><h2>Microsoft-Anmeldung</h2><p>Öffne die Microsoft-Seite im Browser und gib dort den Code ein. Dein Passwort gehört ausschließlich auf die offizielle Microsoft-Seite.</p><div className="device-row"><code>{device.code}</code><button className="btn" onClick={() => window.scarrix.openUrl(device.url).catch(e => setNotice(String(e)))}>Microsoft-Anmeldeseite öffnen ↗</button></div><small>{device.url}</small></section>}
 
 
-      {tab === 'home' && <div className="play-layout">
+      {tab === 'home' && playView==='play' && <div className="play-layout">
         <div className="play-main">
-          <div className="play-tabs"><button className={playView === 'play' ? 'selected' : ''} onClick={() => setPlayView('play')}>SPIELEN</button><button className={playView === 'profiles' ? 'selected' : ''} onClick={() => setPlayView('profiles')}>MEINE PROFILE <span>{config.instances.length}</span></button></div>
-          {playView === 'play' ? <section className="character-stage">
+          <div className="play-tabs"><button className='selected' onClick={() => setPlayView('play')}>SPIELEN</button><button className='' onClick={() => setPlayView('profiles')}>MEINE PROFILE <span>{config.instances.length}</span></button></div>
+          {<section className="character-stage">
             <label className="rotation-toggle"><input type="checkbox" checked={config.launcher.rotateSkin !== false} onChange={e => save({...config,launcher:{...config.launcher,rotateSkin:e.target.checked}})}/> Skin-Rotation</label>
             <div className="stage-eyebrow">{profile ? "DEIN MINECRAFT-PROFIL" : "DEIN ABENTEUER BEGINNT HIER"}</div>
             <SkinPreview cape={capePreview.dataUrl??profile?.capes.find(c=>c.state==='ACTIVE')?.url} skin={profile?.skins?.[0]?.url} nameTag={profile?.name ?? "Gast"} model={profile?.skins?.[0]?.variant?.toLowerCase() === "slim" ? "slim" : "classic"} rotate={config.launcher.rotateSkin !== false} animate={config.launcher.animations !== false}/>
@@ -207,16 +209,13 @@ function App() {
               <div className="stage-links"><button className="text-btn" onClick={() => setTab('skins')}>◈ Skin ändern</button><button className="text-btn" disabled={busy} onClick={() => {setEditingId(null);setInstanceStep(0);setInstanceName('');setDraftRam(memory ? memory.recommendedMB/1024 : .5);setShowNewInstance(true);}}>+ Neues Profil</button><button className="text-btn" disabled={busy} onClick={() => run(() => window.scarrix.gamePrepare(), setNotice)}>Dateien vorbereiten</button></div>
             </div>
             <div className="stage-server"><span className={'dot' + (status?.online ? ' online' : '')}/><b>SCARRIX.NET</b><span>{status?.players ?? '—'} Spieler online</span><select aria-label="Spielmodus auswählen" value={selectedModeId} onChange={e => setSelectedModeId(e.target.value)}>{config.modes.map(m => <option value={m.id} key={m.id}>{m.group ? m.group + ' / ' : ''}{m.name}</option>)}</select></div>
-          </section> : <section className="profiles-view">
-            <div className="section-row"><div><p className="eyebrow">DEINE SAMMLUNG</p><h2>Minecraft-Profile</h2></div><button className="btn primary" disabled={busy} onClick={() => {setEditingId(null);setInstanceStep(0);setInstanceName('');setDraftRam(memory ? memory.recommendedMB/1024 : .5);setShowNewInstance(true);}}>{editingId ? 'Änderungen speichern' : '+ Profil erstellen'}</button></div>
-            {config.instances.map(i => <article key={i.id} className={'profile-row ' + (i.id === activeInstance?.id ? 'selected' : '')}><div className={'profile-icon ' + i.loader}>{i.loader === 'vanilla' ? '▧' : i.loader === 'fabric' ? '⬡' : '⚒'}</div><div className="profile-copy"><b>{i.name}</b><small>{i.version} · {i.loader.toUpperCase()} · {formatRam(i.ramGB*1024)}</small></div><button className="text-btn" disabled={busy} onClick={()=>{setEditingId(i.id);setInstanceName(i.name);setDraftVersion(i.version);setDraftLoader(i.loader);setDraftRam(memory?Math.min(i.ramGB,memory.maxMB/1024):i.ramGB);setInstanceStep(0);setShowNewInstance(true);}}>Bearbeiten</button><button className="text-btn" disabled={busy} onClick={()=>run(()=>window.scarrix.profiles.duplicate(i.id),setConfig)}>Kopieren</button><button className="text-btn" disabled={busy} onClick={()=>run(()=>window.scarrix.profiles.export(i.id),setNotice)}>Export</button><button className="btn outline" disabled={busy} onClick={() => {chooseInstance(i.id);setPlayView('play');}}>{i.id === activeInstance?.id ? '▶ Spielen' : 'Auswählen'}</button></article>)}
-            <div className="profile-bottom"><button className="btn primary" disabled={busy} onClick={()=>run(()=>window.scarrix.profiles.modpack(),result=>{if(result){setConfig(result);setNotice("Modpack importiert und als neues Profil ausgewählt.");}})}>Modpack importieren (.mrpack)</button><button className="btn outline" disabled={busy} onClick={()=>run(()=>window.scarrix.profiles.import(),result=>{if(result){setConfig(result);setNotice("Profil importiert. Prüfe Mods vor dem Start.");}})}>Profil importieren</button><button className="text-btn" disabled={busy || config.instances.length < 2} onClick={deleteInstance}>Ausgewähltes Profil entfernen</button><small>Minecraft-Dateien bleiben erhalten.</small></div>
           </section>}
         </div>
         <aside className="news-rail"><p className="eyebrow">NEUIGKEITEN</p><h2>Scarrix Network</h2>{config.news.length ? config.news.map((n,i) => <article className="news-tile" key={i}><div className="news-art"><ScarrixMark decorative/></div><h3>{n.title}</h3><p>{n.text}</p></article>) : <><article className="news-tile"><div className="news-art landscape"><ScarrixMark decorative/><span>SCARRIX</span></div><h3>Dein nächstes Abenteuer</h3><p>Wähle dein Profil und starte ins Scarrix-Netzwerk.</p></article><article className="news-tile"><div className="news-art blocks">⬡</div><h3>Dein Spiel. Dein Profil.</h3><p>Vanilla, Fabric oder Forge — jede Instanz hat ihre eigenen Mods.</p><button className="text-btn" onClick={() => setPlayView('profiles')}>Profile öffnen ↗</button></article></>}<div className="news-rail-footer">COMMUNITY LAUNCHER<small>Nicht offiziell von Mojang oder Microsoft.</small></div></aside>
       </div>}
 
-      {tab === 'mods' && <CatalogBrowser config={config} busy={busy} run={run} versions={versions} onProfiles={()=>{setTab('home');setPlayView('profiles');}}/>}
+      {tab==='home'&&playView==='profiles'&&<ProfileStudio config={config} account={profile} busy={busy} run={run} onConfig={setConfig} modeId={selectedMode?.id??config.modes[0]?.id??''} connect={connect} onCreate={()=>{setEditingId(null);setInstanceStep(0);setInstanceName('');setDraftRam(memory?memory.recommendedMB/1024:.5);setShowNewInstance(true);}} onCatalog={id=>{setCatalogTarget(id);setTab('mods');}}/>}
+      {tab === 'mods' && <CatalogBrowser targetInstanceId={catalogTarget} config={config} busy={busy} run={run} versions={versions} onProfiles={()=>{setTab('home');setPlayView('profiles');}}/>}
 
       {tab === 'skins' && <SkinLibrary config={config} profile={profile} busy={busy} run={run} onProfile={setProfile} connect={connect}/>}
       {tab === 'capes' && <CapeLibrary config={config} profile={profile} busy={busy} run={run} onProfile={setProfile} onPreview={setCapePreview}/>}

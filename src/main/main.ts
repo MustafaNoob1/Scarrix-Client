@@ -22,6 +22,7 @@ import { importModpack } from './modpack';
 import { searchCatalog, catalogVersions, catalogTargets, installCatalog, catalogCategories } from './catalog';
 import { communityCapes } from './community-capes';
 import { controlWindow } from './window-controls';
+import {profileContents,profileOverview,toggleProfileContent,removeProfileContent,openProfileFolder,profileLoaders,profileIcon,profileJavaPick,profileJava,checkProfileUpdates,updateProfileContent,deleteProfile} from './profile-studio';
 import type { Config } from './types';
 
 let window: BrowserWindow;
@@ -54,6 +55,18 @@ function handle(channel:string, action:(event:Electron.IpcMainInvokeEvent,...arg
   ipcMain.handle(channel, async(event,...args)=>{try{return await action(event,...args);}catch(error){try{recordError(error);}catch{}if(['game:prepare','game:start','java:install','mods:install','update:check'].includes(channel))stepStatus(friendlyError(error),'error');throw new Error(friendlyError(error));}});
 }
 function handlers() {
+  handle('profiles:contents',(_e,id,kind,world)=>profileContents(id,kind,world));
+  handle('profiles:overview',(_e,id)=>profileOverview(id));
+  handle('profiles:toggle',(_e,id,kind,name,enabled,world)=>toggleProfileContent(id,kind,name,enabled===true,world));
+  handle('profiles:content:remove',(_e,id,kind,name,world)=>removeProfileContent(id,kind,name,world));
+  handle('profiles:folder',(_e,id,section)=>openProfileFolder(id,section));
+  handle('profiles:delete',async(_e,id)=>publicConfig(await deleteProfile(id)));
+  handle('profiles:loaders',(_e,version,loader)=>profileLoaders(version,loader));
+  handle('profiles:icon',()=>profileIcon());
+  handle('profiles:java:pick',()=>profileJavaPick());
+  handle('profiles:java',(_e,version,javaPath)=>profileJava(version,javaPath));
+  handle('profiles:updates',(_e,id,kind,world)=>checkProfileUpdates(id,kind,world));
+  handle('profiles:content:update',(_e,id,kind,name,world)=>exclusive('Profilinhalt aktualisieren',async()=>{try{const result=await updateProfileContent(id,kind,name,world,n=>window.webContents.send('app:progress',n));stepStatus('Inhalt aktualisiert','done');return result;}catch(e){stepStatus('Aktualisierung fehlgeschlagen','error');throw e;}finally{window.webContents.send('app:progress',null);}}));
   handle('capes:community',()=>communityCapes());
   handle('skins:prepare',(_e,input:unknown)=>prepareSkin(input));
   handle('skins:save',(_e,id:unknown,name:unknown,model:unknown)=>saveSkinDraft(id,name,model));
@@ -104,7 +117,7 @@ function handlers() {
   handle('status:get', () => serverStatus());
   handle('status:modes', () => modeStatuses());
   handle('java:version', () => javaVersion());
-  handle('game:start', (_e, id: string) => startGame(String(id), notice));
+  handle('game:start', (_e, id: string,instanceId?:string) => startGame(String(id), notice,instanceId));
   handle('game:prepare', () => prepareGame(notice));
   handle('mods:search', (_e, term: string, source: 'modrinth' | 'curseforge') => {
     if (!['modrinth','curseforge'].includes(source)) throw new Error('Unbekannte Modquelle');

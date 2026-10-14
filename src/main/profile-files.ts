@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import AdmZip from 'adm-zip';
-import { getConfig, saveConfig, instancePath, rootPath } from './config';
+import { getConfig, saveConfig, instancePath, rootPath, sharedProfilePath } from './config';
 import type { Instance } from './types';
 import { exclusive } from './operations';
 import { archiveSafe } from './java';
@@ -13,7 +13,7 @@ export function profilePath(instance: Instance) {
   const destination=path.join(rootPath(),'instances',instance.id);
   const legacy=path.join(rootPath(),'instances',instance.version+'-'+instance.loader+(instance.id==='default'?'':'-'+instance.id));
   if(!fs.existsSync(destination)&&fs.existsSync(legacy))fs.renameSync(legacy,destination);
-  return destination;
+  return sharedProfilePath?.(instance)??destination;
 }
 function newId() { return 'instance-'+crypto.randomUUID(); }
 function walk(folder:string, root=folder):Array<{file:string;name:string}> {
@@ -31,7 +31,7 @@ export async function duplicateProfile(id:string) {
     const cfg=getConfig();const original=cfg.instances.find(i=>i.id===id);
     if(!original)throw new Error('Profil nicht gefunden.');
     if(cfg.instances.length>=16)throw new Error('Maximal 16 Profile.');
-    const item={...original,id:newId(),name:(original.name+' Kopie').slice(0,50)};
+    const item={...original,id:newId(),name:(original.name+' Kopie').slice(0,50),sharedGroup:false};
     const from=id===cfg.activeInstanceId?instancePath():profilePath(original);
     const to=profilePath(item);
     let size=0;
@@ -48,7 +48,7 @@ export async function exportProfile(id:string):Promise<string> {
     const choice=await dialog.showSaveDialog({defaultPath:item.name.replace(/[^a-zA-Z0-9_-]/g,'_')+'.scarrix.zip',filters:[{name:'Scarrix-Profil',extensions:['zip']}]});
     if(choice.canceled||!choice.filePath)return 'Export abgebrochen.';
     const zip=new AdmZip();
-    zip.addFile('profile.json',Buffer.from(JSON.stringify({format:'scarrix-profile',schema:1,profile:{name:item.name,version:item.version,loader:item.loader,loaderVersion:item.loaderVersion,ramGB:item.ramGB}},null,2)));
+    zip.addFile('profile.json',Buffer.from(JSON.stringify({format:'scarrix-profile',schema:1,profile:{name:item.name,version:item.version,loader:item.loader,loaderVersion:item.loaderVersion,ramGB:item.ramGB,group:item.group,icon:item.icon,window:item.window,jvmArgs:item.jvmArgs,quickPlayWorld:item.quickPlayWorld}},null,2)));
     const from=id===cfg.activeInstanceId?instancePath():profilePath(item);let size=0;
     for(const dir of allowed)for(const entry of walk(path.join(from,dir))){size+=fs.statSync(entry.file).size;if(size>maxExpanded)throw new Error('Profil zu groß (maximal 1 GB).');zip.addLocalFile(entry.file,'files/'+dir+'/'+path.posix.dirname(entry.name),path.posix.basename(entry.name));}
     const temp=choice.filePath+'.tmp-'+crypto.randomUUID();
@@ -77,11 +77,11 @@ export async function importProfile() {
     if(fs.statSync(choice.filePaths[0]).size>300*1024*1024)throw new Error('Profilarchiv zu groß (maximal 300 MB).');
     const zip=new AdmZip(choice.filePaths[0]);validateArchiveEntries(zip.getEntries());
     const metadata=zip.getEntry('profile.json');
-    if(!metadata||metadata.header.size>16384)throw new Error('Profilbeschreibung fehlt oder ist zu groß.');
+    if(!metadata||metadata.header.size>256000)throw new Error('Profilbeschreibung fehlt oder ist zu groß.');
     const raw=JSON.parse(metadata.getData().toString('utf8'));
     if(raw.format!=='scarrix-profile'||raw.schema!==1)throw new Error('Unbekanntes Profilformat.');
     const p=raw.profile;
-    const item:Instance={id:newId(),name:p?.name,version:p?.version,loader:p?.loader,loaderVersion:p?.loaderVersion,ramGB:p?.ramGB};
+    const item:Instance={id:newId(),name:p?.name,version:p?.version,loader:p?.loader,loaderVersion:p?.loaderVersion,ramGB:p?.ramGB,group:p?.group,icon:p?.icon,window:p?.window,jvmArgs:p?.jvmArgs,quickPlayWorld:p?.quickPlayWorld};
     const dest=profilePath(item);
     // Validate all settings before extracting; rollback on any extraction failure.
     const next={...cfg,instances:[...cfg.instances,item],activeInstanceId:item.id};

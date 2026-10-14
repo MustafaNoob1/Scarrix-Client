@@ -2,6 +2,20 @@
 
 Die Settings-Navigation verwendet feste, gleich hohe Einträge. Auf der Spielseite sind Spielen und Profil-Auswahl getrennte Bedienelemente; das Profil-Menü zeigt Name, Version und Loader.
 
+## Profilseite und Einstellungen
+
+Alle/Modpacks, Namenssuche und Sortierung zeigen die Profilbibliothek. Spielen startet direkt das angeklickte Profil mit seinem RAM, Java und Fensteroptionen; Microsoft-/Minecraft-Prüfung bleibt erforderlich. Mods öffnet die Inhaltsansicht dieses Profils. Das Zahnrad bietet Bearbeiten, Duplizieren, Exportieren, Ordner öffnen und Entfernen. Entfernte Profile bleiben mit ihren Dateien auf dem Datenträger erhalten.
+
+Die Inhaltsansicht liest tatsächliche Dateien aus dem Profil: Mods, Ressourcenpakete, Shader und Datapacks einer ausgewählten Welt. Fabric-Metadaten liefern Name, Version und Bild; andere Dateien verwenden vorhandene Pack-Bilder bzw. Dateinamen. Schalter aktivieren/deaktivieren eine Datei über .disabled. Entfernen sichert sie in removed-content. Welten, Screenshots und Logs öffnen den passenden lokalen Ordner.
+
+Die ausdrückliche Updateprüfung sendet Datei-Prüfsummen an [Modrinths Versions-API](https://docs.modrinth.com/api/operations/getlatestversionsfromhashes/) und berücksichtigt die Spielversion und den Loader. Nicht erkannte Dateien werden nicht ersetzt. Einzelne oder alle gefundenen stabilen Updates verwenden den bereits geprüften Downloadweg; deaktivierte Inhalte bleiben deaktiviert. Mod-Abhängigkeiten werden gemeldet und müssen gegebenenfalls zusätzlich installiert werden. Es gibt noch keine automatische CurseForge-Updateprüfung.
+
+Profileinstellungen: Allgemein (Name, PNG-Bild, Gruppe, gemeinsamer Gruppenordner, Schnellstart einer vorhandenen Welt, aktuelles Konto), Installation (offizielle Spielversionen, Vanilla/Fabric/Forge und passende Loader-Versionen), Java & Speicher (dynamischer physischer RAM, optionaler Java-Pfad, Erkennung/Kompatibilitätsprüfung, begrenzte GC-Argumente) und Fenster (Breite, Höhe, Auflösungsvorlagen, Vollbild). Quilt/NeoForge sind noch nicht installierbar und werden nicht als funktionierende Optionen angezeigt.
+
+Gemeinsame Gruppenordner liegen getrennt von Einzelprofilen unter minecraft/groups. Nur Profile mit identischer Minecraft-/Loader-Version dürfen einen Ordner gemeinsam verwenden. Alte Einzelprofil-Dateien bleiben erhalten und werden beim Umschalten nicht verschoben. Duplizieren erzeugt wieder ein eigenes Profil. Export übernimmt portable Einstellungen; lokale Java-Pfade und die Gruppenfreigabe werden nicht in ein anderes System importiert.
+
+Spielzeit und letzter Start werden lokal erfasst. Speicherangaben zählen bis 20.000 Dateien und ignorieren Links; bei größeren Profilen ist die Anzeige eine Untergrenze. Schnellstart öffnet ab Minecraft 1.20 eine vorhandene Welt anstelle der Netzwerkverbindung. Benutzerdefiniertes Java muss zur offiziell benötigten Java-Version passen; sonst stoppt der Start mit einem Hinweis. Ohne Override kann der Launcher passendes Java weiterhin automatisch installieren.
+
 ## Inhalte installieren
 
 Modrinth zeigt Mods, Ressourcenpakete, Shader und Datenpakete mit Projektbildern, Autor, Downloads und Kategorien. Suche, Minecraft-Version, Loader, Kategorie und Sortierung filtern den Katalog. CurseForge-Mods benötigen den bereits unterstützten API-Key; dieser wird nicht an den Renderer übertragen. Ohne Key bleibt Modrinth verfügbar.

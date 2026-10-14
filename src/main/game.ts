@@ -2,13 +2,16 @@ import { memoryInfo } from './memory';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import fs from 'node:fs';
+import path from 'node:path';
 import { ensureJava } from './java';
 import { runInstallerTask, stepStatus } from './downloads';
 import { exclusive } from './operations';
 import { trackGame } from './game-sessions';
 import { Version, launch } from '@xmcl/core';
 import { getVersionList, installTask, installDependenciesTask, getLoaderArtifactListFor, installFabric, getForgeVersionList, installForge } from '@xmcl/installer';
-import { getConfig, rootPath, instancePath } from './config';
+import { getConfig, rootPath, instancePath, saveConfig } from './config';
+import { profileLaunchOptions } from './profile-options';
+import {recordProfilePlay} from './profile-studio';
 import { getSessionToken, getPublicProfile, restoreSession } from './auth';
 const execFileAsync = promisify(execFile);
 
@@ -21,7 +24,7 @@ export async function javaVersion(): Promise<string> {
 // Download and check Minecraft files without requiring an approved Microsoft application.
 async function doPrepare(notify: (message: string) => void) {
   const cfg = getConfig();
-    const javaPath = await ensureJava(cfg.minecraft.version);
+    const javaPath = await ensureJava(cfg.minecraft.version,cfg.instances.find(i=>i.id===cfg.activeInstanceId)?.javaPath);
     const mcRoot = rootPath();
     const gameRoot = instancePath();
     fs.mkdirSync(mcRoot, { recursive: true });
@@ -67,8 +70,8 @@ export async function prepareGame(notify: (message: string) => void): Promise<st
 
 let launching = false;
 
-export async function startGame(modeId: string, notify: (message: string) => void): Promise<string> {
-  return exclusive('Minecraft starten', () => doStartGame(modeId, notify));
+export async function startGame(modeId: string, notify: (message: string) => void, instanceId?:string): Promise<string> {
+  return exclusive('Minecraft starten', async() => {if(instanceId){const cfg=getConfig();if(!cfg.instances.some(i=>i.id===instanceId))throw new Error('Profil nicht gefunden.');await saveConfig({...cfg,activeInstanceId:instanceId},true);}return doStartGame(modeId, notify);});
 }
 async function doStartGame(modeId: string, notify: (message: string) => void): Promise<string> {
   if (launching) throw new Error('Minecraft wird bereits vorbereitet.');
@@ -83,6 +86,8 @@ async function doStartGame(modeId: string, notify: (message: string) => void): P
     if (!profile) throw new Error('Bitte zuerst mit Microsoft anmelden.');
     const { resolved, gameRoot, mcRoot, javaPath } = await prepareMinecraft(notify);
     const minecraft = cfg.minecraft;
+    const selectedInstance=cfg.instances.find(i=>i.id===cfg.activeInstanceId)!;
+    if(selectedInstance.quickPlayWorld){const parts=minecraft.version.split('.').map(Number);if(parts[0]<26&&parts[1]<20)throw new Error('Schnellstart benötigt Minecraft 1.20 oder neuer.');if(!fs.existsSync(path.join(gameRoot,'saves',selectedInstance.quickPlayWorld,'level.dat')))throw new Error('Schnellstart-Welt nicht gefunden.');}
     notify('Minecraft wird gestartet …');
     const child = await launch({
       javaPath,
@@ -93,13 +98,16 @@ async function doStartGame(modeId: string, notify: (message: string) => void): P
       accessToken: token,
       launcherName: 'Scarrix Client', launcherBrand: 'scarrix-client',
       minMemory: 512, maxMemory: Math.min(minecraft.ramGB * 1024, memoryInfo().maxMB),
-      server: { ip: cfg.server.address, port: cfg.server.port }
+      ...profileLaunchOptions(selectedInstance),
+      server: selectedInstance.quickPlayWorld?undefined:{ ip: cfg.server.address, port: cfg.server.port }
     });
     stepStatus('Minecraft gestartet', 'done');
+    const started=Date.now();recordProfilePlay(selectedInstance.id,started,0);child.once('exit',()=>recordProfilePlay(selectedInstance.id,started,Math.max(0,Date.now()-started)));
     const instance=cfg.instances.find(i=>i.id===cfg.activeInstanceId);
     trackGame(child,{name:instance?.name??'Minecraft',version:minecraft.version,loader:minecraft.loader,player:profile.name,ramMB:Math.min(minecraft.ramGB*1024,memoryInfo().maxMB)},gameRoot,[token]);
     child.on('error', err => {notify('Minecraft-Prozessfehler: ' + err.message);});
     child.on('exit', code => {notify(`Minecraft beendet (Code ${code ?? 'unbekannt'}).`);});
+    if(selectedInstance.quickPlayWorld)return "Minecraft gestartet · Welt: "+selectedInstance.quickPlayWorld;
     return `Minecraft gestartet für ${profile.name}. Verbinde über ${cfg.server.address}:${cfg.server.port}; wähle ${mode.group ? mode.group + " / " : ""}${mode.name} innerhalb des Netzwerks. Ein automatischer Wechsel zum Unterserver ist ohne Scarrix-Routing-API nicht möglich.`;
   } finally { launching = false; }
 }
