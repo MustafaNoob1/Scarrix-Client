@@ -1,3 +1,7 @@
+import {listAccounts,switchAccount,removeAccount} from './auth';
+import {forgetAllSavedAccounts} from './account-vault';
+import {assertIdle} from './operations';
+import {modPreflight} from './mod-preflight';
 import { app, BrowserWindow, ipcMain, shell, Menu } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -81,6 +85,7 @@ function handlers() {
   handle('diagnostics:analyze',()=>analyzeDiagnostics());
   handle('catalog:modpack',(_e,id,version)=>enqueueDownload('Modpack installieren',()=>installCatalogModpack(id,version)));
   handle('profiles:contents',(_e,id,kind,world)=>profileContents(id,kind,world));
+  handle('profiles:preflight',(_e,id)=>modPreflight(id));
   handle('profiles:overview',(_e,id)=>profileOverview(id));
   handle('profiles:toggle',(_e,id,kind,name,enabled,world)=>toggleProfileContent(id,kind,name,enabled===true,world));
   handle('profiles:content:remove',(_e,id,kind,name,world)=>removeProfileContent(id,kind,name,world));
@@ -135,8 +140,11 @@ function handlers() {
   handle('system:memory', () => memoryInfo());
   handle('minecraft:versions', () => officialVersions());
   handle('app:version', () => app.getVersion());
-  handle('config:save', async (_e, config: Config) => {const saved=await saveConfig(config);if(!saved.launcher.rememberAccount)forgetMicrosoftAccount();return publicConfig(saved);});
-  handle('auth:start', () => microsoftLogin(window));
+  handle('config:save', async (_e, config: Config) => {const saved=await saveConfig(config);if(!saved.launcher.rememberAccount){forgetMicrosoftAccount();forgetAllSavedAccounts();}return publicConfig(saved);});
+  handle('auth:accounts',()=>listAccounts());
+  handle('auth:switch',(_e,id)=>{assertIdle();return switchAccount(id);});
+  handle('auth:remove',(_e,id)=>{assertIdle();return removeAccount(id);});
+  handle('auth:start', () => {assertIdle();return microsoftLogin(window);});
   handle('auth:profile', () => restoreSession());
   handle('auth:refresh', () => refreshProfile());
   handle('auth:logout', () => { logout(); return true; });

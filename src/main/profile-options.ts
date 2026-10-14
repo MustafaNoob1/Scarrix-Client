@@ -1,6 +1,9 @@
 import path from 'node:path';
 import type {Instance} from './types';
 export function validateProfileOptions(item:Instance) {
+ if(item.favorite!==undefined&&typeof item.favorite!=='boolean')throw Error('Favorit ungültig.');
+ if(item.color!==undefined&&!['red','blue','purple','gold'].includes(item.color))throw Error('Profilfarbe ungültig.');
+ if(item.preferredAccountId!==undefined&&!/^[a-f0-9]{32}$/i.test(item.preferredAccountId))throw Error('Bevorzugtes Konto ungültig.');
  if(item.sharedGroup!==undefined&&typeof item.sharedGroup!=='boolean')throw new Error('Gemeinsamer Ordner muss ein- oder ausgeschaltet sein.');
  for(const [name,value,max] of [['Gruppe',item.group,40],['Schnellstart-Welt',item.quickPlayWorld,80]] as const)if(value!==undefined&&(typeof value!=='string'||value.length>max||/[\x00-\x1f\x7f]/.test(value)))throw new Error(name+' ist ungültig.');
  if(item.sharedGroup&&!item.group?.trim())throw new Error('Ein gemeinsamer Ordner benötigt eine Gruppe.');

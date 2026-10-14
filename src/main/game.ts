@@ -1,3 +1,4 @@
+import {modPreflight} from './mod-preflight';
 import { memoryInfo } from './memory';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -80,6 +81,9 @@ async function doStartGame(modeId: string, notify: (message: string) => void): P
     const cfg = getConfig();
     const mode = cfg.modes.find(m => m.id === modeId);
     if (!mode) throw new Error('Dieser Spielmodus ist nicht konfiguriert.');
+    const check=modPreflight(cfg.activeInstanceId);if(!check.canLaunch)throw Error('Mod-Prüfung: '+check.issues.filter(i=>i.severity==='error').map(i=>i.file+': '+i.message).join(' · ')+' Öffne im Profil die Mod-Prüfung.');
+    const preferred=cfg.instances.find(i=>i.id===cfg.activeInstanceId)?.preferredAccountId;
+    if(preferred&&getPublicProfile()?.id!==preferred){const {switchAccount}=await import('./auth');await switchAccount(preferred);}
     await restoreSession();
     const profile = getPublicProfile();
     const token = getSessionToken();

@@ -1,5 +1,5 @@
 export interface Mode { id: string; name: string; address: string; port: number; group?: string }
-export interface Instance { id: string; name: string; version: string; loader: 'vanilla' | 'fabric' | 'forge'; loaderVersion?: string; ramGB: number;group?:string;sharedGroup?:boolean;quickPlayWorld?:string;javaPath?:string;jvmArgs?:string[];window?:{width:number;height:number;fullscreen:boolean};icon?:string }
+export interface Instance { id: string; name: string; version: string; loader: 'vanilla' | 'fabric' | 'forge'; loaderVersion?: string; ramGB: number;favorite?:boolean;color?:'red'|'blue'|'purple'|'gold';preferredAccountId?:string;group?:string;sharedGroup?:boolean;quickPlayWorld?:string;javaPath?:string;jvmArgs?:string[];window?:{width:number;height:number;fullscreen:boolean};icon?:string }
 export interface Config {
   server: { name: string; address: string; port: number; group?: string };
   minecraft: { version: string; loader: 'vanilla' | 'fabric' | 'forge' | 'quilt'; loaderVersion?: string; javaPath: string; ramGB: number };
@@ -7,7 +7,7 @@ export interface Config {
   github: { owner: string; repo: string; privateRepo?: boolean };
   modrinth: { userAgent: string };
   curseforge: { apiKey: string };
-  launcher: { theme: 'red' | 'blue' | 'purple' | 'gold'; rememberAccount?: boolean; rotateSkin?: boolean; animations?: boolean; backgroundMotion?: 'on' | 'off' | 'system'; background?: 'grid' | 'glow' | 'plain' | 'aurora' | 'stars' | 'nebula' | 'embers' | 'matrix' | 'horizon' };
+  launcher: { showNews?:boolean;skinSize?:'small'|'medium'|'large';quickProfileId?:string;onboardingDone?:boolean; theme: 'red' | 'blue' | 'purple' | 'gold'; rememberAccount?: boolean; rotateSkin?: boolean; animations?: boolean; backgroundMotion?: 'on' | 'off' | 'system'; background?: 'grid' | 'glow' | 'plain' | 'aurora' | 'stars' | 'nebula' | 'embers' | 'matrix' | 'horizon' };
   instances: Instance[];
   activeInstanceId: string;
   language: 'de' | 'en';

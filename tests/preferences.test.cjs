@@ -10,6 +10,7 @@ function setup() {
   let temp;
   const fakeFs = {existsSync:()=>true,readFileSync:()=>config,mkdirSync:()=>{},writeFileSync:(_p,c)=>temp=c,renameSync:()=>config=temp};
   const box={exports:{},process,require:id=>{
+    if(id==='./launcher-options')return require('./load-main.cjs')('launcher-options');
     if(id==='./profile-options')return require('./load-main.cjs')('profile-options');
     if(id==='./operations')return {assertIdle:()=>{}};
     if(id==='electron')return {app:{getPath:()=>'/fake',isPackaged:false}};
@@ -39,6 +40,10 @@ test('old installations gain appearance defaults',()=>{
   assert.equal(c.launcher.rotateSkin,true);
   assert.equal(c.launcher.animations,true);
   assert.equal(c.launcher.background,'grid');
+});
+test('home preferences, favorites, profile colors and preferred accounts survive a config round trip',async()=>{
+ const api=setup(),c=api.getConfig();c.launcher={...c.launcher,showNews:false,skinSize:'large',quickProfileId:'default',onboardingDone:true};Object.assign(c.instances[0],{favorite:true,color:'gold',preferredAccountId:'a'.repeat(32)});const saved=await api.saveConfig(c);assert.equal(saved.launcher.showNews,false);assert.equal(saved.launcher.skinSize,'large');assert.equal(saved.launcher.onboardingDone,true);assert.equal(saved.launcher.quickProfileId,'default');assert.equal(saved.instances[0].favorite,true);assert.equal(saved.instances[0].color,'gold');assert.equal(saved.instances[0].preferredAccountId,'a'.repeat(32));
+ await assert.rejects(api.saveConfig({...saved,instances:[{...saved.instances[0],color:'javascript'}]}));await assert.rejects(api.saveConfig({...saved,instances:[{...saved.instances[0],preferredAccountId:'../file'}]}));
 });
 test('animated backgrounds are saved and unknown options fall back safely',async()=>{
   const api=setup();
