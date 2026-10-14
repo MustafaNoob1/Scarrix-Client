@@ -91,6 +91,6 @@ export async function installLauncherUpdate(win:BrowserWindow){target=win;if(!do
 let updateProgress=progressReporter('Launcher-Update herunterladen');
 async function promptRestart(){
   if(!target||target.isDestroyed())return;
-  const result=await dialog.showMessageBox(target,{type:'info',title:'Launcher aktualisieren',message:'Geprüftes Update jetzt installieren und neu starten?',buttons:['Jetzt neu starten','Später'],defaultId:0,cancelId:1});
-  if(result.response===0&&downloaded){assertIdle();autoUpdater.quitAndInstall(false,true);}
+  const result=await dialog.showMessageBox(target,{type:'info',title:'Launcher aktualisieren',message:'Geprüftes Update im Hintergrund anwenden und den Launcher neu starten?',buttons:['Jetzt neu starten','Später'],defaultId:0,cancelId:1});
+  if(result.response===0&&downloaded){assertIdle();autoUpdater.quitAndInstall(true,true);}
 }

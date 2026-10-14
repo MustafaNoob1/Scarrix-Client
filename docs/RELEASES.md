@@ -39,3 +39,5 @@ Bei erneuter privater Sichtbarkeit braucht es einen öffentlichen Distributionsk
 
 Der Preview-Release ist eine Testversion, kein fertig getesteter Produktionslauncher.
 
+
+Windows-In-App-Updates verwenden den Silent-Modus des geprüften NSIS-Pakets (`quitAndInstall(true, true)`): kein Setup-Assistent, automatische Rückkehr in den Launcher nach dem Anwenden. Technisch bleibt das signatur- und prüfsummengeprüfte Update-Paket erforderlich, damit gesperrte Programmdateien nach dem Beenden sicher ersetzt werden. Für die erste Installation bleibt ein normaler Installer verfügbar. Eine systemseitige Administratorabfrage kann bei einer Installation in geschützten Ordnern weiterhin erforderlich sein. Der Benutzer startet Download und Neustart ausdrücklich; normale Starts/Beenden lösen keine automatische Installation aus.
