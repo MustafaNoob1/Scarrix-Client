@@ -1,0 +1,119 @@
+/* One alignment rule for actions, navigation and dialogs, including portals. */
+button {
+  display: inline-flex;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  gap: .5em;
+  line-height: 1.25;
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+button > .ui-icon,
+button > .brand-icon,
+button > .scarrix-mark {
+  display: block;
+  flex-shrink: 0;
+  margin: 0;
+  vertical-align: initial;
+}
+
+.button-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5em;
+  min-width: 0;
+}
+.button-label > .ui-icon { margin: 0; flex-shrink: 0; }
+
+/* These controls previously used block layout or space-between. */
+.shell .settings-nav button,
+.shell .profile-editor-layout > nav > button,
+.shell .profile-gear-menu button,
+.shell .profile-content-nav button,
+.shell .header-popup button,
+.shell .profile-picker > button,
+.studio-dialog button,
+.instance-logs-window button {
+  display: inline-flex;
+}
+
+/* Keep multi-line choices as a centered stack rather than a long text row. */
+.shell .launch-split > .btn,
+.shell .profile-picker-menu button,
+.shell .background-options > button,
+.shell .skin-model-options button,
+.shell .skin-library-card,
+.shell .skin-card-body,
+.shell .add-skin,
+.shell .no-cape {
+  display: flex;
+  flex-direction: column;
+}
+.shell .launch-split > .btn { gap: 6px; padding: 10px 12px; }
+.shell .launch-split > .btn > small { margin: 0; line-height: 1.3; }
+.shell .launch-split .button-label { flex-wrap: wrap; }
+.shell .profile-picker > button { padding-inline: 12px; }
+.shell .profile-picker > button > i { display: flex; align-items: center; margin: 0; }
+.shell .profile-picker-menu button { padding: 12px 30px; gap: 5px; }
+.shell .profile-picker-menu small { margin: 0; }
+.shell .profile-picker-menu em { top: 50%; transform: translateY(-50%); display: flex; }
+.shell .background-options > button { gap: 7px; padding: 8px 8px 12px; }
+.shell .background-options b,
+.shell .background-options small { margin: 0; }
+.shell .background-thumbnail { width: 100%; }
+.shell .skin-model-options small { margin: 0; }
+.shell .profile-open { justify-content: center; }
+.shell .profile-open > span:last-child { text-align: center; }
+.shell .profile-content-nav button { gap: 7px; }
+.shell .profile-content-nav button small { float: none; margin: 0; }
+
+/* Compact controls retain their dimensions and center the glyph, not its baseline. */
+.shell .header-icon,
+.shell .window-buttons button,
+.shell .skin-card-actions button,
+.shell .cape-card-actions button,
+.studio-close,
+.studio-dialog > header > button,
+.shell .export-tree-row > button {
+  display: inline-flex;
+  padding: 0;
+  gap: 0;
+}
+.shell .profile-gear-anchor > button {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+}
+.shell .export-formats > button { display: inline-flex; }
+.shell .catalog-install button:last-child { min-width: 32px; }
+.shell .settings-nav .ui-icon,
+.shell .catalog-sources .brand-icon { margin: 0; }
+.shell .color-choice { display: inline-flex; padding: 0; }
+.shell .rail-brand { display: flex; }
+.shell .compact-sidebar .nav > span { display: flex; align-items: center; justify-content: center; }
+
+.shell .btn,
+.shell .catalog-tabs button,
+.shell .catalog-sources button,
+.shell .catalog-pagination button,
+.shell .utility-actions button,
+.queue-job button,
+.studio-buttons button {
+  min-height: 36px;
+}
+
+@media (max-width: 720px) {
+  .shell .topbar-left > .header-icon { display: none; }
+  .shell .notification-button { display: none; }
+  .shell .stage-links { flex-wrap: wrap; gap: 8px 12px; }
+  .shell .stage-links button { min-height: 28px; }
+  .shell .settings-nav button { padding-inline: 10px; }
+}
+
+@media (min-width: 721px) and (max-width: 980px) {
+  .shell .topbar-left > .header-icon:nth-child(2) { display: none; }
+}

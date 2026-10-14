@@ -21,6 +21,7 @@ import { ScarrixMark } from './ScarrixMark';
 import { AmbientBackground, backgrounds } from './AmbientBackground';
 import { DownloadPanel, JavaPanel, InstalledModsPanel, DiagnosticsPanel } from './FeaturePanels';
 import { SkinPreview } from './SkinPreview';
+import './buttons.css';
 
 type Tab = 'home' | 'mods' | 'skins' | 'capes' | 'settings';
 const de = {
@@ -208,7 +209,7 @@ function App() {
             <SkinPreview cape={capePreview.dataUrl??profile?.capes.find(c=>c.state==='ACTIVE')?.url} skin={profile?.skins?.[0]?.url} nameTag={profile?.name ?? "Gast"} model={profile?.skins?.[0]?.variant?.toLowerCase() === "slim" ? "slim" : "classic"} rotate={config.launcher.rotateSkin !== false} animate={config.launcher.animations !== false}/>
             <div className="character-platform"/>
             <div className="stage-launch">
-              <div className="launch-split"><button className="btn primary" disabled={busy || !profile || !selectedMode} onClick={() => run(() => window.scarrix.game(selectedMode!.id), setNotice)}><UiIcon glyph="▶"/> {busy ? 'WIRD VORBEREITET …' : 'SPIELEN'}<small>{activeInstance?.version} · {activeInstance?.loader.toUpperCase()}</small></button><ProfilePicker instances={config.instances} selected={activeInstance?.id??''} disabled={busy} onSelect={chooseInstance}/></div>
+              <div className="launch-split"><button className="btn primary" disabled={busy || !profile || !selectedMode} onClick={() => run(() => window.scarrix.game(selectedMode!.id), setNotice)}><span className="button-label"><UiIcon glyph="▶"/> {busy ? 'WIRD VORBEREITET …' : 'SPIELEN'}</span><small>{activeInstance?.version} · {activeInstance?.loader.toUpperCase()}</small></button><ProfilePicker instances={config.instances} selected={activeInstance?.id??''} disabled={busy} onSelect={chooseInstance}/></div>
               {!profile && <button className="text-btn" disabled={busy} onClick={connect}>Mit Microsoft anmelden, um zu spielen</button>}
               <div className="stage-links"><button className="text-btn" onClick={() => setTab('skins')}><UiIcon glyph="◈"/> Skin ändern</button><button className="text-btn" disabled={busy} onClick={() => {setEditingId(null);setInstanceStep(0);setInstanceName('');setDraftRam(memory ? memory.recommendedMB/1024 : .5);setShowNewInstance(true);}}>+ Neues Profil</button><button className="text-btn" disabled={busy} onClick={() => run(() => window.scarrix.gamePrepare(), setNotice)}>Dateien vorbereiten</button></div>
             </div>
