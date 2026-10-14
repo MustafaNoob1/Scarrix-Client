@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain, shell, Menu } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import { getConfig, saveConfig, instancePath, rootPath } from './config';
-import { microsoftLogin, getPublicProfile, logout, refreshProfile, selectCape } from './auth';
+import { microsoftLogin, getPublicProfile, logout, refreshProfile, selectCape, restoreSession } from './auth';
 import { javaVersion, startGame, prepareGame } from './game';
 import { serverStatus, modeStatuses } from './status';
 import { installedMods, toggleMod, removeMod, searchMods, installMod } from './mods';
@@ -16,6 +16,9 @@ import { exclusive } from './operations';
 import { duplicateProfile, importProfile, exportProfile } from './profile-files';
 import { recordError, friendlyError, readLogs, openLogs, exportLogs } from './diagnostics';
 import { listGameSessions, gameSessionLogs, stopGameSession, openGameSessionFolder, exportGameSessionLogs } from './game-sessions';
+import { readWindowState, watchWindowState } from './window-state';
+import { forgetMicrosoftAccount } from './microsoft-token';
+import { importModpack } from './modpack';
 import { controlWindow } from './window-controls';
 import type { Config } from './types';
 
@@ -23,12 +26,15 @@ let window: BrowserWindow;
 const notice = (text: string) => { if (window && !window.isDestroyed()) window.webContents.send('app:notice', text); };
 
 function createWindow(): void {
+  const savedWindow=readWindowState();
   window = new BrowserWindow({
-    frame: false, width: 1200, height: 790, minWidth: 930, minHeight: 600,
+    frame: false, ...savedWindow,
     icon: app.isPackaged ? path.join(process.resourcesPath,'icon.png') : path.resolve('assets/icons/icon.png'),
     backgroundColor: '#09090b', title: 'Scarrix Client', autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true, sandbox: false }
   });
+  watchWindowState(window);
+  if(savedWindow.maximized)window.maximize();
   window.setMenuBarVisibility(false);
   window.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https:\/\/(login\.microsoftonline\.com|microsoft\.com|www\.microsoft\.com|github\.com|docs\.modrinth\.com)/i.test(url)) shell.openExternal(url);
@@ -46,6 +52,7 @@ function handle(channel:string, action:(event:Electron.IpcMainInvokeEvent,...arg
   ipcMain.handle(channel, async(event,...args)=>{try{return await action(event,...args);}catch(error){try{recordError(error);}catch{}if(['game:prepare','game:start','java:install','mods:install','update:check'].includes(channel))stepStatus(friendlyError(error),'error');throw new Error(friendlyError(error));}});
 }
 function handlers() {
+  handle('profiles:modpack',async()=>{const cfg=await importModpack();return cfg?publicConfig(cfg):null;});
   handle('sessions:list',()=>listGameSessions());
   handle('sessions:logs',(_e,id:unknown,since:unknown)=>gameSessionLogs(id,since));
   handle('sessions:stop',(_e,id:unknown)=>stopGameSession(id));
@@ -73,9 +80,9 @@ function handlers() {
   handle('system:memory', () => memoryInfo());
   handle('minecraft:versions', () => officialVersions());
   handle('app:version', () => app.getVersion());
-  handle('config:save', async (_e, config: Config) => publicConfig(await saveConfig(config)));
+  handle('config:save', async (_e, config: Config) => {const saved=await saveConfig(config);if(!saved.launcher.rememberAccount)forgetMicrosoftAccount();return publicConfig(saved);});
   handle('auth:start', () => microsoftLogin(window));
-  handle('auth:profile', () => getPublicProfile());
+  handle('auth:profile', () => restoreSession());
   handle('auth:refresh', () => refreshProfile());
   handle('auth:logout', () => { logout(); return true; });
   handle('status:get', () => serverStatus());

@@ -21,10 +21,12 @@ Diese Version verwendet dort weiterhin den Device-Code-Flow. Der Launcher zeigt 
 
 ## Datenschutz und Grenzen
 
-Minecraft-Token bleiben im Hauptprozess und im Arbeitsspeicher. Microsofts Broker verwaltet seine eigenen Konten/Token im Betriebssystem; dieser Speicher wird vom Launcher weder ausgelesen noch exportiert. „Abmelden“ trennt das Minecraft-Konto vom Launcher, meldet aber nicht das gesamte Windows-Konto ab. Kein dauerhafter eigener Token-Cache, kein Loggen von Passwörtern oder Token, keine automatische Browser-Ausweichanmeldung unter Windows.
+Minecraft-Token bleiben im Hauptprozess und im Arbeitsspeicher. Microsofts Broker verwaltet seine eigenen Konten/Token im Betriebssystem; dieser Speicher wird vom Launcher weder ausgelesen noch exportiert. „Abmelden“ trennt das Minecraft-Konto vom Launcher, meldet aber nicht das gesamte Windows-Konto ab. Bei aktivem „Anmeldung merken“ speichert der Launcher die gewählte Microsoft-Kontoidentität und den MSAL-Cache verschlüsselt über Electron safeStorage (unter Windows DPAPI). Auf Linux mit basic_text oder ohne sicheren Schlüsselspeicher erfolgt keine dauerhafte Speicherung. Erst nach einer erfolgreichen Minecraft-Profilprüfung wird gespeichert. Beim Start wird ausschließlich eine stille Anmeldung versucht; nötige Kontobestätigung erfordert einen Klick auf Anmelden. Abmelden oder das Ausschalten der Merken-Funktion löscht die lokale verschlüsselte Datei. Kein Loggen von Passwörtern oder Token, keine automatische Browser-Ausweichanmeldung unter Windows.
 
 Der Paket-Build prüft, ob die nativen Broker-Module aus dem fertigen Windows-Paket geladen werden können. End-to-End-Anmeldung mit einem echten Minecraft-Konto muss nach App-Registrierung und Freigabe geprüft werden. Falls Windows/WAM nicht verfügbar ist, erscheint eine verständliche Fehlermeldung.
 
 Offizielle Referenzen:
 - https://learn.microsoft.com/en-us/entra/msal/javascript/node/brokering
 - https://learn.microsoft.com/en-us/entra/msal/dotnet/acquiring-tokens/desktop-mobile/wam
+
+Verschlüsselung: https://www.electronjs.org/docs/latest/api/safe-storage

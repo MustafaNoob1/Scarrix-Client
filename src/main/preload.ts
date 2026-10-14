@@ -13,7 +13,7 @@ contextBridge.exposeInMainWorld('scarrix', {
   statusModes: () => ipcRenderer.invoke('status:modes'),
   javaDetails: () => ipcRenderer.invoke('java:details'),
   javaInstall: () => ipcRenderer.invoke('java:install'),
-  profiles: { duplicate:(id:string)=>ipcRenderer.invoke('profiles:duplicate',id), export:(id:string)=>ipcRenderer.invoke('profiles:export',id), import:()=>ipcRenderer.invoke('profiles:import') },
+  profiles: { modpack:()=>ipcRenderer.invoke('profiles:modpack'), duplicate:(id:string)=>ipcRenderer.invoke('profiles:duplicate',id), export:(id:string)=>ipcRenderer.invoke('profiles:export',id), import:()=>ipcRenderer.invoke('profiles:import') },
   diagnostics: {read:()=>ipcRenderer.invoke('diagnostics:read'),open:()=>ipcRenderer.invoke('diagnostics:open'),export:()=>ipcRenderer.invoke('diagnostics:export')},
   downloadStatus:()=>ipcRenderer.invoke('download:get'),
   onDownload:(cb:(data:unknown)=>void)=>listen('download:status',cb),

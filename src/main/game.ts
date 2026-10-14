@@ -9,7 +9,7 @@ import { trackGame } from './game-sessions';
 import { Version, launch } from '@xmcl/core';
 import { getVersionList, installTask, installDependenciesTask, getLoaderArtifactListFor, installFabric, getForgeVersionList, installForge } from '@xmcl/installer';
 import { getConfig, rootPath, instancePath } from './config';
-import { getSessionToken, getPublicProfile } from './auth';
+import { getSessionToken, getPublicProfile, restoreSession } from './auth';
 const execFileAsync = promisify(execFile);
 
 export async function javaVersion(): Promise<string> {
@@ -37,14 +37,14 @@ async function doPrepare(notify: (message: string) => void) {
       stepStatus('Fabric installieren');
       notify('Installiere Fabric …');
       const loaders = await getLoaderArtifactListFor(minecraft.version);
-      const selected = loaders[0];
+      const selected = minecraft.loaderVersion ? loaders.find(l=>l.loader.version===minecraft.loaderVersion) : loaders[0];
       if (!selected) throw new Error('Keine Fabric-Version verfügbar.');
       launchVersion = await installFabric(selected, mcRoot);
     } else if (minecraft.loader === 'forge') {
       stepStatus('Forge installieren');
       notify('Installiere Forge …');
       const list = await getForgeVersionList({ minecraft: minecraft.version });
-      const selected = list.versions?.[0];
+      const selected = minecraft.loaderVersion ? list.versions?.find(l=>l.version===minecraft.loaderVersion) : list.versions?.[0];
       if (!selected) throw new Error('Kein Forge-Loader für diese Version gefunden.');
       launchVersion = await installForge(selected, mcRoot, { java: javaPath });
     } else if (minecraft.loader === 'quilt') {
@@ -77,6 +77,7 @@ async function doStartGame(modeId: string, notify: (message: string) => void): P
     const cfg = getConfig();
     const mode = cfg.modes.find(m => m.id === modeId);
     if (!mode) throw new Error('Dieser Spielmodus ist nicht konfiguriert.');
+    await restoreSession();
     const profile = getPublicProfile();
     const token = getSessionToken();
     if (!profile) throw new Error('Bitte zuerst mit Microsoft anmelden.');

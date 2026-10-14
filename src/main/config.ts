@@ -12,7 +12,7 @@ const defaults: Config = {
   microsoft: { clientId: '604d79e5-9f8c-4e1c-ab0f-6d8001175151' }, github: { owner: 'MustafaNoob1', repo: 'scarrix-client', privateRepo: false },
   modrinth: { userAgent: 'MustafaNoob1/scarrix-client/0.1.1' },
   curseforge: { apiKey: '' }, language: 'de',
-  launcher: { theme: 'red', background: 'aurora', animations: true, rotateSkin: true },
+  launcher: { rememberAccount: true, theme: 'red', background: 'aurora', animations: true, rotateSkin: true },
   instances: [{ id: 'default', name: 'Standard', version: '1.21.1', loader: 'vanilla', ramGB: 4 }],
   activeInstanceId: 'default',
   modes: [
@@ -74,8 +74,8 @@ export function getConfig(): Config {
   const selected = instances.find(item => item.id === custom.activeInstanceId) ?? instances[0];
   const theme = ['red', 'blue', 'purple', 'gold'].includes(custom.launcher?.theme ?? '') ? custom.launcher!.theme : 'red';
   return {
-    ...combined, instances, activeInstanceId: selected.id, launcher: { theme, rotateSkin: custom.launcher?.rotateSkin !== false, animations: custom.launcher?.animations !== false, backgroundMotion: ['on','off','system'].includes(custom.launcher?.backgroundMotion ?? '') ? custom.launcher?.backgroundMotion : 'on', background: ['grid','glow','plain','aurora','stars'].includes(custom.launcher?.background ?? '') ? custom.launcher!.background : 'grid' },
-    minecraft: { ...combined.minecraft, version: selected.version, loader: selected.loader, ramGB: selected.ramGB }
+    ...combined, instances, activeInstanceId: selected.id, launcher: { rememberAccount: custom.launcher?.rememberAccount !== false, theme, rotateSkin: custom.launcher?.rotateSkin !== false, animations: custom.launcher?.animations !== false, backgroundMotion: ['on','off','system'].includes(custom.launcher?.backgroundMotion ?? '') ? custom.launcher?.backgroundMotion : 'on', background: ['grid','glow','plain','aurora','stars'].includes(custom.launcher?.background ?? '') ? custom.launcher!.background : 'grid' },
+    minecraft: { ...combined.minecraft, version: selected.version, loader: selected.loader, loaderVersion: selected.loaderVersion, ramGB: selected.ramGB }
   };
 }
 
@@ -96,6 +96,7 @@ export async function saveConfig(value: Config, internal = false): Promise<Confi
     if (typeof item.name !== 'string' || !item.name.trim() || item.name.length > 50 || /[\u0000-\u001f\u007f]/.test(item.name)) throw new Error('Ungültiger Instanzname.');
     if (!/^\d+\.\d+(?:\.\d+)?(?:[.-][\w.]+)?$/.test(item.version)) throw new Error('Ungültige Minecraft-Version.');
     if (!['vanilla', 'fabric', 'forge'].includes(item.loader)) throw new Error('Unbekannter Mod-Loader.');
+    if(item.loaderVersion!==undefined&&(item.loader==='vanilla'||typeof item.loaderVersion!=='string'||!/^\d[\w.+-]{0,59}$/.test(item.loaderVersion)))throw new Error('Ungültige Loader-Version.');
     if (!validMemory(item.ramGB)) throw new Error('RAM muss zwischen 512 MB und dem physischen Systemspeicher liegen (256-MB-Schritte).');
     if (!existing.instances.some(old => old.id === item.id && old.version === item.version) && !versions.includes(item.version)) throw new Error('Keine offizielle Minecraft-Release-Version.');
   }
@@ -108,10 +109,10 @@ export async function saveConfig(value: Config, internal = false): Promise<Confi
   }
   const safe: Config = {
     ...existing, language: value.language,
-    launcher: { theme: value.launcher.theme, rotateSkin: value.launcher.rotateSkin !== false, animations: value.launcher.animations !== false, backgroundMotion: ['on','off','system'].includes(value.launcher.backgroundMotion ?? '') ? value.launcher.backgroundMotion : 'on', background: ['grid','glow','plain','aurora','stars'].includes(value.launcher.background ?? '') ? value.launcher.background : 'grid' },
+    launcher: { rememberAccount: value.launcher.rememberAccount !== false, theme: value.launcher.theme, rotateSkin: value.launcher.rotateSkin !== false, animations: value.launcher.animations !== false, backgroundMotion: ['on','off','system'].includes(value.launcher.backgroundMotion ?? '') ? value.launcher.backgroundMotion : 'on', background: ['grid','glow','plain','aurora','stars'].includes(value.launcher.background ?? '') ? value.launcher.background : 'grid' },
     instances: value.instances,
     activeInstanceId: active.id,
-    minecraft: { ...existing.minecraft, version: active.version, loader: active.loader, ramGB: active.ramGB }
+    minecraft: { ...existing.minecraft, version: active.version, loader: active.loader, loaderVersion: active.loaderVersion, ramGB: active.ramGB }
   };
   const file = location();
   fs.mkdirSync(path.dirname(file), { recursive: true });

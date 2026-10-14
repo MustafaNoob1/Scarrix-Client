@@ -48,7 +48,7 @@ export async function exportProfile(id:string):Promise<string> {
     const choice=await dialog.showSaveDialog({defaultPath:item.name.replace(/[^a-zA-Z0-9_-]/g,'_')+'.scarrix.zip',filters:[{name:'Scarrix-Profil',extensions:['zip']}]});
     if(choice.canceled||!choice.filePath)return 'Export abgebrochen.';
     const zip=new AdmZip();
-    zip.addFile('profile.json',Buffer.from(JSON.stringify({format:'scarrix-profile',schema:1,profile:{name:item.name,version:item.version,loader:item.loader,ramGB:item.ramGB}},null,2)));
+    zip.addFile('profile.json',Buffer.from(JSON.stringify({format:'scarrix-profile',schema:1,profile:{name:item.name,version:item.version,loader:item.loader,loaderVersion:item.loaderVersion,ramGB:item.ramGB}},null,2)));
     const from=id===cfg.activeInstanceId?instancePath():profilePath(item);let size=0;
     for(const dir of allowed)for(const entry of walk(path.join(from,dir))){size+=fs.statSync(entry.file).size;if(size>maxExpanded)throw new Error('Profil zu groß (maximal 1 GB).');zip.addLocalFile(entry.file,'files/'+dir+'/'+path.posix.dirname(entry.name),path.posix.basename(entry.name));}
     const temp=choice.filePath+'.tmp-'+crypto.randomUUID();
@@ -81,7 +81,7 @@ export async function importProfile() {
     const raw=JSON.parse(metadata.getData().toString('utf8'));
     if(raw.format!=='scarrix-profile'||raw.schema!==1)throw new Error('Unbekanntes Profilformat.');
     const p=raw.profile;
-    const item:Instance={id:newId(),name:p?.name,version:p?.version,loader:p?.loader,ramGB:p?.ramGB};
+    const item:Instance={id:newId(),name:p?.name,version:p?.version,loader:p?.loader,loaderVersion:p?.loaderVersion,ramGB:p?.ramGB};
     const dest=profilePath(item);
     // Validate all settings before extracting; rollback on any extraction failure.
     const next={...cfg,instances:[...cfg.instances,item],activeInstanceId:item.id};

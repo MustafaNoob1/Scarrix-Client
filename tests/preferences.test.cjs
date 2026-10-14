@@ -53,3 +53,5 @@ test('background motion is independent of other animations and validates saved v
  for(const motion of ['on','off','system']){const c=api.getConfig();c.launcher.animations=false;c.launcher.backgroundMotion=motion;const saved=await api.saveConfig(c);assert.equal(saved.launcher.backgroundMotion,motion);assert.equal(saved.launcher.animations,false);}
  const c=api.getConfig();c.launcher.backgroundMotion='invalid';assert.equal((await api.saveConfig(c)).launcher.backgroundMotion,'on');
 });
+
+test('remember preference and exact modpack loader version survive config round trips',async()=>{const api=setup();const c=api.getConfig();c.launcher.rememberAccount=false;c.instances[0].loader='fabric';c.instances[0].loaderVersion='0.16.10';const saved=await api.saveConfig(c);assert.equal(saved.launcher.rememberAccount,false);assert.equal(saved.minecraft.loaderVersion,'0.16.10');assert.equal(api.getConfig().instances[0].loaderVersion,'0.16.10');c.instances[0].loaderVersion='../invalid';await assert.rejects(api.saveConfig(c),/Loader-Version/);});

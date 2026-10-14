@@ -155,7 +155,7 @@ git push origin v0.1.1
 | Funktion | Stand / Einschränkung |
 |---|---|
 | Desktop-Oberfläche | Vorhanden: Electron/React, Deutsch/Englisch (wesentliche UI) |
-| Microsoft-Anmeldung | Implementierter Device-Code-/Xbox-/Minecraft-Flow, **ungetestet** und abhängig von Microsoft-Freigabe |
+| Microsoft-Anmeldung | Windows: natives Microsoft-WAM-Fenster; macOS/Linux: Device-Code. Xbox-/Minecraft-Abschluss abhängig von Microsoft-Freigabe |
 | Passwortschutz | Keine Passwörter im Launcher; Token nur während der Sitzung im RAM |
 | Serverstatus | Implementiert über mcstatus.io für das **Gesamtnetzwerk** |
 | Modus-Status/Spielerzahlen | **Nicht vorhanden** ohne eigene Scarrix-Modus-API bzw. getrennte erreichbare Server |
@@ -286,3 +286,13 @@ Unter **Einstellungen** gibt es außerdem einen Link zu [Eclipse Temurin / Adopt
 
 ## Version 0.5
 Profilbearbeitung, Import/Export, Java-Automatik, installierte Mods, Download-Anzeige und lokale Logs: [Funktionsübersicht](docs/FEATURES-0.5.md). Öffentliche Updates: [einmalige Signiereinrichtung](docs/UPDATE-SETUP.md).
+
+## Aktuelle Komfortfunktionen
+
+- Anmeldung merken mit Systemverschlüsselung und stiller Kontowiederherstellung; lokale Zugangsdaten werden bei Abmelden entfernt.
+- Minecraft-Logs mit Hinweisen auf RAM-, Java-, Mod-, Grafik- und Dateifehler. Unklare Ursachen werden als unklar gekennzeichnet.
+- Modrinth `.mrpack`-Import unter Meine Profile, mit SHA1/SHA512, begrenzten Downloads und neuem Profil. Vanilla/Fabric/Forge unterstützt; Quilt/NeoForge werden vor dem Import klar abgewiesen. Die Loader-Version eines Packs bleibt festgelegt.
+- Fenstergröße, Position und Maximierungszustand bleiben erhalten; getrennte Monitore und kleine Arbeitsflächen werden berücksichtigt.
+- Darstellung geprüft bei 780×560 und 720×440 logischen Pixeln sowie 150 Prozent App-Skalierung. Vollständige Anmeldung und echter Minecraft-/Modpack-Start bleiben bis zur Microsoft-Freigabe zu prüfen.
+
+Details: [Komfortfunktionen und Grenzen](docs/QUALITY-FEATURES.md).

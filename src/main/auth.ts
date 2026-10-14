@@ -1,5 +1,5 @@
 import { BrowserWindow } from 'electron';
-import { acquireMicrosoftToken } from './microsoft-token';
+import { acquireMicrosoftToken, restoreMicrosoftToken, rememberMicrosoftAccount, forgetMicrosoftAccount } from './microsoft-token';
 import { MicrosoftAuthenticator, MojangClient } from '@xmcl/user';
 import { getConfig } from './config';
 import { Profile } from './types';
@@ -14,8 +14,14 @@ export function getSessionToken(): string {
   if (!session || Date.now() >= session.expires) throw new Error('Bitte melde dich erneut mit Microsoft an.');
   return session.token;
 }
-export function logout(): void { session = null; }
+let accountEpoch=0;
+export function logout(): void { accountEpoch++;session = null;forgetMicrosoftAccount(); }
+async function minecraftSession(microsoftToken:string){const auth=new MicrosoftAuthenticator({});const xbox=await auth.acquireXBoxToken(microsoftToken,AbortSignal.timeout(30000));const claim=xbox.minecraftXstsResponse.DisplayClaims.xui[0];const mc=await auth.loginMinecraftWithXBox(claim.uhs,xbox.minecraftXstsResponse.Token,AbortSignal.timeout(30000));const raw=await mojang.getProfile(mc.access_token,AbortSignal.timeout(20000));return {token:mc.access_token,expires:Date.now()+Math.max(60,mc.expires_in-120)*1000,profile:publicMinecraftProfile(raw)};}
+let restoring:Promise<Profile|null>|null=null;
+export async function restoreSession():Promise<Profile|null>{if(session&&session.expires>Date.now())return session.profile;if(authenticating)return null;if(!getConfig().launcher.rememberAccount)return null;if(restoring)return restoring;const epoch=accountEpoch;restoring=(async()=>{const token=await restoreMicrosoftToken(getConfig().microsoft.clientId);if(!token)return null;try{const result=await minecraftSession(token);if(epoch!==accountEpoch)return null;session=result;rememberMicrosoftAccount();return result.profile;}catch{if(epoch===accountEpoch)session=null;throw new Error('Gespeicherte Anmeldung konnte nicht wiederhergestellt werden. Bitte melde dich erneut an.');}})().finally(()=>{restoring=null;});return restoring;}
+
 export async function refreshProfile(): Promise<Profile> {
+  if(!session||session.expires<=Date.now())await restoreSession();
   const raw = await mojang.getProfile(getSessionToken(), AbortSignal.timeout(20000));
   const profile = publicMinecraftProfile(raw);
   if (session) session.profile = profile;
@@ -26,20 +32,15 @@ export async function microsoftLogin(win: BrowserWindow): Promise<Profile> {
   const clientId = getConfig().microsoft.clientId.trim();
   if (!/^[0-9a-f-]{36}$/i.test(clientId)) throw new Error('Microsoft-Anmeldung ist derzeit nicht eingerichtet. Bitte kontaktiere den Scarrix-Support.');
   authenticating = true;
+  const epoch=accountEpoch;
   try {
+    if(restoring)await restoring.catch(()=>{});
     const microsoftToken = await acquireMicrosoftToken(win, clientId);
-    const auth = new MicrosoftAuthenticator({});
-    const xbox = await auth.acquireXBoxToken(microsoftToken, AbortSignal.timeout(30000));
-    const claim = xbox.minecraftXstsResponse.DisplayClaims.xui[0];
-    const mc = await auth.loginMinecraftWithXBox(claim.uhs, xbox.minecraftXstsResponse.Token, AbortSignal.timeout(30000));
-    // getProfile rejects accounts without a valid Minecraft Java profile.
-    const raw = await mojang.getProfile(mc.access_token, AbortSignal.timeout(20000));
-    session = {
-      token: mc.access_token,
-      expires: Date.now() + Math.max(60, mc.expires_in - 120) * 1000,
-      profile: { id: raw.id, name: raw.name, skins: [], capes: [] }
-    };
-    return await refreshProfile();
+    const result=await minecraftSession(microsoftToken);
+    if(epoch!==accountEpoch)throw new Error('Anmeldung wurde abgebrochen.');
+    session=result;
+    if(getConfig().launcher.rememberAccount)rememberMicrosoftAccount();else forgetMicrosoftAccount();
+    return result.profile;
   } catch (err) {
     session = null;
     const message = err instanceof Error ? err.message : String(err);

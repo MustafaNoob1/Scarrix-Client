@@ -1,14 +1,14 @@
-export interface GameSession {id:string;name:string;version:string;loader:string;player:string;startedAt:number;endedAt:number|null;pid:number|null;ramMB:number;state:'running'|'stopping'|'exited';exitCode:number|null}
+export interface GameSession {id:string;name:string;version:string;loader:string;player:string;startedAt:number;endedAt:number|null;pid:number|null;ramMB:number;state:'running'|'stopping'|'exited';exitCode:number|null;diagnosis?:{kind:string;title:string;message:string;steps:string[];confidence:'likely'|'unknown'}|null}
 export interface GameLogLine {sequence:number;time:number;level:'ERROR'|'WARN'|'INFO'|'DEBUG'|'TRACE';text:string}
 export interface Profile { id: string; name: string; skins: { id?: string; url: string; variant?: string }[]; capes: { id: string; alias?: string; url: string; state?: string }[] }
 export interface Mode { id: string; name: string; address: string; port: number; group?: string }
-export interface Instance { id: string; name: string; version: string; loader: 'vanilla' | 'fabric' | 'forge'; ramGB: number }
+export interface Instance { id: string; name: string; version: string; loader: 'vanilla' | 'fabric' | 'forge'; loaderVersion?: string; ramGB: number }
 export interface Config {
   server: { name: string; address: string; port: number; group?: string };
-  minecraft: { version: string; loader: 'vanilla' | 'fabric' | 'forge' | 'quilt'; javaPath: string; ramGB: number };
+  minecraft: { version: string; loader: 'vanilla' | 'fabric' | 'forge' | 'quilt'; loaderVersion?: string; javaPath: string; ramGB: number };
   microsoft: { clientId: string }; github: { owner: string; repo: string; privateRepo?: boolean };
   modrinth: { userAgent: string }; curseforge: { apiKey: string };
-  launcher: { theme: 'red' | 'blue' | 'purple' | 'gold'; rotateSkin?: boolean; animations?: boolean; backgroundMotion?: 'on' | 'off' | 'system'; background?: 'grid' | 'glow' | 'plain' | 'aurora' | 'stars' };
+  launcher: { theme: 'red' | 'blue' | 'purple' | 'gold'; rememberAccount?: boolean; rotateSkin?: boolean; animations?: boolean; backgroundMotion?: 'on' | 'off' | 'system'; background?: 'grid' | 'glow' | 'plain' | 'aurora' | 'stars' };
   instances: Instance[];
   activeInstanceId: string;
   language: 'de' | 'en'; modes: Mode[]; news: { title: string; text: string }[];
@@ -22,7 +22,7 @@ export interface Api {
   sessions:{list():Promise<GameSession[]>;logs(id:string,since:number):Promise<{lines:GameLogLine[];lastSequence:number;truncated:boolean}>;stop(id:string):Promise<void>;folder(id:string):Promise<void>;export(id:string):Promise<string>};
   windowControl(action:'state'|'minimize'|'maximize'|'close'):Promise<boolean>;
   javaDetails():Promise<JavaDetails>; javaInstall():Promise<JavaDetails>;
-  profiles:{duplicate(id:string):Promise<Config>;export(id:string):Promise<string>;import():Promise<Config|null>};
+  profiles:{modpack():Promise<Config|null>;duplicate(id:string):Promise<Config>;export(id:string):Promise<string>;import():Promise<Config|null>};
   diagnostics:{read():Promise<{launcher:string;minecraft:string}>;open():Promise<void>;export():Promise<string>};
   downloadStatus():Promise<DownloadStatus|null>;
   onDownload(cb:(status:DownloadStatus)=>void):()=>void;
