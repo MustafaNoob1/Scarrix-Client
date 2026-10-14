@@ -7,7 +7,7 @@ import { getConfig, saveConfig, instancePath, rootPath, sharedProfilePath } from
 import type { Instance } from './types';
 import { exclusive } from './operations';
 import { archiveSafe } from './java';
-const allowed=['mods','config','resourcepacks','shaderpacks','saves'];
+const allowed=['mods','config','defaultconfigs','resourcepacks','shaderpacks','saves','screenshots','logs','resources','scripts','kubejs','datapacks','options.txt','optionsof.txt','optionsshaders.txt','servers.dat'];
 const maxExpanded=1024**3;
 export function profilePath(instance: Instance) {
   const destination=path.join(rootPath(),'instances',instance.id);
@@ -16,6 +16,7 @@ export function profilePath(instance: Instance) {
   return sharedProfilePath?.(instance)??destination;
 }
 function newId() { return 'instance-'+crypto.randomUUID(); }
+function profileFileList(from:string){return allowed.flatMap(dir=>{const target=path.join(from,dir);if(!fs.existsSync(target))return [];if(fs.lstatSync(target).isSymbolicLink())throw new Error('Profil enthält einen symbolischen Link.');if(fs.statSync(target).isFile())return [{file:target,name:dir}];return walk(target).map(e=>({...e,name:dir+'/'+e.name}));});}
 function walk(folder:string, root=folder):Array<{file:string;name:string}> {
   if(!fs.existsSync(folder))return [];
   const output:Array<{file:string;name:string}>=[];
@@ -36,7 +37,7 @@ export async function duplicateProfile(id:string) {
     const to=profilePath(item);
     let size=0;
     try{
-      for(const dir of allowed)for(const entry of walk(path.join(from,dir))){size+=fs.statSync(entry.file).size;if(size>maxExpanded)throw new Error('Profil zu groß (maximal 1 GB).');const dest=path.join(to,dir,entry.name);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(entry.file,dest);}
+      for(const entry of profileFileList(from)){size+=fs.statSync(entry.file).size;if(size>maxExpanded)throw new Error('Profil zu groß (maximal 1 GB).');const dest=path.join(to,entry.name);fs.mkdirSync(path.dirname(dest),{recursive:true});fs.copyFileSync(entry.file,dest);}
       return await saveConfig({...cfg,instances:[...cfg.instances,item],activeInstanceId:item.id},true);
     }catch(e){fs.rmSync(to,{recursive:true,force:true});throw e;}
   });
@@ -50,7 +51,7 @@ export async function exportProfile(id:string):Promise<string> {
     const zip=new AdmZip();
     zip.addFile('profile.json',Buffer.from(JSON.stringify({format:'scarrix-profile',schema:1,profile:{name:item.name,version:item.version,loader:item.loader,loaderVersion:item.loaderVersion,ramGB:item.ramGB,group:item.group,icon:item.icon,window:item.window,jvmArgs:item.jvmArgs,quickPlayWorld:item.quickPlayWorld}},null,2)));
     const from=id===cfg.activeInstanceId?instancePath():profilePath(item);let size=0;
-    for(const dir of allowed)for(const entry of walk(path.join(from,dir))){size+=fs.statSync(entry.file).size;if(size>maxExpanded)throw new Error('Profil zu groß (maximal 1 GB).');zip.addLocalFile(entry.file,'files/'+dir+'/'+path.posix.dirname(entry.name),path.posix.basename(entry.name));}
+    for(const entry of profileFileList(from)){size+=fs.statSync(entry.file).size;if(size>maxExpanded)throw new Error('Profil zu groß (maximal 1 GB).');zip.addLocalFile(entry.file,'files/'+path.posix.dirname(entry.name),path.posix.basename(entry.name));}
     const temp=choice.filePath+'.tmp-'+crypto.randomUUID();
     try{zip.writeZip(temp);fs.renameSync(temp,choice.filePath);}finally{if(fs.existsSync(temp))fs.unlinkSync(temp);}
     return 'Profil exportiert: '+choice.filePath;
@@ -65,14 +66,14 @@ export function validateArchiveEntries(entries:Array<{entryName:string;header:{s
     seen.add(name.toLowerCase());
     if(name==='profile.json')continue;
     const parts=name.split('/');
-    if(parts[0]!=='files'||!allowed.includes(parts[1]))throw new Error('Nicht erlaubte Datei im Profilarchiv.');
+    if(parts[0]!=='files'||!allowed.includes(parts[1])||(/^(options.*\\.txt|servers\\.dat)$/.test(parts[1])&&parts.length!==2)||/\\.(exe|dll|bat|cmd|ps1|vbs|lnk|com|scr)$/i.test(name))throw new Error('Nicht erlaubte Datei im Profilarchiv.');
   }
 }
 export async function importProfile() {
   return exclusive('Profil importieren',async()=>{
     const cfg=getConfig();
     if(cfg.instances.length>=16)throw new Error('Maximal 16 Profile.');
-    const choice=await dialog.showOpenDialog({properties:['openFile'],filters:[{name:'Scarrix-Profil',extensions:['zip']}]});
+    const choice=await dialog.showOpenDialog({properties:['openFile'],filters:[{name:'Scarrix-Profil',extensions:['scarrixpack','zip']}]});
     if(choice.canceled||!choice.filePaths[0])return null;
     if(fs.statSync(choice.filePaths[0]).size>300*1024*1024)throw new Error('Profilarchiv zu groß (maximal 300 MB).');
     const zip=new AdmZip(choice.filePaths[0]);validateArchiveEntries(zip.getEntries());

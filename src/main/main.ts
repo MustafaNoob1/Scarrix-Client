@@ -21,6 +21,7 @@ import { forgetMicrosoftAccount } from './microsoft-token';
 import { importModpack } from './modpack';
 import { searchCatalog, catalogVersions, catalogTargets, installCatalog, catalogCategories } from './catalog';
 import { communityCapes } from './community-capes';
+import {profileExportTree,exportSelectedProfile} from './profile-export';
 import { controlWindow } from './window-controls';
 import {profileContents,profileOverview,toggleProfileContent,removeProfileContent,openProfileFolder,profileLoaders,profileIcon,profileJavaPick,profileJava,checkProfileUpdates,updateProfileContent,deleteProfile} from './profile-studio';
 import type { Config } from './types';
@@ -93,7 +94,8 @@ function handlers() {
   handle('java:details',()=>javaDetails());
   handle('java:install',()=>exclusive('Java installieren',async()=>{await ensureJava(getConfig().minecraft.version);stepStatus('Java installiert','done');return javaDetails();}));
   handle('profiles:duplicate',async(_e,id:string)=>publicConfig(await duplicateProfile(id)));
-  handle('profiles:export',(_e,id:string)=>exportProfile(id));
+  handle('profiles:export:tree',(_e,id)=>profileExportTree(id));
+  handle('profiles:export',async(_e,id:string,options)=>{const result=await (options?exportSelectedProfile(id,options):exportProfile(id));notice(result);return result;});
   handle('profiles:import',async()=>{const cfg=await importProfile();return cfg?publicConfig(cfg):null;});
   handle('mods:list',()=>installedMods());
   handle('mods:toggle',(_e,name:string,enabled:boolean)=>toggleMod(name,enabled===true));

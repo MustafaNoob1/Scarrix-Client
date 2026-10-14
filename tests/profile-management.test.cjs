@@ -13,7 +13,7 @@ test('profile export/import and duplicate preserve files while creating new IDs'
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'scarrix-profile-test-'));
  const file=path.join(dir,'export.zip');let chosen=file;
  let cfg={instances:[{id:'default',name:'Vanilla',version:'1.21.1',loader:'vanilla',ramGB:4}],activeInstanceId:'default'};
- const root=path.join(dir,'minecraft');const folder=path.join(root,'instances','default','mods');fs.mkdirSync(folder,{recursive:true});fs.writeFileSync(path.join(folder,'test.jar'),'mod-data');
+ const root=path.join(dir,'minecraft');const folder=path.join(root,'instances','default','mods');fs.mkdirSync(folder,{recursive:true});fs.writeFileSync(path.join(folder,'test.jar'),'mod-data');fs.writeFileSync(path.join(root,'instances','default','options.txt'),'game-options');
  const config={getConfig:()=>cfg,rootPath:()=>root,instancePath:()=>path.join(root,'instances',cfg.activeInstanceId),saveConfig:async c=>(cfg=c)};
  const api=load('profile-files',{'electron':{dialog:{showSaveDialog:async()=>({filePath:file,canceled:false}),showOpenDialog:async()=>({filePaths:[chosen],canceled:false})}},'./config':config,'./java':{archiveSafe:n=>n&&!n.startsWith('/')&&!n.includes('\\')&&!n.includes(':')&&!n.split('/').includes('..')}});
  try {
@@ -22,7 +22,7 @@ test('profile export/import and duplicate preserve files while creating new IDs'
   const imported=await api.importProfile();assert.equal(imported.instances.length,2);assert.notEqual(imported.activeInstanceId,'default');
   assert.equal(fs.readFileSync(path.join(root,'instances',imported.activeInstanceId,'mods','test.jar'),'utf8'),'mod-data');
   const duplicated=await api.duplicateProfile(imported.activeInstanceId);assert.equal(duplicated.instances.length,3);assert.notEqual(duplicated.activeInstanceId,imported.instances[1].id);
-  assert.equal(fs.readFileSync(path.join(root,'instances',duplicated.activeInstanceId,'mods','test.jar'),'utf8'),'mod-data');
+  assert.equal(fs.readFileSync(path.join(root,'instances',duplicated.activeInstanceId,'mods','test.jar'),'utf8'),'mod-data');assert.equal(fs.readFileSync(path.join(root,'instances',duplicated.activeInstanceId,'options.txt'),'utf8'),'game-options');
  }finally{fs.rmSync(dir,{recursive:true,force:true});}
 });
 test('installed mod toggling and removal only touch the chosen profile',()=>{
