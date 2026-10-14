@@ -4,7 +4,9 @@
 
 Der Launcher ist als **Electron + TypeScript + React**-Projekt aufgebaut und stellt eine Benutzeroberfläche mit Startseite, Serverstatus, Microsoft-Anmeldung, Mod-Browser, Skin-Bibliothek, offiziellem Cape-Wechsel und Einstellungen bereit.
 
-> ⚠️ **Status: Entwickler-Prototyp (v0.1.1), kein getesteter Release.** Microsoft/Minecraft-Authentifizierung benötigt eine passende App-Registrierung und eventuell eine zusätzliche Minecraft-Services-Zulassung. Builds und echter Minecraft-Start müssen auf Windows/macOS/Linux noch geprüft werden. Microsoft, Mojang und Scarrix.net haben den Client nicht offiziell bestätigt.
+> **Status: öffentliche 0.6.0-Preview.** Die Release-Pipeline prüft Tests, TypeScript und Installer für Windows, macOS und Linux. Die Minecraft-Services-Freigabe der App steht noch aus; ein erfolgreicher Microsoft-Login allein ermöglicht deshalb noch keinen bestätigten Minecraft-Start. Microsoft, Mojang und Scarrix.net haben den Client nicht offiziell bestätigt.
+
+Installer: [GitHub-Releases](https://github.com/MustafaNoob1/scarrix-client/releases). Die neue Profil-Auswahl, der Inhaltskatalog sowie Skin-/Cape-Dialoge sind in [Studio und Community-Capes](docs/STUDIO.md) beschrieben, einschließlich der noch fehlenden gehosteten Cape-Anbindung.
 
 ## Voraussetzungen
 
@@ -94,7 +96,7 @@ Der Client öffnet ein Electron-Fenster. Beim ersten Start wird die Beispiel-`co
 
 ### 7. Einloggen
 
-Links unten **Mit Microsoft anmelden** anklicken → Browser-Link öffnen → Code nur auf der Microsoft-Seite eingeben → Minecraft-Profil wird überprüft. Fehlt die Zulassung der App, kann dieser Schritt mit **403 Invalid app registration** enden; siehe Anleitung.
+**Mit Microsoft anmelden** anklicken. Unter Windows öffnet sich das native Microsoft-Anmeldefenster; anschließend wird das Minecraft-Profil geprüft. Fehlt die Zulassung der App, kann dieser Schritt mit **403 Invalid app registration** enden; siehe Anleitung.
 
 ### 8. Java und Minecraft einstellen
 
@@ -257,7 +259,7 @@ Der eigene Scarrix-Client-Quellcode in diesem Repository steht unter der MIT-Liz
 
 ## Preview 0.2.0: Installationspakete und Minecraft-Vorbereitung
 
-Die CI-Pipeline baut auf jedem Push nach `main` Installationspakete für Windows, macOS und Linux. Nach erfolgreicher Prüfung **aller Plattformen** erstellt sie einen privaten **Preview-Release** mit den Installationsdateien. Details und Einschränkungen: [Release-Anleitung](docs/RELEASES.md).
+Die CI-Pipeline baut auf jedem Push nach `main` Installationspakete für Windows, macOS und Linux. Nach erfolgreicher Prüfung **aller Plattformen** erstellt sie einen öffentlichen **Preview-Release** mit den Installationsdateien und kryptografisch signierten Update-Metadaten. Details und Einschränkungen: [Release-Anleitung](docs/RELEASES.md).
 
 Ohne Microsoft-Login können Minecraft-Versionsdateien jetzt über **„Minecraft-Dateien vorbereiten“** im Client heruntergeladen/geprüft werden. Dafür sind eine passende Java-Installation und Internetzugang erforderlich. Der Minecraft-Login und Spielstart bleiben von der Microsoft/Minecraft-Freigabe abhängig. Eine erfolgreich vorbereitete Spielversion beweist noch nicht, dass ein echter Online-Spielstart funktioniert.
 

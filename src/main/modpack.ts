@@ -11,7 +11,7 @@ import { archiveSafe } from './java';
 import { progressReporter, stepStatus } from './downloads';
 import type { Instance } from './types';
 const MAX=1024**3;
-const hosts=new Set(['cdn.modrinth.com','github.com','raw.githubusercontent.com','gitlab.com','release-assets.githubusercontent.com','objects.githubusercontent.com']);
+const hosts=new Set(['cdn.modrinth.com','github.com','raw.githubusercontent.com','gitlab.com','release-assets.githubusercontent.com','objects.githubusercontent.com','edge.forgecdn.net','mediafilez.forgecdn.net']);
 export function safePackUrl(value:string){const url=new URL(value);if(url.protocol!=='https:'||url.username||url.password||(url.port&&url.port!=='443')||!hosts.has(url.hostname)||/\s/.test(value))throw new Error('Nicht erlaubter Modpack-Downloadserver.');return url.href;}
 export function safePackPath(value:unknown){if(typeof value!=='string'||value.length>240||/[\x00-\x1f\x7f]/.test(value)||!archiveSafe(value)||value.split('/').some(p=>!p||p==='.')||/\.(exe|dll|bat|cmd|ps1|vbs|lnk|com|scr)$/i.test(value))throw new Error('Unsicherer Dateipfad im Modpack.');return value;}
 interface PackFile {path:string;hashes:{sha1:string;sha512:string};fileSize:number;downloads:string[];env?:{client?:string;server?:string}}

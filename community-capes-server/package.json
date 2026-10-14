@@ -1,0 +1,15 @@
+{
+  "name": "scarrix-community-capes",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.cjs",
+    "test": "node --test server.test.cjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "pngjs": "^7.0.0"
+  }
+}

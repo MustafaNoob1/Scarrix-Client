@@ -68,6 +68,10 @@
       {
         "from": "assets/icons/icon.png",
         "to": "icon.png"
+      },
+      {
+        "from": "community-channel.json",
+        "to": "community-channel.json"
       }
     ],
     "directories": {

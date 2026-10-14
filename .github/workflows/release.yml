@@ -26,12 +26,15 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev
       - run: npm ci --no-audit --no-fund
+      - name: Install prepared cape-service test dependencies
+        run: npm ci --prefix community-capes-server --ignore-scripts --no-audit --no-fund
       - name: Stamp unique preview version
         run: node scripts/prepare-release.cjs
       - name: Check TypeScript and run tests
         run: |
           npm run typecheck
           npm test
+          npm test --prefix community-capes-server
       - name: Build installer and update metadata
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'

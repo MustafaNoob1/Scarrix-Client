@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { SkinViewer, NameTagObject } from 'skinview3d';
 import steveSkin from './assets/steve.png';
 import { applySkinMotion } from './skin-motion';
-export function SkinPreview({ skin, rotate, animate, model, nameTag }: { skin?: string; rotate: boolean; animate: boolean; model?: 'classic' | 'slim'; nameTag?: string }) {
+export function SkinPreview({ skin, rotate, animate, model, nameTag, cape, back, elytra }: { skin?: string; rotate: boolean; animate: boolean; model?: 'classic' | 'slim'; nameTag?: string;cape?:string;back?:boolean;elytra?:boolean }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const viewerRef = useRef<SkinViewer | null>(null);
   const motionSettings = useRef({rotate,animate});
@@ -21,6 +21,8 @@ export function SkinPreview({ skin, rotate, animate, model, nameTag }: { skin?: 
     try {
       viewer = new SkinViewer({ canvas: canvas.current, width: 360, height: 430 });
       viewerRef.current = viewer;
+      if(back)viewer.playerObject.rotation.y=Math.PI;
+      if(cape)void viewer.loadCape(cape,{backEquipment:elytra?'elytra':'cape'}).catch(()=>{});
       viewer.zoom = nameTag ? .76 : .85;
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
       motionQuery = reducedMotion;
@@ -36,6 +38,6 @@ export function SkinPreview({ skin, rotate, animate, model, nameTag }: { skin?: 
       else fallback();
     } catch { setFailed(true); }
     return () => { disposed = true;if(motionQuery&&motionChanged)motionQuery.removeEventListener('change',motionChanged);viewerRef.current=null;viewer?.dispose(); };
-  }, [skin, model, nameTag]);
+  }, [skin, model, nameTag, cape, back, elytra]);
   return <div className="skin-preview"><canvas ref={canvas} aria-label={nameTag ? 'Minecraft-Skin von '+nameTag+' mit Namensschild' : 'Minecraft-Skin, mit der Maus drehbar'} hidden={failed}/>{failed && <div className="skin-unavailable">◈<small>3D-Vorschau nicht verfügbar</small></div>}{!failed&&nameTag&&<small className="skin-status" role="status">{phase==='loading'?'Skin wird geladen …':phase==='placeholder'?(skin?'Skin nicht erreichbar · Platzhalter':'Steve · Kein Konto verknüpft'):(rotate?'Automatische Rotation · Mit der Maus drehen':'Mit der Maus drehen')}</small>}</div>;
 }

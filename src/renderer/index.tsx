@@ -4,6 +4,11 @@ import type { Config, Profile, ModHit, SavedImage, DownloadStatus, GameSession }
 import './style.css';
 import './play.css';
 import './clean.css';
+import { SkinLibrary } from './SkinLibrary';
+import { CapeLibrary } from './CapeLibrary';
+import { CatalogBrowser } from './CatalogBrowser';
+import { ProfilePicker } from './ProfilePicker';
+import './studio.css';
 import { InstanceLogs } from './InstanceLogs';
 import './instance-logs.css';
 import './responsive.css';
@@ -52,6 +57,8 @@ function App() {
   const [noticeMenu,setNoticeMenu] = useState(false);
   const setTab = (next:Tab) => { rawSetTab(next);setAccountMenu(false);setNoticeMenu(false); if(next!==tab){setHistory([...history.slice(0,historyIndex+1),next]);setHistoryIndex(historyIndex+1);} };
   const go = (index:number) => {rawSetTab(history[index]);setHistoryIndex(index);setAccountMenu(false);setNoticeMenu(false);};
+  const [capePreview,setCapePreview]=useState<{selectedId:string|null;dataUrl?:string}>({selectedId:null});
+  useEffect(()=>{window.scarrix.capes.preview().then(setCapePreview).catch(()=>{});},[]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [status, setStatus] = useState<{online: boolean; players:number | null; maxPlayers: number | null; version:string | null} | null>(null);
   const [backendStatuses, setBackendStatuses] = useState<Array<{id: string; online: boolean | null; players: number | null; maxPlayers: number | null}> | null>(null);
@@ -87,9 +94,9 @@ function App() {
   const [appVersion, setAppVersion] = useState('0.6.0');
   const t = config?.language === 'en' ? en : de;
 
-  const run = async <T,>(job: () => Promise<T>, done?: (result:T) => void) => {
+  const run = async <T,>(job: () => Promise<T>, done?: (result:T) => void | Promise<void>) => {
     setBusy(true); setNotice('');
-    try { const result = await job(); done?.(result); }
+    try { const result = await job(); await done?.(result); }
     catch (e) { setNotice(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
   };
@@ -192,10 +199,10 @@ function App() {
           {playView === 'play' ? <section className="character-stage">
             <label className="rotation-toggle"><input type="checkbox" checked={config.launcher.rotateSkin !== false} onChange={e => save({...config,launcher:{...config.launcher,rotateSkin:e.target.checked}})}/> Skin-Rotation</label>
             <div className="stage-eyebrow">{profile ? "DEIN MINECRAFT-PROFIL" : "DEIN ABENTEUER BEGINNT HIER"}</div>
-            <SkinPreview skin={profile?.skins?.[0]?.url} nameTag={profile?.name ?? "Gast"} model={profile?.skins?.[0]?.variant?.toLowerCase() === "slim" ? "slim" : "classic"} rotate={config.launcher.rotateSkin !== false} animate={config.launcher.animations !== false}/>
+            <SkinPreview cape={capePreview.dataUrl??profile?.capes.find(c=>c.state==='ACTIVE')?.url} skin={profile?.skins?.[0]?.url} nameTag={profile?.name ?? "Gast"} model={profile?.skins?.[0]?.variant?.toLowerCase() === "slim" ? "slim" : "classic"} rotate={config.launcher.rotateSkin !== false} animate={config.launcher.animations !== false}/>
             <div className="character-platform"/>
             <div className="stage-launch">
-              <div className="launch-split"><button className="btn primary" disabled={busy || !profile || !selectedMode} onClick={() => run(() => window.scarrix.game(selectedMode!.id), setNotice)}>▶ {busy ? 'WIRD VORBEREITET …' : 'SPIELEN'}<small>{activeInstance?.version} · {activeInstance?.loader.toUpperCase()}</small></button><select aria-label="Minecraft-Profil auswählen" value={activeInstance?.id ?? ''} onChange={e => chooseInstance(e.target.value)} disabled={busy}>{config.instances.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}</select></div>
+              <div className="launch-split"><button className="btn primary" disabled={busy || !profile || !selectedMode} onClick={() => run(() => window.scarrix.game(selectedMode!.id), setNotice)}>▶ {busy ? 'WIRD VORBEREITET …' : 'SPIELEN'}<small>{activeInstance?.version} · {activeInstance?.loader.toUpperCase()}</small></button><ProfilePicker instances={config.instances} selected={activeInstance?.id??''} disabled={busy} onSelect={chooseInstance}/></div>
               {!profile && <button className="text-btn" disabled={busy} onClick={connect}>Mit Microsoft anmelden, um zu spielen</button>}
               <div className="stage-links"><button className="text-btn" onClick={() => setTab('skins')}>◈ Skin ändern</button><button className="text-btn" disabled={busy} onClick={() => {setEditingId(null);setInstanceStep(0);setInstanceName('');setDraftRam(memory ? memory.recommendedMB/1024 : .5);setShowNewInstance(true);}}>+ Neues Profil</button><button className="text-btn" disabled={busy} onClick={() => run(() => window.scarrix.gamePrepare(), setNotice)}>Dateien vorbereiten</button></div>
             </div>
@@ -209,28 +216,10 @@ function App() {
         <aside className="news-rail"><p className="eyebrow">NEUIGKEITEN</p><h2>Scarrix Network</h2>{config.news.length ? config.news.map((n,i) => <article className="news-tile" key={i}><div className="news-art"><ScarrixMark decorative/></div><h3>{n.title}</h3><p>{n.text}</p></article>) : <><article className="news-tile"><div className="news-art landscape"><ScarrixMark decorative/><span>SCARRIX</span></div><h3>Dein nächstes Abenteuer</h3><p>Wähle dein Profil und starte ins Scarrix-Netzwerk.</p></article><article className="news-tile"><div className="news-art blocks">⬡</div><h3>Dein Spiel. Dein Profil.</h3><p>Vanilla, Fabric oder Forge — jede Instanz hat ihre eigenen Mods.</p><button className="text-btn" onClick={() => setPlayView('profiles')}>Profile öffnen ↗</button></article></>}<div className="news-rail-footer">COMMUNITY LAUNCHER<small>Nicht offiziell von Mojang oder Microsoft.</small></div></aside>
       </div>}
 
-      {tab === 'mods' && <><InstalledModsPanel profileId={config.activeInstanceId} refreshKey={modRefresh} busy={busy} run={run}/><div className="panel intro"><h2>Mod-Browser</h2><p>Finde kompatible Mods für {config.minecraft.version} / {config.minecraft.loader}. Mods werden nur in der aktuellen Instanz installiert.</p><form className="search" onSubmit={e => {e.preventDefault();run(() => window.scarrix.mods.search(modQuery, source), setMods);}}><input value={modQuery} onChange={e => setModQuery(e.target.value)} placeholder="Sodium, Iris, JEI …"/><select value={source} onChange={e => setSource(e.target.value as typeof source)}><option value="modrinth">Modrinth</option><option value="curseforge">CurseForge</option></select><button className="btn primary" disabled={busy || !modQuery.trim()}>{t.search}</button></form></div>
-        <div className="mod-list">{mods.map(m => <div key={m.source+m.id} className="mod panel">{m.icon ? <img src={m.icon} alt=""/> : <div className="mod-placeholder">⬡</div>}<div className="mod-info"><b>{m.name}</b><p>{m.description}</p><small>{Number(m.downloads || 0).toLocaleString()} Downloads · {m.source}</small></div><button className="btn outline" disabled={busy} onClick={() => {setProgress(0); run(() => window.scarrix.mods.install(m.id, m.source), result => {setModRefresh(n=>n+1);setNotice(`${result.filename} installiert. ${result.dependencies.length ? 'Benötigte Abhängigkeiten prüfen: ' + result.dependencies.join(', ') : ''}`);});}}>{t.install}</button></div>)}</div>
-        <p className="hint">Hinweis: Abhängigkeiten werden erkannt und gemeldet, jedoch nicht automatisch nachinstalliert. CurseForge benötigt einen API-Schlüssel und erlaubt nicht für jede Mod einen Download.</p>
-      </>}
+      {tab === 'mods' && <CatalogBrowser config={config} busy={busy} run={run} versions={versions} onProfiles={()=>{setTab('home');setPlayView('profiles');}}/>}
 
-      {tab === 'skins' && <section className="skin-editor">
-        <div className="skin-editor-heading"><div><p className="eyebrow">DEIN MINECRAFT-LOOK</p><h2>Skin ändern</h2><p>PNG auswählen, Modell prüfen und auf dein Minecraft-Konto anwenden.</p></div><button className="btn outline" disabled={busy} onClick={() => run(() => window.scarrix.skins.upload(skinModel), result => {setSkins(result.library);if(result.selectedId)setSelectedSkinId(result.selectedId);setNotice(result.message);})}>+ Skin auswählen</button></div>
-        <div className="skin-editor-layout"><div className="skin-editor-preview">
-          <SkinPreview skin={skins.find(s => s.id === selectedSkinId)?.dataUrl || profile?.skins?.[0]?.url} model={selectedSkinId ? skinModel : profile?.skins?.[0]?.variant?.toLowerCase() === 'slim' ? 'slim' : 'classic'} rotate={config.launcher.rotateSkin !== false} animate={config.launcher.animations !== false}/>
-          <span className="skin-preview-label">{selectedSkinId ? 'VORSCHAU · NOCH NICHT ANGEWENDET' : profile ? 'AKTUELLER SKIN' : 'VORSCHAU'}</span>
-        </div><div className="skin-editor-controls"><p className="eyebrow">MODELL</p><h3>Welche Arme hat dein Skin?</h3><div className="skin-model-options">{([{id:'classic',title:'Classic',detail:'Steve · breite Arme'},{id:'slim',title:'Slim',detail:'Alex · schmale Arme'}] as const).map(m => <button key={m.id} className={skinModel === m.id ? 'selected' : ''} disabled={busy} onClick={() => setSkinModel(m.id)}><b>{m.title}</b><small>{m.detail}</small></button>)}</div>
-          <p className="hint">PNG mit 64×64 oder 64×32 Pixeln, maximal 2 MB. Deine Auswahl wird zuerst lokal gespeichert.</p>
-          {!profile && <div className="settings-note">Du kannst Skins bereits auswählen und ansehen. Zum Ändern deines Minecraft-Skins musst du dich mit deinem Java-Konto anmelden.<button className="text-btn" disabled={busy} onClick={connect}>Mit Microsoft anmelden →</button></div>}
-          <button className="btn primary skin-apply" disabled={busy || !profile || !selectedSkinId} onClick={() => run(() => window.scarrix.skins.apply(selectedSkinId!, skinModel), updated => {setProfile(updated);setSelectedSkinId(null);setNotice('Skin auf deinem Minecraft-Konto geändert. Die Spielen-Seite zeigt jetzt deinen neuen Skin.');})}>{busy ? 'Wird verarbeitet …' : '✓ Skin anwenden'}</button>
-          {selectedSkinId && <button className="text-btn" disabled={busy} onClick={() => setSelectedSkinId(null)}>Auswahl verwerfen</button>}
-          {profile && <button className="text-btn" disabled={busy} onClick={() => run(() => window.scarrix.auth.refresh(), updated => {setProfile(updated);setNotice('Aktueller Skin vom Minecraft-Konto geladen.');})}>Aktuellen Skin neu laden ↻</button>}
-        </div></div>
-        <div className="section-row"><h2>Meine Skins</h2><small>{skins.length} gespeichert</small></div><div className="skin-library">{skins.length ? skins.map(s => <button key={s.id} className={'skin-library-card ' + (selectedSkinId === s.id ? 'selected' : '')} disabled={busy} onClick={() => setSelectedSkinId(s.id)}><img src={s.dataUrl} alt="Gespeicherter Minecraft-Skin"/><span>{selectedSkinId === s.id ? '✓ Ausgewählt' : 'Skin auswählen'}</span></button>) : <div className="skin-library-empty">Noch keine Skins gespeichert. Wähle oben deine erste PNG-Datei aus.</div>}</div>
-      </section>}
-
-      {tab === 'capes' && <><div className="panel intro"><h2>{t.official}</h2><p>Hier werden die Capes angezeigt, die dein offizielles Minecraft-Konto bereits besitzt.</p><div className="cape-list">{profile?.capes?.length ? profile.capes.map(c => <div key={c.id} className="cape panel"><img src={c.url} alt="Cape"/><b>{c.alias || c.id}</b><button className="btn outline" disabled={busy} onClick={() => run(() => window.scarrix.capes.select(c.id), setProfile)}>Ausrüsten</button></div>) : <p>Keine Capes geladen. Bitte anmelden.</p>}</div><button className="btn ghost" disabled={!profile || busy} onClick={() => run(() => window.scarrix.capes.select(null), setProfile)}>Cape ablegen</button></div><div className="panel intro"><h2>Eigene Cape-Vorschauen</h2><p>Ein eigenes Cape kann lokal gespeichert und angezeigt werden. Offizielle Minecraft-Capes lassen sich damit nicht neu erstellen oder auf Mojangs Server hochladen.</p><button className="btn primary" disabled={busy} onClick={() => run(() => window.scarrix.capes.upload(), result => {setCapes(result.library);setNotice(result.message);})}>{t.capeUpload}</button><div className="skin-grid">{capes.map(c => <div key={c.id} className="panel skin-item"><img src={c.dataUrl} alt="Eigene Cape-Vorschau"/></div>)}</div></div></>}
-
+      {tab === 'skins' && <SkinLibrary config={config} profile={profile} busy={busy} run={run} onProfile={setProfile} connect={connect}/>}
+      {tab === 'capes' && <CapeLibrary config={config} profile={profile} busy={busy} run={run} onProfile={setProfile} onPreview={setCapePreview}/>}
 
       {tab === 'settings' && <section className="settings-window">
         <div className="settings-title"><h2>⚙ Einstellungen</h2><span>Launcher · v{appVersion}</span></div>

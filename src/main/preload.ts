@@ -7,6 +7,7 @@ const listen = (channel: string, cb: (data: any) => void) => {
 contextBridge.exposeInMainWorld('scarrix', {
   windowControl: (action: 'state'|'minimize'|'maximize'|'close') => ipcRenderer.invoke('window:control',action),
   sessions: {list:()=>ipcRenderer.invoke('sessions:list'),logs:(id:string,since:number)=>ipcRenderer.invoke('sessions:logs',id,since),stop:(id:string)=>ipcRenderer.invoke('sessions:stop',id),folder:(id:string)=>ipcRenderer.invoke('sessions:folder',id),export:(id:string)=>ipcRenderer.invoke('sessions:export',id)},
+  catalog: {search:(source:string,query:unknown)=>ipcRenderer.invoke('catalog:search',source,query),categories:(kind:string)=>ipcRenderer.invoke('catalog:categories',kind),versions:(source:string,id:string,filter?:unknown)=>ipcRenderer.invoke('catalog:versions',source,id,filter),targets:(source:string,id:string,version:string|null,kind:string)=>ipcRenderer.invoke('catalog:targets',source,id,version,kind),install:(source:string,id:string,instance:string,version:string|null,kind:string,world?:string)=>ipcRenderer.invoke('catalog:install',source,id,instance,version,kind,world)},
   config: { get: () => ipcRenderer.invoke('config:get'), save: (cfg: unknown) => ipcRenderer.invoke('config:save', cfg) },
   auth: { start: () => ipcRenderer.invoke('auth:start'), profile: () => ipcRenderer.invoke('auth:profile'), refresh: () => ipcRenderer.invoke('auth:refresh'), logout: () => ipcRenderer.invoke('auth:logout') },
   status: () => ipcRenderer.invoke('status:get'),
@@ -21,8 +22,8 @@ contextBridge.exposeInMainWorld('scarrix', {
   game: (mode: string) => ipcRenderer.invoke('game:start', mode),
   gamePrepare: () => ipcRenderer.invoke('game:prepare'),
   mods: { list:()=>ipcRenderer.invoke('mods:list'), toggle:(name:string,enabled:boolean)=>ipcRenderer.invoke('mods:toggle',name,enabled), remove:(name:string)=>ipcRenderer.invoke('mods:remove',name), search: (query: string, source: string) => ipcRenderer.invoke('mods:search', query, source), install: (id: string, source: string) => ipcRenderer.invoke('mods:install', id, source) },
-  skins: { library: () => ipcRenderer.invoke('skins:library'), upload: (model: string) => ipcRenderer.invoke('skins:upload', model), apply: (id: string, model: string) => ipcRenderer.invoke('skins:apply', id, model) },
-  capes: { library: () => ipcRenderer.invoke('capes:library'), upload: () => ipcRenderer.invoke('capes:upload'), select: (id: string | null) => ipcRenderer.invoke('capes:select', id) },
+  skins: {prepare:(input?:string)=>ipcRenderer.invoke('skins:prepare',input),save:(id:string,name:string,model:string)=>ipcRenderer.invoke('skins:save',id,name,model),edit:(id:string,input:unknown)=>ipcRenderer.invoke('skins:edit',id,input),remove:(id:string)=>ipcRenderer.invoke('skins:remove',id), library: () => ipcRenderer.invoke('skins:library'), upload: (model: string) => ipcRenderer.invoke('skins:upload', model), apply: (id: string, model: string) => ipcRenderer.invoke('skins:apply', id, model) },
+  capes: {community:()=>ipcRenderer.invoke('capes:community'),preview:()=>ipcRenderer.invoke('capes:preview'),setPreview:(id:string|null)=>ipcRenderer.invoke('capes:preview:set',id),edit:(id:string,input:unknown)=>ipcRenderer.invoke('capes:edit',id,input),remove:(id:string)=>ipcRenderer.invoke('capes:remove',id), library: () => ipcRenderer.invoke('capes:library'), upload: () => ipcRenderer.invoke('capes:upload'), select: (id: string | null) => ipcRenderer.invoke('capes:select', id) },
   memory: () => ipcRenderer.invoke('system:memory'),
   versions: () => ipcRenderer.invoke('minecraft:versions'),
   version: () => ipcRenderer.invoke('app:version'),

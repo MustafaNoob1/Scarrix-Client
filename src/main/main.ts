@@ -6,7 +6,7 @@ import { microsoftLogin, getPublicProfile, logout, refreshProfile, selectCape, r
 import { javaVersion, startGame, prepareGame } from './game';
 import { serverStatus, modeStatuses } from './status';
 import { installedMods, toggleMod, removeMod, searchMods, installMod } from './mods';
-import { getLibrary, upload, applySavedSkin } from './skins';
+import { getLibrary, upload, applySavedSkin, prepareSkin, saveSkinDraft, editLibraryImage, removeLibraryImage, capePreview, setCapePreview } from './skins';
 import { memoryInfo } from './memory';
 import { officialVersions } from './versions';
 import { checkForUpdate } from './updater';
@@ -19,6 +19,8 @@ import { listGameSessions, gameSessionLogs, stopGameSession, openGameSessionFold
 import { readWindowState, watchWindowState } from './window-state';
 import { forgetMicrosoftAccount } from './microsoft-token';
 import { importModpack } from './modpack';
+import { searchCatalog, catalogVersions, catalogTargets, installCatalog, catalogCategories } from './catalog';
+import { communityCapes } from './community-capes';
 import { controlWindow } from './window-controls';
 import type { Config } from './types';
 
@@ -52,6 +54,20 @@ function handle(channel:string, action:(event:Electron.IpcMainInvokeEvent,...arg
   ipcMain.handle(channel, async(event,...args)=>{try{return await action(event,...args);}catch(error){try{recordError(error);}catch{}if(['game:prepare','game:start','java:install','mods:install','update:check'].includes(channel))stepStatus(friendlyError(error),'error');throw new Error(friendlyError(error));}});
 }
 function handlers() {
+  handle('capes:community',()=>communityCapes());
+  handle('skins:prepare',(_e,input:unknown)=>prepareSkin(input));
+  handle('skins:save',(_e,id:unknown,name:unknown,model:unknown)=>saveSkinDraft(id,name,model));
+  handle('skins:edit',(_e,id:unknown,input:any)=>editLibraryImage('skins',id,input));
+  handle('skins:remove',(_e,id:unknown)=>removeLibraryImage('skins',id));
+  handle('capes:edit',(_e,id:unknown,input:any)=>editLibraryImage('capes',id,input));
+  handle('capes:remove',(_e,id:unknown)=>removeLibraryImage('capes',id));
+  handle('capes:preview',()=>capePreview());
+  handle('capes:preview:set',(_e,id:unknown)=>setCapePreview(id));
+  handle('catalog:search',(_e,source:unknown,query:any)=>searchCatalog(source,query));
+  handle('catalog:categories',(_e,kind:unknown)=>catalogCategories(kind));
+  handle('catalog:versions',(_e,source:unknown,id:unknown,filter:any)=>catalogVersions(source,id,filter));
+  handle('catalog:targets',(_e,source:unknown,id:unknown,version:unknown,kind:unknown)=>catalogTargets(source,id,version,kind));
+  handle('catalog:install',(_e,source:unknown,id:unknown,instance:unknown,version:unknown,kind:unknown,world:unknown)=>exclusive('Inhalt installieren',async()=>{try{const result=await installCatalog(source,id,instance,version,kind,world,n=>window.webContents.send('app:progress',n));stepStatus('Inhalt installiert','done');return result;}catch(e){stepStatus('Installation fehlgeschlagen','error');throw e;}finally{window.webContents.send('app:progress',null);}}));
   handle('profiles:modpack',async()=>{const cfg=await importModpack();return cfg?publicConfig(cfg):null;});
   handle('sessions:list',()=>listGameSessions());
   handle('sessions:logs',(_e,id:unknown,since:unknown)=>gameSessionLogs(id,since));
