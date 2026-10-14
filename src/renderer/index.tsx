@@ -1,3 +1,5 @@
+import {FriendsDock} from './FriendsDock';
+import {useMotionState} from './motion';
 import {UiIcon,IconLabel} from './UiIcons';
 import React, { useEffect, useState } from 'react';
 import {UpdatePanel} from './UpdatePanel';
@@ -22,6 +24,7 @@ import { AmbientBackground, backgrounds } from './AmbientBackground';
 import { DownloadPanel, JavaPanel, InstalledModsPanel, DiagnosticsPanel } from './FeaturePanels';
 import { SkinPreview } from './SkinPreview';
 import './buttons.css';
+import './motion.css';
 
 type Tab = 'home' | 'mods' | 'skins' | 'capes' | 'settings';
 const de = {
@@ -56,7 +59,7 @@ function App() {
   const runningCount=gameSessions.filter(s=>s.state!=='exited').length;
   useEffect(()=>{let cancelled=false;let timer:ReturnType<typeof setTimeout>;const poll=async()=>{try{const data=await window.scarrix.sessions.list();if(!cancelled)setGameSessions(data);}catch{}if(!cancelled)timer=setTimeout(poll,1000);};void poll();return()=>{cancelled=true;clearTimeout(timer);};},[]);
   const [config, setConfig] = useState<Config | null>(null);
-  const [tab, rawSetTab] = useState<Tab>('home');
+  const [tab, rawSetTab] = useMotionState<Tab>('home');
   const [history, setHistory] = useState<Tab[]>(['home']);
   const [historyIndex,setHistoryIndex] = useState(0);
   const [accountMenu,setAccountMenu] = useState(false);
@@ -82,8 +85,8 @@ function App() {
   const [paths, setPaths] = useState<{minecraft: string; instance: string} | null>(null);
   const [selectedModeId, setSelectedModeId] = useState('survival');
   const [catalogTarget,setCatalogTarget]=useState<string|undefined>();
-  const [playView, setPlayView] = useState<'play' | 'profiles'>('play');
-  const [settingsSection, setSettingsSection] = useState('general');
+  const [playView, setPlayView] = useMotionState<'play' | 'profiles'>('play');
+  const [settingsSection, setSettingsSection] = useMotionState('general');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [download, setDownload] = useState<DownloadStatus|null>(null);
   const [modRefresh, setModRefresh] = useState(0);
@@ -190,7 +193,7 @@ function App() {
           <div className="header-popup-anchor"><button className="header-icon notification-button" aria-label="Mitteilungen" aria-expanded={noticeMenu} onClick={()=>{setNoticeMenu(!noticeMenu);setAccountMenu(false);}}><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>{notice&&<i/>}</button>{noticeMenu&&<div className="header-popup"><b>Mitteilungen</b><p>{notice||'Du bist auf dem neuesten Stand.'}</p><button disabled={busy} onClick={()=>{setNoticeMenu(false);run(()=>window.scarrix.update(),setNotice);}}>Nach Updates suchen</button></div>}</div>
           <button className={"instance-chip "+(runningCount?'has-running':'')} onClick={()=>{setShowLogs(true);setAccountMenu(false);setNoticeMenu(false);}}><UiIcon glyph="▣"/> <span>{runningCount} {runningCount===1?'INSTANZ':'INSTANZEN'}</span></button>
           <div className="header-popup-anchor"><button className="account-chip" aria-expanded={accountMenu} onClick={()=>{setAccountMenu(!accountMenu);setNoticeMenu(false);}}><AccountFace skin={profile?.skins?.[0]?.url}/><b>{profile?.name||'ANMELDEN'}</b><span><UiIcon glyph="▾"/></span></button>{accountMenu&&<div className="header-popup"><b>{profile?.name||'Minecraft-Konto'}</b><p>{profile?'Dein verknüpftes Konto':'Verknüpfe dein Microsoft-Konto.'}</p><button disabled={busy} onClick={()=>{setAccountMenu(false);profile?setTab('skins'):connect();}}>{profile?'Skin ändern':'Microsoft anmelden'}</button>{profile&&<button disabled={busy} onClick={()=>{setAccountMenu(false);run(()=>window.scarrix.auth.logout(),()=>setProfile(null));}}>Abmelden</button>}</div>}</div>
-          <button className="header-icon framed" aria-label="GitHub öffnen" onClick={()=>run(()=>window.scarrix.openUrl('https://github.com/MustafaNoob1/scarrix-client'))}><UiIcon glyph="↗"/></button>
+          <FriendsDock key={profile?.id??'guest'} profile={profile}/><button className="header-icon framed github-shortcut" aria-label="GitHub öffnen" onClick={()=>run(()=>window.scarrix.openUrl('https://github.com/MustafaNoob1/scarrix-client'))}><UiIcon glyph="↗"/></button>
           <div className="window-buttons"><button aria-label="Minimieren" onClick={()=>window.scarrix.windowControl('minimize')}>—</button><button aria-label="Maximieren oder Wiederherstellen" onClick={()=>window.scarrix.windowControl('maximize')}><UiIcon glyph="□"/></button><button className="close-window" aria-label="Schließen" onClick={()=>window.scarrix.windowControl('close')}><UiIcon glyph="×"/></button></div>
         </div>
       </header>

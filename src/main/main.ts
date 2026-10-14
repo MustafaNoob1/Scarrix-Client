@@ -26,6 +26,7 @@ import {saveCapeTemplate} from './cape-images';
 import { controlWindow } from './window-controls';
 import {profileContents,profileOverview,toggleProfileContent,removeProfileContent,openProfileFolder,profileLoaders,profileIcon,profileJavaPick,profileJava,checkProfileUpdates,updateProfileContent,deleteProfile} from './profile-studio';
 import type { Config } from './types';
+import {friendsSnapshot,saveFriendPreferences,addLocalContact,removeLocalContact} from './friends';
 import {enqueueDownload,queueState,setQueueSink,cancelDownload,retryDownload} from './download-queue';
 import {createBackup,listBackups,restoreBackup,removeBackup} from './profile-backups';
 import {profileMedia,openProfileMedia,saveScreenshot} from './profile-media';
@@ -62,6 +63,10 @@ function handle(channel:string, action:(event:Electron.IpcMainInvokeEvent,...arg
   ipcMain.handle(channel, async(event,...args)=>{try{return await action(event,...args);}catch(error){try{recordError(error);}catch{}if(['game:prepare','game:start','java:install','mods:install','update:check'].includes(channel))stepStatus(friendlyError(error),'error');throw new Error(friendlyError(error));}});
 }
 function handlers() {
+  handle('friends:get',()=>friendsSnapshot());
+  handle('friends:preferences',(_e,value)=>saveFriendPreferences(value));
+  handle('friends:add',(_e,name)=>addLocalContact(name));
+  handle('friends:remove',(_e,id)=>removeLocalContact(id));
   setQueueSink(jobs=>{if(window&&!window.isDestroyed())window.webContents.send('queue:state',jobs);});
   handle('queue:list',()=>queueState());
   handle('queue:cancel',(_e,id)=>cancelDownload(id));

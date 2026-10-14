@@ -1,0 +1,19 @@
+/* Snapshot just the active page; the title bar and ambient layers stay still. */
+.main>.play-layout,.main>.profile-studio,.main>.catalog-page,.main>.wardrobe-page,.main>.settings-window{view-transition-name:launcher-content}
+::view-transition-group(root){animation:none}
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+::view-transition-old(launcher-content){animation:route-out .13s ease-in both}
+::view-transition-new(launcher-content){animation:route-in .26s cubic-bezier(.22,1,.36,1) both}
+@keyframes route-out{to{opacity:0;transform:translateY(-6px)}}
+@keyframes route-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.shell button{transition:background-color .18s,border-color .18s,color .18s,box-shadow .18s,transform .16s,opacity .18s}
+.shell button:active:not(:disabled){transform:translateY(1px) scale(.97)!important;transition-duration:.08s}
+.shell .header-icon:hover:not(:disabled),.shell .wardrobe-primary:hover:not(:disabled){box-shadow:0 0 0 1px var(--accent-faint)}
+.studio-dialog,.modal,.instance-logs-window{animation:dialog-arrive .24s cubic-bezier(.22,1,.36,1) both}
+.header-popup,.profile-picker-menu,.profile-gear-menu{transform-origin:top right;animation:popup-arrive .18s ease-out both}
+@keyframes dialog-arrive{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes popup-arrive{from{opacity:0;transform:translateY(-5px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+[data-animations=false] button,[data-animations=false] .studio-dialog,[data-animations=false] .modal,[data-animations=false] .instance-logs-window,[data-animations=false] .header-popup,[data-animations=false] .profile-picker-menu,[data-animations=false] .profile-gear-menu{transition:none!important;animation:none!important}
+[data-animations=false] button:active:not(:disabled){transform:none!important}
+@media(prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}.shell button,.studio-dialog,.modal,.instance-logs-window,.header-popup,.profile-picker-menu,.profile-gear-menu{transition:none!important;animation:none!important}.shell button:active:not(:disabled){transform:none!important}}
+@media(max-width:850px){.shell .github-shortcut{display:none}.shell .account-chip{max-width:150px;min-width:110px}.shell .instance-chip{padding:0 8px}}
