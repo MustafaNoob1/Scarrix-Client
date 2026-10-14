@@ -65,8 +65,8 @@ button > .scarrix-mark {
 .shell .background-options small { margin: 0; }
 .shell .background-thumbnail { width: 100%; }
 .shell .skin-model-options small { margin: 0; }
-.shell .profile-open { justify-content: center; }
-.shell .profile-open > span:last-child { text-align: center; }
+.shell .profile-open { justify-content: flex-start !important; text-align: left !important; }
+.shell .profile-open > span:last-child { text-align: left; }
 .shell .profile-content-nav button { gap: 7px; }
 .shell .profile-content-nav button small { float: none; margin: 0; }
 

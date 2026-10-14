@@ -31,7 +31,7 @@ function setup({signed=true,tamper=false,restart=false,changedMetadata=false}={}
  return {api:load('public-updater',mocks),updater,get prompts(){return prompts;},win:{isDestroyed:()=>false,webContents:{send:()=>{}}},cleanup:()=>fs.rmSync(dir,{recursive:true,force:true})};
 }
 test('signed public update applies silently and relaunches after explicit confirmation',async()=>{
- const s=setup({restart:true});try{await s.api.checkForUpdate(s.win);assert.equal(s.updater.downloaded,undefined);await s.api.downloadLauncherUpdate(s.win);assert.equal(s.updater.install,undefined);await s.api.installLauncherUpdate(s.win);assert.deepEqual(s.updater.install,[true,true]);assert.equal(s.updater.autoInstallOnAppQuit,false);assert.equal(s.updater.allowDowngrade,false);}finally{s.cleanup();}
+ const s=setup({restart:true});try{await s.api.checkForUpdate(s.win);assert.equal(s.updater.downloaded,undefined);await s.api.downloadLauncherUpdate(s.win);assert.equal(s.updater.install,undefined);await s.api.installLauncherUpdate(s.win);assert.deepEqual(s.updater.install,[true,true]);assert.equal(s.updater.autoInstallOnAppQuit,false);assert.equal(s.updater.allowDowngrade,false);assert.equal(s.updater.disableDifferentialDownload,false);assert.equal(s.updater.feed.useMultipleRangeRequest,false);}finally{s.cleanup();}
 });
 test('unsigned releases and altered installers cannot install',async()=>{
  for(const opts of [{signed:false},{tamper:true}]){const s=setup(opts);try{if(opts.signed===false)await assert.rejects(s.api.checkForUpdate(s.win));else{await s.api.checkForUpdate(s.win);await assert.rejects(s.api.downloadLauncherUpdate(s.win));}assert.equal(s.updater.install,undefined);}finally{s.cleanup();}}

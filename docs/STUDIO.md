@@ -75,3 +75,7 @@ Die Download-Schaltfläche oben öffnet eine Warteschlange für Katalog-Inhalte,
 Welten und Screenshots zeigen bis zu 120 lokale Einträge mit Datum und PNG-Vorschau. Weltordner und Originalbilder lassen sich öffnen, Screenshots separat speichern. Es findet kein automatischer Upload statt. Einstellungen → Fehlerdiagnose zeigt eine wahrscheinliche Ursache, passende Schritte, relevante Fehlerzeilen und den neuesten lokalen Absturzbericht. Die Analyse ist eine Hilfestellung, keine garantierte Ursachenerkennung. Erkannte Zugangstokens werden wie bei der Logansicht entfernt.
 
 API-Grundlagen: [Modrinth-Versionen und Abhängigkeiten](https://docs.modrinth.com/api/operations/getversion/), [Modrinth-Suche](https://docs.modrinth.com/api/operations/searchprojects/) und [mrpack-Format](https://support.modrinth.com/en/articles/8802351-modrinth-modpack-format-mrpack).
+
+## Zusätzliche Atmosphäre
+
+Darstellung bietet zusätzlich Scarrix Nebula, Crimson Forge, Scarrix Codefall und Neon Horizon. Die dekorativen Ebenen bleiben hinter den lesbaren Inhaltsflächen und reagieren auf die vorhandene Einstellung Bewegung (Ein/Aus/System). Keine Videos oder externen Grafik-Downloads sind erforderlich. Profilbild, Name und Metadaten in der Profilliste stehen wieder links; Spielen, Mods und Zahnrad bleiben rechts. Normale Aktionsbuttons behalten zentrierte Beschriftungen.

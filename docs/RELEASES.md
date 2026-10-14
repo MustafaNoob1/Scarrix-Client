@@ -41,3 +41,9 @@ Der Preview-Release ist eine Testversion, kein fertig getesteter Produktionslaun
 
 
 Windows-In-App-Updates verwenden den Silent-Modus des geprüften NSIS-Pakets (`quitAndInstall(true, true)`): kein Setup-Assistent, automatische Rückkehr in den Launcher nach dem Anwenden. Technisch bleibt das signatur- und prüfsummengeprüfte Update-Paket erforderlich, damit gesperrte Programmdateien nach dem Beenden sicher ersetzt werden. Für die erste Installation bleibt ein normaler Installer verfügbar. Eine systemseitige Administratorabfrage kann bei einer Installation in geschützten Ordnern weiterhin erforderlich sein. Der Benutzer startet Download und Neustart ausdrücklich; normale Starts/Beenden lösen keine automatische Installation aus.
+
+## Differenzielle Windows-Updates
+
+Der Windows-Updater aktiviert differenzielle Downloads mit den bereits veröffentlichten .exe.blockmap-Dateien und einzelnen HTTP-Range-Anfragen. Unveränderte Blöcke stammen aus dem lokalen Installer-Cache. Die rekonstruierte Datei muss weiterhin sowohl die vollständige SHA512-Prüfsumme als auch die Prüfung gegen das signierte Release-Manifest bestehen. Ohne passenden Cache, bei fehlenden Blockmaps oder nicht funktionierenden Range-Downloads verwendet electron-updater einen vollständigen Download. Ein garantiert ausschließlich kleiner Patch bei jeder Installation ist damit nicht möglich. Die Umstellung greift erst ab der installierten Version mit aktiviertem Differential-Modus.
+
+Ein Integrationstest verwendet den echten GenericDifferentialDownloader: Nur der geänderte von drei Blöcken wird über HTTP geladen, die gesamte Datei wiederhergestellt und geprüft. Manipulierte Patch-Daten schlagen an der abschließenden Prüfsumme fehl. Erstinstallation und Installations-/Neustart-Bestätigung bleiben unverändert.

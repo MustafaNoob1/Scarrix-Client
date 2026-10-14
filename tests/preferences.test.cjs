@@ -42,7 +42,7 @@ test('old installations gain appearance defaults',()=>{
 });
 test('animated backgrounds are saved and unknown options fall back safely',async()=>{
   const api=setup();
-  for(const background of ['aurora','stars']){
+  for(const background of ['aurora','stars','nebula','embers','matrix','horizon']){
     const cfg=api.getConfig();cfg.launcher.background=background;
     assert.equal((await api.saveConfig(cfg)).launcher.background,background);
   }

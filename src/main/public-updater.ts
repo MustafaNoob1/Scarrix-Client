@@ -73,8 +73,8 @@ export async function downloadLauncherUpdate(win:BrowserWindow):Promise<string>{
   target=win;assertIdle();if(checking)throw new Error('Update-Prüfung oder Download läuft bereits.');if(downloaded)return publish('ready','Update bereits heruntergeladen.');if(!pending||!installer)throw new Error('Bitte zuerst nach Updates suchen.');
   checking=true;const selected=pending;publish('downloading','Launcher-Update wird heruntergeladen …',selected.version,0);
   try{
-    autoUpdater.autoDownload=false;autoUpdater.autoInstallOnAppQuit=false;autoUpdater.allowPrerelease=true;autoUpdater.channel='latest';autoUpdater.allowDowngrade=false;autoUpdater.disableDifferentialDownload=true;
-    autoUpdater.setFeedURL({provider:'generic',url:selected.feed});
+    autoUpdater.autoDownload=false;autoUpdater.autoInstallOnAppQuit=false;autoUpdater.allowPrerelease=true;autoUpdater.channel='latest';autoUpdater.allowDowngrade=false;autoUpdater.disableDifferentialDownload=false;
+    autoUpdater.setFeedURL({provider:'generic',url:selected.feed,useMultipleRangeRequest:false});
     autoUpdater.verifyUpdateCodeSignature=async(_names,file)=>installer?verifyInstaller(file,installer):'Keine signierte Update-Datei freigegeben.';
     if(!configured){
       autoUpdater.on('error',()=>{send('app:progress',null);stepStatus('Update fehlgeschlagen','error');publish('error','Update fehlgeschlagen. Bitte erneut prüfen oder versuchen.');});

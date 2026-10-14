@@ -1,0 +1,39 @@
+/* Decorative layers stay behind content; transform/opacity drive the motion. */
+.ambient-nebula .ambient-wash{background:radial-gradient(ellipse at 65% 40%,#48205080,transparent 65%)}
+.nebula-system{position:absolute;inset:0;overflow:hidden}
+.nebula-cloud{position:absolute;inset:-45%;background:conic-gradient(from 40deg,transparent 10%,#b71e4c66 25%,transparent 40%,#5632ad70 60%,var(--accent-glow) 78%,transparent 90%);filter:blur(45px);animation:nebula-turn 28s linear infinite}
+.nebula-core{position:absolute;left:58%;top:35%;width:24vw;height:24vw;border-radius:50%;background:radial-gradient(circle,#f5b4d622,var(--accent-glow) 24%,transparent 65%);animation:nebula-pulse 5s ease-in-out infinite alternate}
+.nebula-ring{position:absolute;width:55vw;height:24vw;left:27%;top:28%;border:1px solid #ff709833;border-radius:50%;box-shadow:0 0 38px #a63ac422,inset 0 0 25px #d9386620;animation:nebula-tilt 11s ease-in-out infinite alternate}
+.ambient-embers .ambient-wash{background:radial-gradient(ellipse at 50% 115%,#bc222588,transparent 65%),radial-gradient(ellipse at 85% 100%,#f5812533,transparent 50%);animation:forge-breathe 4s ease-in-out infinite alternate}
+.ambient-embers .ambient-sparks i{background:#ffbc73;box-shadow:0 0 9px #ff4c28;animation-name:forge-spark}
+.ambient-matrix .ambient-wash{background:radial-gradient(ellipse at 60% 20%,var(--accent-faint),transparent 70%)}
+.codefall{position:absolute;inset:0;overflow:hidden;mask-image:linear-gradient(transparent,#000 15%,#000 80%,transparent)}
+.codefall i{position:absolute;top:-65%;font:14px/1.8 Consolas,monospace;white-space:pre;text-align:center;color:var(--accent-strong);text-shadow:0 0 9px var(--accent);font-style:normal;animation:codefall-drop 12s linear infinite}
+.ambient-horizon .ambient-wash{background:linear-gradient(#100d1c,#25101e66 55%,#080b12)}
+.horizon-sun{position:absolute;left:calc(65% - 100px);top:20%;width:200px;height:200px;border-radius:50%;background:repeating-linear-gradient(transparent 0 14px,#0b0b16 15px 20px),linear-gradient(#e85b613f,#a0216833);box-shadow:0 0 80px #d02c5120;animation:horizon-breathe 6s ease-in-out infinite alternate}
+.horizon-plane{position:absolute;left:-50%;right:-50%;top:55%;height:85%;perspective:400px;overflow:hidden;mask-image:linear-gradient(transparent,#000 25%,transparent)}
+.horizon-plane>div{position:absolute;inset:-100%;background-image:linear-gradient(#f2385c33 1px,transparent 1px),linear-gradient(90deg,#af3a8d33 1px,transparent 1px);background-size:64px 64px;transform:rotateX(64deg);animation:horizon-grid 2.5s linear infinite}
+.thumbnail-nebula{background:conic-gradient(from 40deg,#11101b,#49203c,#252049,#11101b)}
+.thumbnail-embers{background:radial-gradient(ellipse at 50% 120%,#b84832,#36141b 45%,#100e16)}
+.thumbnail-matrix{background:repeating-linear-gradient(90deg,#0d1019 0 17px,#54233877 18px 19px,#0d1019 20px 31px)}
+.thumbnail-horizon{background:repeating-linear-gradient(0deg,#70244433 0 1px,transparent 1px 12px),linear-gradient(#171127,#4c1a354f)}
+@keyframes nebula-turn{to{transform:rotate(360deg)}}
+@keyframes nebula-pulse{to{transform:scale(1.35);opacity:.55}}
+@keyframes nebula-tilt{from{transform:rotate(-25deg) scale(.92)}to{transform:rotate(8deg) scale(1.08)}}
+@keyframes forge-breathe{to{opacity:.55;transform:translateY(-3%)}}
+@keyframes forge-spark{0%{transform:translate3d(0,35vh,0);opacity:0}15%{opacity:.75}85%{opacity:.3}100%{transform:translate3d(65px,-65vh,0);opacity:0}}
+@keyframes codefall-drop{to{transform:translateY(170vh)}}
+@keyframes horizon-breathe{to{opacity:.55;transform:translateY(-10px)}}
+@keyframes horizon-grid{to{background-position:0 64px;transform:rotateX(64deg)}}
+.ambient-background[data-running="false"] *{animation:none!important}
+@media(prefers-reduced-motion:reduce){.ambient-background[data-motion="system"] *{animation:none!important}}
+
+/* Sharper hierarchy and quiet surfaces keep decorative motion readable. */
+.shell .profile-studio-row{background:#090e18d4;border-color:#ffffff12;box-shadow:0 8px 24px #00000014;transition:border-color .18s,background .18s}
+.shell .profile-studio-row:hover{border-color:#ffffff24;background:#0d1420e8}
+.shell .profile-studio .profile-open{justify-content:flex-start!important;text-align:left!important}
+.shell .profile-open>span:last-child{text-align:left}
+.shell .profile-open b{font-weight:650;letter-spacing:-.15px}
+.shell .catalog-entry,.shell .skin-card,.shell .cape-card{background:#080e17cf}
+.shell .settings-window{background:#0c121ed9}
+.ambient-background[data-running="false"] .codefall i{top:-10%}@media(prefers-reduced-motion:reduce){.ambient-background[data-motion="system"] .codefall i{top:-10%}}

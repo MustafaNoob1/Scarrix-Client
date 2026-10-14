@@ -15,7 +15,7 @@ export interface Config {
   minecraft: { version: string; loader: 'vanilla' | 'fabric' | 'forge' | 'quilt'; loaderVersion?: string; javaPath: string; ramGB: number };
   microsoft: { clientId: string }; github: { owner: string; repo: string; privateRepo?: boolean };
   modrinth: { userAgent: string }; curseforge: { apiKey: string };
-  launcher: { theme: 'red' | 'blue' | 'purple' | 'gold'; rememberAccount?: boolean; rotateSkin?: boolean; animations?: boolean; backgroundMotion?: 'on' | 'off' | 'system'; background?: 'grid' | 'glow' | 'plain' | 'aurora' | 'stars' };
+  launcher: { theme: 'red' | 'blue' | 'purple' | 'gold'; rememberAccount?: boolean; rotateSkin?: boolean; animations?: boolean; backgroundMotion?: 'on' | 'off' | 'system'; background?: 'grid' | 'glow' | 'plain' | 'aurora' | 'stars' | 'nebula' | 'embers' | 'matrix' | 'horizon' };
   instances: Instance[];
   activeInstanceId: string;
   language: 'de' | 'en'; modes: Mode[]; news: { title: string; text: string }[];
