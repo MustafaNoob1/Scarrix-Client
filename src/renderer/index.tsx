@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import {displayError} from './errors';
 import type { Config, Profile, ModHit, SavedImage, DownloadStatus, GameSession } from './types';
 import './style.css';
 import './play.css';
@@ -99,7 +100,7 @@ function App() {
   const run = async <T,>(job: () => Promise<T>, done?: (result:T) => void | Promise<void>) => {
     setBusy(true); setNotice('');
     try { const result = await job(); await done?.(result); }
-    catch (e) { setNotice(e instanceof Error ? e.message : String(e)); }
+    catch (e) { setNotice(displayError(e)); }
     finally { setBusy(false); }
   };
   const refresh = () => {

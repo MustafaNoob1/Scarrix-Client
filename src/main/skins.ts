@@ -4,6 +4,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { appData } from './config';
 import { setSkin } from './auth';
+import {normalizeCape} from './cape-images';
 
 interface SavedImage { id: string; name: string; dataUrl: string; added: string; model?: 'classic'|'slim'; favorite?:boolean }
 function libraryDir(kind: 'skins' | 'capes'): string { return path.join(appData(), kind); }
@@ -28,18 +29,20 @@ export function getLibrary(kind: 'skins' | 'capes'): SavedImage[] {
 }
 export async function upload(kind: 'skins' | 'capes', model: 'classic' | 'slim'):
   Promise<{ library: SavedImage[]; message: string; selectedId?: string }> {
-  const chosen = await dialog.showOpenDialog({ properties: ['openFile'], filters: [{ name: 'PNG', extensions: ['png'] }] });
+  const chosen = await dialog.showOpenDialog({ properties: ['openFile'], filters: [{ name: kind==='capes'?'Cape-Bild (PNG oder JPG)':'PNG', extensions: kind==='capes'?['png','jpg','jpeg']:['png'] }] });
   if (chosen.canceled || !chosen.filePaths[0]) return { library: getLibrary(kind), message: 'Auswahl abgebrochen.' };
   const file = chosen.filePaths[0];
   if (fs.statSync(file).size > 2 * 1024 * 1024) throw new Error('Bild darf maximal 2 MB haben.');
-  const bytes = fs.readFileSync(file);
+  const input = fs.readFileSync(file);
+  const cape = kind==='capes'?normalizeCape(input):null;
+  const bytes = cape?.bytes??input;
   checkPng(bytes, kind === 'capes');
   const dir = libraryDir(kind);
   fs.mkdirSync(dir, { recursive: true });
   const id = crypto.createHash('sha256').update(bytes).digest('hex').slice(0, 16) + '.png';
   fs.writeFileSync(path.join(dir, id), bytes, { mode: 0o600 });
-  if(kind==='capes')editLibraryImage('capes',id,{name:path.basename(file,'.png').slice(0,50)||'Mein Cape'});
-  return { library: getLibrary(kind), selectedId: id, message: kind === 'skins' ? 'Skin importiert. Wähle das Modell und klicke auf Skin anwenden.' : 'Eigenes Cape wurde nur lokal als Vorschau gespeichert. Microsoft bietet keinen offiziellen Custom-Cape-Upload.' };
+  if(kind==='capes')editLibraryImage('capes',id,{name:path.parse(file).name.slice(0,50)||'Mein Cape'});
+  return { library: getLibrary(kind), selectedId: id, message: kind === 'skins' ? 'Skin importiert. Wähle das Modell und klicke auf Skin anwenden.' : cape!.message+' Als lokale Launcher-Vorschau gespeichert.' };
 }
 export async function applySavedSkin(id: string, model: 'classic' | 'slim') {
   if (!['classic', 'slim'].includes(model)) throw new Error('Unbekanntes Skin-Modell.');

@@ -44,6 +44,10 @@ Skins lassen sich aus PNG-Dateien, Spielernamen, UUIDs oder offiziellen textures
 
 Der Cape-Tab bietet lokale PNG-Uploads, Favoriten, Namenssuche, eine 3D-Vorschau mit Cape/Elytra und „Kein Cape“. Eigene Uploads sind aktuell ausschließlich lokale Launcher-Vorschauen. Offizielle Konto-Capes können nach erfolgreicher Minecraft-Anmeldung separat ausgerüstet oder abgelegt werden.
 
+Der lokale Cape-Import erkennt PNG und JPG am Dateiinhalt, auch bei falscher Dateiendung. Bilder dürfen maximal 2 MB und 2048×2048 Pixel haben. 64×32-Texturen bleiben unverändert, alte 22×17-Texturen werden auf die Standardfläche erweitert und größere Texturen mit Seitenverhältnis 2:1 auf 64×32 verkleinert. Andere Bildmotive werden auf die Vorder- und Rückseite der Cape-Textur übertragen. Beschädigte und andere Bildformate werden mit einer verständlichen Meldung zurückgewiesen; Skins behalten ihre strikten PNG-Abmessungen.
+
+„Cape-Vorlage“ neben Hochladen speichert eine echte PNG mit 64×32 Pixeln. Rot markiert die Vorderseite (x=1–10, y=1–16), Dunkelrot die Rückseite (x=12–21, y=1–16). Schmale Streifen bilden die Kanten. Die übrige Fläche ist transparent und sollte frei bleiben. Die Vorlage lässt sich bearbeiten und anschließend direkt wieder importieren.
+
 Es existiert noch kein gehosteter Community-Dienst. community-channel.json ist deshalb deaktiviert. Der lesende Launcher-Adapter und ein separater [Cape-Service](../community-capes-server/README.md) mit Konto-Verifikation, privaten ausstehenden Uploads, Moderation und Auswahl pro Spieler-UUID sind vorbereitet und getestet. Server-Schlüssel gehören ausschließlich auf den Server.
 
 Vor einer Freischaltung fehlen Deployment unter HTTPS, die echte Integrationsprüfung mit einem freigegebenen Java-Konto, authentifizierter Community-Upload/Ausrüsten im Launcher und die Minecraft-Mod für die Darstellung. Andere Spieler sehen eigene Capes erst mit dieser Mod und dem gehosteten Dienst. Das ist kein bereits funktionierender globaler Cape-Katalog.

@@ -11,3 +11,4 @@
 @media(max-height:700px){.skin-save-preview .skin-preview,.cape-preview-stage>.skin-preview{height:250px}.skin-save-preview .skin-preview canvas,.cape-preview-stage>.skin-preview canvas{height:250px!important;width:209px!important}.skin-save-preview{gap:12px}.studio-dialog>header{padding:15px 20px}.skin-preview-dialog>header h2{font-size:15px}}
 .main>.wardrobe-page:has(.studio-backdrop),.main>.catalog-page:has(.studio-backdrop){z-index:100}
 .studio-backdrop,.studio-dialog,.studio-close{-webkit-app-region:no-drag}
+.cape-upload-actions{display:flex;gap:10px;flex-shrink:0}.cape-upload-hint{margin:-12px 0 22px}@media(max-width:850px){.cape-upload-actions{flex-wrap:wrap;flex-shrink:1}}

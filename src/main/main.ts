@@ -22,6 +22,7 @@ import { importModpack } from './modpack';
 import { searchCatalog, catalogVersions, catalogTargets, installCatalog, catalogCategories } from './catalog';
 import { communityCapes } from './community-capes';
 import {profileExportTree,exportSelectedProfile} from './profile-export';
+import {saveCapeTemplate} from './cape-images';
 import { controlWindow } from './window-controls';
 import {profileContents,profileOverview,toggleProfileContent,removeProfileContent,openProfileFolder,profileLoaders,profileIcon,profileJavaPick,profileJava,checkProfileUpdates,updateProfileContent,deleteProfile} from './profile-studio';
 import type { Config } from './types';
@@ -134,6 +135,7 @@ function handlers() {
   handle('skins:apply', (_e, id: string, model: 'classic' | 'slim') => applySavedSkin(id, model));
   handle('capes:library', () => getLibrary('capes'));
   handle('capes:upload', () => upload('capes', 'classic'));
+  handle('capes:template',()=>saveCapeTemplate());
   handle('capes:select', (_e, id: string | null) => selectCape(id));
   handle('update:check', () => checkForUpdate(window));
   handle('paths:get', () => ({ minecraft: rootPath(), instance: instancePath() }));

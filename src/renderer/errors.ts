@@ -1,0 +1,1 @@
+export function displayError(error:unknown){let text=error instanceof Error?error.message:String(error);for(let n=0;n<3;n++)text=text.replace(/^Error invoking remote method '[^']*':\s*/,'').replace(/^Error:\s*/,'');return text;}

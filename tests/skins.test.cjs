@@ -11,6 +11,7 @@ function setup({cancel=false,decoded=true}={}) {
   const box={exports:{},Buffer,require:id=>{
     if(id==='electron')return {dialog:{showOpenDialog:async()=>({canceled:cancel,filePaths:['/chosen/skin.png']})},nativeImage:{createFromBuffer:()=>({isEmpty:()=>!decoded,getSize:()=>({width:64,height:64})})}};
     if(id==='node:fs')return fakeFs;
+    if(id==='./cape-images')return require('./load-main.cjs')('cape-images',{'electron':{}});
     if(id==='./config')return {appData:()=>'/fake'};
     if(id==='./auth')return {setSkin:async(...args)=>{calls.push(args);return {id:'player',name:'Musti',skins:[{url:'new-skin'}]};}};
     return require(id);
