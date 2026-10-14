@@ -26,6 +26,7 @@
     "adm-zip": "^0.6.1",
     "electron-updater": "^6.6.0",
     "js-yaml": "^5.4.3",
+    "lucide-react": "^1.57.0",
     "pngjs": "^7.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -59,6 +60,8 @@
       "package.json"
     ],
     "extraResources": [
+      { "from": "licenses", "to": "licenses" },
+      { "from": "src/renderer/assets/BRAND-ICONS.md", "to": "licenses/BRAND-ICONS.md" },
       {
         "from": "config.json",
         "to": "config.json"

@@ -1,3 +1,4 @@
+export interface LauncherUpdateState {status:'idle'|'checking'|'available'|'downloading'|'ready'|'current'|'manual'|'disabled'|'error';version:string|null;message:string;canDownload:boolean;percent:number|null}
 export interface ProfileContent {filename:string;name:string;version:string;icon?:string;enabled:boolean;size:number;kind:ContentKind;world?:string;update?:{project:string;version:string;number:string}}
 export interface ProfileOverview {bytes:number;truncated:boolean;worlds:string[];lastPlayed:number|null;playtime:number}
 export type ContentKind='mod'|'resourcepack'|'shader'|'datapack';
@@ -44,7 +45,7 @@ export interface Api {
   capes: {template():Promise<string>;community():Promise<{enabled:boolean;items:Array<{id:string;name:string;ownerName:string;uses:number;url:string}>}>;preview():Promise<{selectedId:string|null;dataUrl?:string}>;setPreview(id:string|null):Promise<{selectedId:string|null;dataUrl?:string}>;edit(id:string,input:{name?:string;favorite?:boolean}):Promise<SavedImage[]>;remove(id:string):Promise<SavedImage[]>; library(): Promise<SavedImage[]>; upload(): Promise<{library: SavedImage[]; message: string; selectedId?: string}>; select(id: string | null): Promise<Profile> };
   memory(): Promise<{ maxMB: number; recommendedMB: number }>;
   versions(): Promise<string[]>;
-  version(): Promise<string>; paths(): Promise<{minecraft:string; instance:string}>; logs(): Promise<string>; update(): Promise<string>;
+  version(): Promise<string>; paths(): Promise<{minecraft:string; instance:string}>; logs(): Promise<string>; update(): Promise<string>;updateState():Promise<LauncherUpdateState>;updateDownload():Promise<string>;updateInstall():Promise<string>;onUpdate(cb:(state:LauncherUpdateState)=>void):()=>void;
   openUrl(url: string): Promise<void>;
   onDevice(cb: (msg: { code: string; url: string; message: string }) => void): () => void;
   onNotice(cb: (msg: string) => void): () => void;

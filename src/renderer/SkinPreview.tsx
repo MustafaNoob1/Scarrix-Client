@@ -1,3 +1,4 @@
+import {UiIcon,IconLabel} from './UiIcons';
 import React, { useEffect, useRef, useState } from 'react';
 import { SkinViewer, NameTagObject } from 'skinview3d';
 import steveSkin from './assets/steve.png';
@@ -39,5 +40,5 @@ export function SkinPreview({ skin, rotate, animate, model, nameTag, cape, back,
     } catch { setFailed(true); }
     return () => { disposed = true;if(motionQuery&&motionChanged)motionQuery.removeEventListener('change',motionChanged);viewerRef.current=null;viewer?.dispose(); };
   }, [skin, model, nameTag, cape, back, elytra]);
-  return <div className="skin-preview"><canvas ref={canvas} aria-label={nameTag ? 'Minecraft-Skin von '+nameTag+' mit Namensschild' : 'Minecraft-Skin, mit der Maus drehbar'} hidden={failed}/>{failed && <div className="skin-unavailable">◈<small>3D-Vorschau nicht verfügbar</small></div>}{!failed&&nameTag&&<small className="skin-status" role="status">{phase==='loading'?'Skin wird geladen …':phase==='placeholder'?(skin?'Skin nicht erreichbar · Platzhalter':'Steve · Kein Konto verknüpft'):(rotate?'Automatische Rotation · Mit der Maus drehen':'Mit der Maus drehen')}</small>}</div>;
+  return <div className="skin-preview"><canvas ref={canvas} aria-label={nameTag ? 'Minecraft-Skin von '+nameTag+' mit Namensschild' : 'Minecraft-Skin, mit der Maus drehbar'} hidden={failed}/>{failed && <div className="skin-unavailable"><UiIcon glyph="◈"/><small>3D-Vorschau nicht verfügbar</small></div>}{!failed&&nameTag&&<small className="skin-status" role="status">{phase==='loading'?'Skin wird geladen …':phase==='placeholder'?(skin?'Skin nicht erreichbar · Platzhalter':'Steve · Kein Konto verknüpft'):(rotate?'Automatische Rotation · Mit der Maus drehen':'Mit der Maus drehen')}</small>}</div>;
 }

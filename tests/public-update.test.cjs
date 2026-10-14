@@ -21,26 +21,26 @@ function setup({signed=true,tamper=false,restart=false,changedMetadata=false}={}
   async downloadUpdate(){this.downloaded=true;const error=await this.verifyUpdateCodeSignature([],file);if(error)throw Error(error);await this.events['update-downloaded']();}
   quitAndInstall(...args){this.install=args;}
  }
- const updater=new Updater();
+ let prompts=0;const updater=new Updater();
  if(tamper)fs.writeFileSync(file,'tampered installer');
- const mocks={process:{...process,resourcesPath:dir,platform:'win32',arch:'x64'},'electron':{app:{isPackaged:true,getVersion:()=> '0.5.0-beta.1'},dialog:{showMessageBox:async()=>({response:restart?0:1})}},
+ const mocks={process:{...process,resourcesPath:dir,platform:'win32',arch:'x64'},'electron':{app:{isPackaged:true,getVersion:()=> '0.5.0-beta.1'},dialog:{showMessageBox:async()=>{prompts++;return {response:restart?0:1};}}},
   'electron-updater':{autoUpdater:updater,NsisUpdater:Updater},
   'node:fs':{...fs,readFileSync:(p,...args)=>String(p).endsWith('update-channel.json')?JSON.stringify({enabled:true,publicKey}):fs.readFileSync(p,...args)},
   fetch:async url=>{const body=url.includes('api.github.com')?JSON.stringify(release):bodies[url.split('/').pop()];const response=new Response(body);Object.defineProperty(response,'url',{value:url});return response;}
  };
- return {api:load('public-updater',mocks),updater,win:{isDestroyed:()=>false,webContents:{send:()=>{}}},cleanup:()=>fs.rmSync(dir,{recursive:true,force:true})};
+ return {api:load('public-updater',mocks),updater,get prompts(){return prompts;},win:{isDestroyed:()=>false,webContents:{send:()=>{}}},cleanup:()=>fs.rmSync(dir,{recursive:true,force:true})};
 }
 test('signed public update is downloaded and restarts after explicit confirmation',async()=>{
- const s=setup({restart:true});try{await s.api.checkForUpdate(s.win);assert.deepEqual(s.updater.install,[false,true]);assert.equal(s.updater.autoInstallOnAppQuit,false);assert.equal(s.updater.allowDowngrade,false);}finally{s.cleanup();}
+ const s=setup({restart:true});try{await s.api.checkForUpdate(s.win);assert.equal(s.updater.downloaded,undefined);await s.api.downloadLauncherUpdate(s.win);assert.equal(s.updater.install,undefined);await s.api.installLauncherUpdate(s.win);assert.deepEqual(s.updater.install,[false,true]);assert.equal(s.updater.autoInstallOnAppQuit,false);assert.equal(s.updater.allowDowngrade,false);}finally{s.cleanup();}
 });
 test('unsigned releases and altered installers cannot install',async()=>{
- for(const opts of [{signed:false},{tamper:true}]){const s=setup(opts);try{await assert.rejects(s.api.checkForUpdate(s.win));assert.equal(s.updater.install,undefined);}finally{s.cleanup();}}
+ for(const opts of [{signed:false},{tamper:true}]){const s=setup(opts);try{if(opts.signed===false)await assert.rejects(s.api.checkForUpdate(s.win));else{await s.api.checkForUpdate(s.win);await assert.rejects(s.api.downloadLauncherUpdate(s.win));}assert.equal(s.updater.install,undefined);}finally{s.cleanup();}}
 });
 test('later leaves verified update ready without restarting',async()=>{
- const s=setup();try{await s.api.checkForUpdate(s.win);assert.equal(s.updater.downloaded,true);assert.equal(s.updater.install,undefined);await s.api.checkForUpdate(s.win);assert.equal(s.updater.install,undefined);}finally{s.cleanup();}
+ const s=setup();try{await s.api.checkForUpdate(s.win);await s.api.downloadLauncherUpdate(s.win);assert.equal(s.updater.downloaded,true);assert.equal(s.prompts,0);assert.equal(s.updater.install,undefined);await s.api.checkForUpdate(s.win);assert.equal(s.updater.install,undefined);}finally{s.cleanup();}
 });
 test('metadata changed between signature check and SDK fetch cannot download or install',async()=>{
- const s=setup({changedMetadata:true});try{await assert.rejects(s.api.checkForUpdate(s.win),/zwischenzeitlich/);assert.equal(s.updater.downloaded,undefined);assert.equal(s.updater.install,undefined);}finally{s.cleanup();}
+ const s=setup({changedMetadata:true});try{await s.api.checkForUpdate(s.win);await assert.rejects(s.api.downloadLauncherUpdate(s.win),/zwischenzeitlich/);assert.equal(s.updater.downloaded,undefined);assert.equal(s.updater.install,undefined);}finally{s.cleanup();}
 });
 test('manifest signature rejects a different signing key and changed payload',()=>{
  const {verifyRelease}=load('update-trust');const a=crypto.generateKeyPairSync('ed25519'),b=crypto.generateKeyPairSync('ed25519');
@@ -48,3 +48,6 @@ test('manifest signature rejects a different signing key and changed payload',()
  assert.throws(()=>verifyRelease(body,sig,b.publicKey.export({type:'spki',format:'pem'})),/Signatur/);
  assert.throws(()=>verifyRelease(Buffer.from('{}'),sig,a.publicKey.export({type:'spki',format:'pem'})),/Signatur/);
 });
+
+test('startup and repeated manual checks only discover updates without downloads or restart prompts',async()=>{const s=setup();try{await s.api.checkForUpdate(s.win,false);assert.equal(s.api.updateState().status,'available');assert.equal(s.api.updateState().canDownload,true);assert.equal(s.updater.downloaded,undefined);assert.equal(s.updater.feed,undefined);assert.equal(s.prompts,0);assert.equal(s.updater.autoDownload,false);assert.equal(s.updater.autoInstallOnAppQuit,false);await s.api.checkForUpdate(s.win);assert.equal(s.updater.downloaded,undefined);assert.equal(s.prompts,0);}finally{s.cleanup();}});
+test('download and installation require their own explicit actions and a verified available update',async()=>{const s=setup();try{await assert.rejects(s.api.downloadLauncherUpdate(s.win),/zuerst nach Updates/);await assert.rejects(s.api.installLauncherUpdate(s.win),/zuerst/);await s.api.checkForUpdate(s.win);await s.api.downloadLauncherUpdate(s.win);assert.equal(s.api.updateState().status,'ready');assert.equal(s.api.updateState().canDownload,false);assert.equal(s.prompts,0);await s.api.checkForUpdate(s.win,false);assert.equal(s.prompts,0);await s.api.installLauncherUpdate(s.win);assert.equal(s.prompts,1);assert.equal(s.updater.install,undefined);}finally{s.cleanup();}});

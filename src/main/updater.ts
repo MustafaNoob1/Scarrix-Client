@@ -1,1 +1,1 @@
-export { checkForUpdate } from './public-updater';
+export {checkForUpdate,downloadLauncherUpdate,installLauncherUpdate,updateState} from './public-updater';

@@ -9,16 +9,17 @@ Er installiert die Abhängigkeiten mit `npm ci`, prüft TypeScript und die autom
 - macOS: `.dmg` und `.zip` (ohne Apple-Notarisierung)
 - Linux: `.AppImage` und `.deb`
 
-Wenn **alle drei** Plattformen erfolgreich gebaut wurden, veröffentlicht GitHub Actions automatisch einen **Prärelease** namens `Scarrix Client 0.2.0 Preview #...` unter `Releases` und hängt die Installer an. Die Dateien bleiben außerdem 30 Tage als Actions-Artefakte verfügbar.
+Wenn **alle drei** Plattformen erfolgreich gebaut wurden, veröffentlicht GitHub Actions automatisch einen **Prärelease** namens `Scarrix Client 0.6.0-beta.N` unter `Releases` und hängt die Installer an. Die Dateien bleiben außerdem 30 Tage als Actions-Artefakte verfügbar.
 
 **Erster Schritt:** Auf GitHub unter `Actions` den Workflow und die Schritte prüfen. Unter `Releases` erscheint ein Download erst nach erfolgreich abgeschlossenem Lauf.
 
-## Privates Repository = private Downloads
+## Updates selbst auswählen
 
-Das Repository ist privat. Deshalb können **nur berechtigte GitHub-Konten** Releases und Actions-Artefakte herunterladen. Für öffentliche Spieler-Downloads muss später ein öffentlicher Veröffentlichungsort eingerichtet werden, ohne Servergeheimnisse oder private Konfiguration hochzuladen.
+Das Repository ist jetzt öffentlich; veröffentlichte Installer sind ohne GitHub-Token herunterladbar. Im installierten Windows-Launcher wird beim Start nur geprüft. Unter Einstellungen → Updates entscheidet der Benutzer mit „Update herunterladen“, ob die neue Version geladen wird. Fortschritt und Status werden angezeigt. „Installieren & neu starten“ fordert anschließend eine Neustart-Bestätigung an. Beim normalen Beenden findet keine automatische Installation statt.
 
-Die automatische `electron-updater`-Aktualisierung funktioniert für öffentlich verteilte Installer aus einem privaten Repo **nicht ohne zusätzliche Update-Infrastruktur und Authentifizierung**. Bis dahin kann der Repository-Inhaber neue Installer manuell installieren.
+Release-Metadaten tragen eine Ed25519-Signatur. Der Client enthält nur den öffentlichen Prüfschlüssel; der private Schlüssel bleibt im Actions-Secret. Installer und Update-Metadaten müssen zum signierten Manifest passen. Eine Änderung der Metadaten zwischen Prüfung und Download wird zurückgewiesen. Dies ersetzt kein Windows-Herausgeberzertifikat. macOS/Linux bieten den manuellen Installer-Download.
 
+Bei erneuter privater Sichtbarkeit braucht es einen öffentlichen Distributionskanal. Niemals GitHub-Tokens in den Client einbetten.
 ## Warnungen und bekannte Grenzen
 
 - **Microsoft/Minecraft OAuth**: App-Freigabe noch ausstehend. Spielstart erst danach prüfbar.
@@ -30,10 +31,11 @@ Die automatische `electron-updater`-Aktualisierung funktioniert für öffentlich
 
 ## Release herunterladen
 
-1. Privates Repository mit berechtigtem GitHub-Konto öffnen.
+1. Öffentliches Scarrix-Repository öffnen.
 2. In GitHub `Actions` den Lauf `Scarrix Client installers and preview release` prüfen.
 3. Nach erfolgreichem Build `Releases` öffnen.
 4. Unter `Assets` für Windows die `.exe` auswählen, herunterladen und installieren.
 5. Wenn kein Release sichtbar ist, die Fehlermeldung im GitHub-Actions-Job ansehen und zuerst beheben.
 
 Der Preview-Release ist eine Testversion, kein fertig getesteter Produktionslauncher.
+

@@ -55,3 +55,9 @@ Vor einer Freischaltung fehlen Deployment unter HTTPS, die echte Integrationspr�
 ## Entwicklung und Prüfung
 
 Zusätzlich zu npm ci im Hauptprojekt: npm ci --prefix community-capes-server --ignore-scripts. Dann npm run typecheck, npm test, npm test --prefix community-capes-server und npm run build. Die Release-Pipeline führt diese Prüfungen auf allen drei Plattformen vor der Installer-Veröffentlichung aus.
+
+## Update-Auswahl und Icons
+
+Beim Start prüft der installierte Windows-Launcher ausschließlich die Verfügbarkeit neuer Versionen. Einstellungen → Updates bietet getrennte Aktionen: Nach Updates suchen, Update herunterladen, Installieren & neu starten. Verfügbare Version, Downloadfortschritt und Installationsbereitschaft bleiben im Bereich sichtbar. Schließen des Launchers installiert kein bereits heruntergeladenes Update automatisch. Vor dem Download werden die signierten Release-Metadaten geprüft; vor der Installation wird der Installer gegen das signierte Manifest geprüft.
+
+Die Oberfläche verwendet gemeinsame SVG-Icons statt von der Systemschrift abhängiger Symbolzeichen. Modrinth und CurseForge werden im Katalog und bei der Export-Auswahl durch lokal gebündelte Anbieter-Logos gekennzeichnet. Herkunft und Hinweise stehen in src/renderer/assets/BRAND-ICONS.md.

@@ -9,7 +9,7 @@ import { installedMods, toggleMod, removeMod, searchMods, installMod } from './m
 import { getLibrary, upload, applySavedSkin, prepareSkin, saveSkinDraft, editLibraryImage, removeLibraryImage, capePreview, setCapePreview } from './skins';
 import { memoryInfo } from './memory';
 import { officialVersions } from './versions';
-import { checkForUpdate } from './updater';
+import { checkForUpdate,downloadLauncherUpdate,installLauncherUpdate,updateState } from './updater';
 import { ensureJava, javaDetails } from './java';
 import { setDownloadSink, downloadStatus, stepStatus } from './downloads';
 import { exclusive } from './operations';
@@ -138,6 +138,9 @@ function handlers() {
   handle('capes:template',()=>saveCapeTemplate());
   handle('capes:select', (_e, id: string | null) => selectCape(id));
   handle('update:check', () => checkForUpdate(window));
+  handle('update:state',()=>updateState());
+  handle('update:download',()=>downloadLauncherUpdate(window));
+  handle('update:install',()=>installLauncherUpdate(window));
   handle('paths:get', () => ({ minecraft: rootPath(), instance: instancePath() }));
   handle('logs:export', async () => {
     const folder = path.join(instancePath(), 'logs');

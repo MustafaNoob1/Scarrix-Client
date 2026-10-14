@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld('scarrix', {
   versions: () => ipcRenderer.invoke('minecraft:versions'),
   version: () => ipcRenderer.invoke('app:version'),
   paths: () => ipcRenderer.invoke('paths:get'), logs: () => ipcRenderer.invoke('logs:export'), update: () => ipcRenderer.invoke('update:check'),
+  updateState:()=>ipcRenderer.invoke('update:state'),updateDownload:()=>ipcRenderer.invoke('update:download'),updateInstall:()=>ipcRenderer.invoke('update:install'),onUpdate:(cb:(data:unknown)=>void)=>listen('update:state',cb),
   openUrl: (url: string) => ipcRenderer.invoke('url:open', url),
   onDevice: (cb: (m: unknown) => void) => listen('auth:device', cb),
   onNotice: (cb: (m: unknown) => void) => listen('app:notice', cb),
