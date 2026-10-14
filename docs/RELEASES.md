@@ -26,7 +26,7 @@ Bei erneuter privater Sichtbarkeit braucht es einen öffentlichen Distributionsk
 - **Windows SmartScreen**: Windows-Installer sind nicht mit einem Herausgeberzertifikat signiert.
 - **macOS Gatekeeper**: Nicht signierte/nicht notarisierte App kann blockiert werden.
 - **Java**: Minecraft 1.21.x benötigt normalerweise Java 21; Java separat installieren und Pfad prüfen.
-- **Mod-Unterstützung**: Einige Mods erfordern Abhängigkeiten; sie werden noch nicht automatisch installiert.
+- **Mod-Unterstützung**: Pflicht-Abhängigkeiten aus Modrinth/CurseForge werden automatisch installiert. Externe, optionale oder unpassende Dateien benötigen weiterhin eine manuelle Entscheidung.
 - **Unterserver**: Ports sind nur Anzeige; Spielbeitritt geht über den öffentlichen Proxy `Scarrix.net:25565`.
 
 ## Release herunterladen

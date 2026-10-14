@@ -8,7 +8,7 @@ module.exports=function loadMain(name,mocks={},cache=new Map()){
   if(id.startsWith('.'))return module.exports(path.relative(path.resolve('src/main'),path.resolve(path.dirname(file),id)),mocks,cache);
   return require(id);
  };
- const box={exports,require:req,Buffer,process:mocks.process||process,URL,URLSearchParams,fetch:mocks.fetch||fetch,AbortSignal,setTimeout,clearTimeout,console,TextDecoder};
+ const box={exports,require:req,Buffer,process:mocks.process||process,URL,URLSearchParams,fetch:mocks.fetch||fetch,AbortSignal,AbortController,setTimeout,clearTimeout,console,TextDecoder};
  vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,esModuleInterop:true,target:ts.ScriptTarget.ES2022}}).outputText,box,{filename:file});
  return exports;
 };

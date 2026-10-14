@@ -26,6 +26,11 @@ import {saveCapeTemplate} from './cape-images';
 import { controlWindow } from './window-controls';
 import {profileContents,profileOverview,toggleProfileContent,removeProfileContent,openProfileFolder,profileLoaders,profileIcon,profileJavaPick,profileJava,checkProfileUpdates,updateProfileContent,deleteProfile} from './profile-studio';
 import type { Config } from './types';
+import {enqueueDownload,queueState,setQueueSink,cancelDownload,retryDownload} from './download-queue';
+import {createBackup,listBackups,restoreBackup,removeBackup} from './profile-backups';
+import {profileMedia,openProfileMedia,saveScreenshot} from './profile-media';
+import {installCatalogModpack} from './modpack-catalog';
+import {analyzeDiagnostics} from './diagnostics';
 
 let window: BrowserWindow;
 const notice = (text: string) => { if (window && !window.isDestroyed()) window.webContents.send('app:notice', text); };
@@ -57,6 +62,19 @@ function handle(channel:string, action:(event:Electron.IpcMainInvokeEvent,...arg
   ipcMain.handle(channel, async(event,...args)=>{try{return await action(event,...args);}catch(error){try{recordError(error);}catch{}if(['game:prepare','game:start','java:install','mods:install','update:check'].includes(channel))stepStatus(friendlyError(error),'error');throw new Error(friendlyError(error));}});
 }
 function handlers() {
+  setQueueSink(jobs=>{if(window&&!window.isDestroyed())window.webContents.send('queue:state',jobs);});
+  handle('queue:list',()=>queueState());
+  handle('queue:cancel',(_e,id)=>cancelDownload(id));
+  handle('queue:retry',(_e,id)=>retryDownload(id));
+  handle('profiles:backups',(_e,id)=>listBackups(id));
+  handle('profiles:backup',(_e,id,scope)=>exclusive('Sicherung erstellen',()=>createBackup(id,scope??'full','Manuelle Sicherung',true)));
+  handle('profiles:restore',(_e,id,backup)=>exclusive('Sicherung wiederherstellen',async()=>{const chosen=listBackups(id).find(b=>b.id===backup);if(!chosen)throw Error('Sicherung nicht gefunden.');await createBackup(id,chosen.scope,'Schutz vor Wiederherstellung',true);await restoreBackup(id,backup,true);return publicConfig(getConfig());}));
+  handle('profiles:backup:remove',(_e,id,backup)=>removeBackup(id,backup));
+  handle('profiles:media',(_e,id,kind)=>profileMedia(id,kind));
+  handle('profiles:media:open',(_e,id,kind,name)=>openProfileMedia(id,kind,name));
+  handle('profiles:screenshot:save',(_e,id,name)=>saveScreenshot(id,name));
+  handle('diagnostics:analyze',()=>analyzeDiagnostics());
+  handle('catalog:modpack',(_e,id,version)=>enqueueDownload('Modpack installieren',()=>installCatalogModpack(id,version)));
   handle('profiles:contents',(_e,id,kind,world)=>profileContents(id,kind,world));
   handle('profiles:overview',(_e,id)=>profileOverview(id));
   handle('profiles:toggle',(_e,id,kind,name,enabled,world)=>toggleProfileContent(id,kind,name,enabled===true,world));
@@ -68,7 +86,7 @@ function handlers() {
   handle('profiles:java:pick',()=>profileJavaPick());
   handle('profiles:java',(_e,version,javaPath)=>profileJava(version,javaPath));
   handle('profiles:updates',(_e,id,kind,world)=>checkProfileUpdates(id,kind,world));
-  handle('profiles:content:update',(_e,id,kind,name,world)=>exclusive('Profilinhalt aktualisieren',async()=>{try{const result=await updateProfileContent(id,kind,name,world,n=>window.webContents.send('app:progress',n));stepStatus('Inhalt aktualisiert','done');return result;}catch(e){stepStatus('Aktualisierung fehlgeschlagen','error');throw e;}finally{window.webContents.send('app:progress',null);}}));
+  handle('profiles:content:update',(_e,id,kind,name,world)=>enqueueDownload('Profilinhalt aktualisieren',async()=>{const result=await updateProfileContent(id,kind,name,world,()=>{});return result.filename+' aktualisiert.';}));
   handle('capes:community',()=>communityCapes());
   handle('skins:prepare',(_e,input:unknown)=>prepareSkin(input));
   handle('skins:save',(_e,id:unknown,name:unknown,model:unknown)=>saveSkinDraft(id,name,model));
@@ -82,7 +100,7 @@ function handlers() {
   handle('catalog:categories',(_e,kind:unknown)=>catalogCategories(kind));
   handle('catalog:versions',(_e,source:unknown,id:unknown,filter:any)=>catalogVersions(source,id,filter));
   handle('catalog:targets',(_e,source:unknown,id:unknown,version:unknown,kind:unknown)=>catalogTargets(source,id,version,kind));
-  handle('catalog:install',(_e,source:unknown,id:unknown,instance:unknown,version:unknown,kind:unknown,world:unknown)=>exclusive('Inhalt installieren',async()=>{try{const result=await installCatalog(source,id,instance,version,kind,world,n=>window.webContents.send('app:progress',n));stepStatus('Inhalt installiert','done');return result;}catch(e){stepStatus('Installation fehlgeschlagen','error');throw e;}finally{window.webContents.send('app:progress',null);}}));
+  handle('catalog:install',(_e,source,id,instance,version,kind,world)=>enqueueDownload('Inhalt installieren',async()=>{const result=await installCatalog(source,id,instance,version,kind,world,()=>{});return result.filename+' in '+result.profileName+' installiert.'+(result.dependencies.length?' '+result.dependencies.length+' Pflicht-Abhängigkeiten installiert.':'');}));
   handle('profiles:modpack',async()=>{const cfg=await importModpack();return cfg?publicConfig(cfg):null;});
   handle('sessions:list',()=>listGameSessions());
   handle('sessions:logs',(_e,id:unknown,since:unknown)=>gameSessionLogs(id,since));

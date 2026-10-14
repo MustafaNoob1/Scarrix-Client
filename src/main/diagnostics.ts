@@ -3,6 +3,8 @@ import path from 'node:path';
 import { app, shell, dialog } from 'electron';
 import { appData, instancePath } from './config';
 import { redact } from './log-redaction';
+import {diagnoseCrash,recentCrashText} from './crash-diagnosis';
+export function analyzeDiagnostics(){const logs=readLogs(),report=redact(recentCrashText(instancePath(),0));const text=logs.minecraft+'\n'+report;const recognized=diagnoseCrash(text,1);const diagnosis=recognized?.confidence==='likely'?recognized:null;const errors=text.split(/\r?\n/).filter(l=>/ERROR|Exception|Caused by:|requires|incompatible|missing mandatory/i.test(l)).slice(-25).map(l=>l.slice(0,400));return {diagnosis,errors,report:report.slice(-64000),message:diagnosis?'Wahrscheinliche Ursache aus lokalen Logs erkannt.':errors.length?'Fehlerzeilen gefunden; die Ursache ist noch nicht eindeutig.':'Keine eindeutige Absturzursache in den vorhandenen Logs.'};}
 export function recordError(error:unknown) {
   fs.mkdirSync(appData(),{recursive:true});
   const file=path.join(appData(),'launcher.log');

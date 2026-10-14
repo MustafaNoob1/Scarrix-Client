@@ -10,6 +10,7 @@ import './clean.css';
 import { SkinLibrary } from './SkinLibrary';
 import { CapeLibrary } from './CapeLibrary';
 import { CatalogBrowser } from './CatalogBrowser';
+import {DownloadQueue} from './StudioTools';
 import {ProfileStudio} from './ProfileStudio';
 import { ProfilePicker } from './ProfilePicker';
 import './studio.css';
@@ -184,7 +185,7 @@ function App() {
     <main className="main"><AmbientBackground mode={config.launcher.background ?? "aurora"} animated={config.launcher.backgroundMotion !== 'off'} motion={config.launcher.backgroundMotion ?? 'on'}/>
       <header className="client-topbar">
         <div className="topbar-left"><button className="header-icon" aria-label="Zurück" disabled={historyIndex===0} onClick={()=>go(historyIndex-1)}><UiIcon glyph="←"/></button><button className="header-icon" aria-label="Vorwärts" disabled={historyIndex===history.length-1} onClick={()=>go(historyIndex+1)}><UiIcon glyph="→"/></button><div className="topbar-brand"><div><b>SCARRIX</b><small>v{appVersion}</small></div></div></div>
-        <div className="topbar-actions">
+        <div className="topbar-actions"><DownloadQueue onConfig={setConfig}/>
           <div className="header-popup-anchor"><button className="header-icon notification-button" aria-label="Mitteilungen" aria-expanded={noticeMenu} onClick={()=>{setNoticeMenu(!noticeMenu);setAccountMenu(false);}}><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>{notice&&<i/>}</button>{noticeMenu&&<div className="header-popup"><b>Mitteilungen</b><p>{notice||'Du bist auf dem neuesten Stand.'}</p><button disabled={busy} onClick={()=>{setNoticeMenu(false);run(()=>window.scarrix.update(),setNotice);}}>Nach Updates suchen</button></div>}</div>
           <button className={"instance-chip "+(runningCount?'has-running':'')} onClick={()=>{setShowLogs(true);setAccountMenu(false);setNoticeMenu(false);}}><UiIcon glyph="▣"/> <span>{runningCount} {runningCount===1?'INSTANZ':'INSTANZEN'}</span></button>
           <div className="header-popup-anchor"><button className="account-chip" aria-expanded={accountMenu} onClick={()=>{setAccountMenu(!accountMenu);setNoticeMenu(false);}}><AccountFace skin={profile?.skins?.[0]?.url}/><b>{profile?.name||'ANMELDEN'}</b><span><UiIcon glyph="▾"/></span></button>{accountMenu&&<div className="header-popup"><b>{profile?.name||'Minecraft-Konto'}</b><p>{profile?'Dein verknüpftes Konto':'Verknüpfe dein Microsoft-Konto.'}</p><button disabled={busy} onClick={()=>{setAccountMenu(false);profile?setTab('skins'):connect();}}>{profile?'Skin ändern':'Microsoft anmelden'}</button>{profile&&<button disabled={busy} onClick={()=>{setAccountMenu(false);run(()=>window.scarrix.auth.logout(),()=>setProfile(null));}}>Abmelden</button>}</div>}</div>

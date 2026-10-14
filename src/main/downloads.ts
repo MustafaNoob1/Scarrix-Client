@@ -2,12 +2,17 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
+import {AsyncLocalStorage} from 'node:async_hooks';
+const context=new AsyncLocalStorage<{signal:AbortSignal;progress:(status:DownloadStatus)=>void}>();
+export function withDownloadContext<T>(signal:AbortSignal,progress:(status:DownloadStatus)=>void,action:()=>Promise<T>){return context.run({signal,progress},action);}
+export function downloadSignal(timeout:number){const signal=context.getStore()?.signal;return signal?AbortSignal.any([signal,AbortSignal.timeout(timeout)]):AbortSignal.timeout(timeout);}
+export function assertDownloadActive(){context.getStore()?.signal.throwIfAborted();}
 export interface DownloadStatus { step: string; percent: number | null; downloaded: number; total: number | null; speed: number; remainingSeconds: number | null; completedFiles: number; state: 'working' | 'done' | 'error' }
 let sink: (status: DownloadStatus) => void = () => {};
 let last: DownloadStatus | null = null;
 export function setDownloadSink(cb: typeof sink) { sink = cb; }
 export function downloadStatus() { return last; }
-export function reportDownload(status: DownloadStatus) { last = status; sink(status); }
+export function reportDownload(status: DownloadStatus) { last = status; sink(status);context.getStore()?.progress(status); }
 export function stepStatus(step: string, state: DownloadStatus['state'] = 'working') {
   reportDownload({step,state,percent:state === 'done' ? 100 : null,downloaded:0,total:null,speed:0,remainingSeconds:null,completedFiles:0});
 }
