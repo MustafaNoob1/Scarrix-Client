@@ -1,36 +1,15 @@
-import { Agent } from 'undici';
-import { DownloadAgent, resolveAgent } from '@xmcl/file-transfer';
+import { Agent, interceptors } from 'undici';
 
-// The SDK starts every asset task at once. Bound the real transport, including
-// ranged requests and retries, rather than relying on its unused concurrency flags.
+// Use the maintained stream downloader with bounded connections and finite
+// retries. In particular, raw Electron socket resets must not abort installation.
 export const MINECRAFT_DOWNLOAD_CONNECTIONS = 8;
-class LimitedDownloads extends DownloadAgent {
-  private active = 0;
-  private waiting: Array<()=>void> = [];
-  override async dispatch(...args: Parameters<DownloadAgent['dispatch']>) {
-    if(this.active >= MINECRAFT_DOWNLOAD_CONNECTIONS) await new Promise<void>(resolve=>this.waiting.push(resolve));
-    else this.active++;
-    try { await super.dispatch(...args); }
-    finally { const next=this.waiting.shift();if(next)next();else this.active--; }
-  }
-}
 export function createMinecraftDownloads() {
-  const base=resolveAgent({ dispatcher: new Agent({
-    connections: MINECRAFT_DOWNLOAD_CONNECTIONS, pipelining: 1,
-    connect: { timeout: 30000, autoSelectFamily: true, autoSelectFamilyAttemptTimeout: 250 },
-    headersTimeout: 60000, bodyTimeout: 60000
-  }) });
-  const retryHandler: typeof base.retryHandler = {async retry(url,attempt,error) {
-    // Electron can surface raw TLS/socket errors instead of Undici SocketError.
-    if(['ECONNRESET','ETIMEDOUT','EAI_AGAIN','ECONNREFUSED'].includes(String(error?.code))) {
-      if(attempt>=3)return false;
-      await new Promise(resolve=>setTimeout(resolve,(attempt+1)*1000));
-      return true;
-    }
-    return base.retryHandler.retry(url,attempt,error);
-  }};
-  return {agent:new LimitedDownloads(retryHandler,base.rangePolicy,base.dispatcher,base.checkpointHandler)};
+  return {dispatcher:new Agent({
+    connections:MINECRAFT_DOWNLOAD_CONNECTIONS,pipelining:1,
+    connect:{timeout:30000,autoSelectFamily:true,autoSelectFamilyAttemptTimeout:250},
+    headersTimeout:60000,bodyTimeout:60000
+  }).compose(interceptors.retry({maxRetries:3,minTimeout:1000,maxTimeout:5000}),interceptors.redirect({maxRedirections:2}))};
 }
-export const minecraftDownloads = createMinecraftDownloads();
-
-export const minecraftRequests = {dispatcher: minecraftDownloads.agent.dispatcher};
+export const minecraftDownloads=createMinecraftDownloads();
+const metadataFetch:typeof fetch=(input,init)=>fetch(input,{...init,signal:init?.signal?AbortSignal.any([init.signal,AbortSignal.timeout(30000)]):AbortSignal.timeout(30000)});
+export const minecraftRequests={dispatcher:minecraftDownloads.dispatcher,fetch:metadataFetch};

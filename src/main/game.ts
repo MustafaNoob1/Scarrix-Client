@@ -1,4 +1,5 @@
 import {minecraftRequests} from './minecraft-downloads';
+import {installFabricProfile,selectFabricLoader} from './fabric-install';
 import {modPreflight} from './mod-preflight';
 import {minecraftDownloads} from './minecraft-downloads';
 import { memoryInfo } from './memory';
@@ -11,7 +12,7 @@ import { runInstallerTask, stepStatus } from './downloads';
 import { exclusive } from './operations';
 import { trackGame } from './game-sessions';
 import { Version, launch } from '@xmcl/core';
-import { getVersionList, installTask, installDependenciesTask, getLoaderArtifactListFor, installFabric, getForgeVersionList, installForge } from '@xmcl/installer';
+import { getVersionList, installVersionTask, installDependenciesTask, getLoaderArtifactListFor, getForgeVersionList, installForge } from '@xmcl/installer';
 import { getConfig, rootPath, instancePath, saveConfig } from './config';
 import { profileLaunchOptions } from './profile-options';
 import {recordProfilePlay} from './profile-studio';
@@ -37,15 +38,15 @@ async function doPrepare(notify: (message: string) => void) {
     const vanilla = versions.find(v => v.id === minecraft.version && v.type === 'release');
     if (!vanilla) throw new Error('Minecraft-Version nicht im offiziellen Manifest gefunden.');
     notify(`Prüfe Minecraft ${minecraft.version} …`);
-    await runInstallerTask(installTask(vanilla, mcRoot, minecraftDownloads), 'Minecraft-Dateien herunterladen');
+    await runInstallerTask(installVersionTask(vanilla, mcRoot, minecraftDownloads), 'Minecraft-Dateien herunterladen');
     let launchVersion = minecraft.version;
     if (minecraft.loader === 'fabric') {
       stepStatus('Fabric installieren');
       notify('Installiere Fabric …');
       const loaders = await getLoaderArtifactListFor(minecraft.version,minecraftRequests);
-      const selected = minecraft.loaderVersion ? loaders.find(l=>l.loader.version===minecraft.loaderVersion) : loaders[0];
+      const selected = selectFabricLoader(loaders,minecraft.loaderVersion);
       if (!selected) throw new Error('Keine Fabric-Version verfügbar.');
-      launchVersion = await installFabric(selected, mcRoot);
+      launchVersion = await installFabricProfile(minecraft.version,selected.loader.version,mcRoot);
     } else if (minecraft.loader === 'forge') {
       stepStatus('Forge installieren');
       notify('Installiere Forge …');
