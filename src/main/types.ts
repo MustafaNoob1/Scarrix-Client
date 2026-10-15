@@ -1,6 +1,6 @@
 import type {Language} from './languages';
 export interface Mode { id: string; name: string; address: string; port: number; group?: string }
-export interface Instance { id: string; name: string; version: string; loader: 'vanilla' | 'fabric' | 'forge'; loaderVersion?: string; ramGB: number;favorite?:boolean;color?:'red'|'blue'|'purple'|'gold';preferredAccountId?:string;group?:string;sharedGroup?:boolean;quickPlayWorld?:string;javaPath?:string;jvmArgs?:string[];window?:{width:number;height:number;fullscreen:boolean};icon?:string }
+export interface Instance { id: string; name: string; version: string; loader: 'vanilla' | 'fabric' | 'forge'; loaderVersion?: string; ramGB: number;baseMods?:boolean;favorite?:boolean;color?:'red'|'blue'|'purple'|'gold';preferredAccountId?:string;group?:string;sharedGroup?:boolean;quickPlayWorld?:string;javaPath?:string;jvmArgs?:string[];window?:{width:number;height:number;fullscreen:boolean};icon?:string }
 export interface Config {
   server: { name: string; address: string; port: number; group?: string };
   minecraft: { version: string; loader: 'vanilla' | 'fabric' | 'forge' | 'quilt'; loaderVersion?: string; javaPath: string; ramGB: number };

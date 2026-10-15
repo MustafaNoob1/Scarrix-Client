@@ -1,3 +1,4 @@
+import {prepareBaseMods} from './base-mods';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -21,7 +22,7 @@ interface Plan {
     raw?: any;
     prefix: string;
     messages: string[];
-    targets: Map<string, string>;
+    targets: Map<string, string>; autoDisabled?:string[];
 }
 function name(value: unknown) { if (typeof value !== 'string' || !value.trim() || /[\x00-\x1f\x7f]/.test(value) || value.length > 100)
     throw Error('Ungültiger Profilname.'); return value.trim().slice(0, 50); }
@@ -35,7 +36,7 @@ export function noRiskProfile(raw: any): {
     const loader = typeof raw?.loader === 'string' ? raw.loader.toLowerCase() : '';
     if (!['vanilla', 'fabric', 'forge'].includes(loader) || typeof raw.game_version !== 'string' || !Array.isArray(raw.mods))
         throw Error('Unbekanntes oder nicht unterstütztes NoRisk-Profil.');
-    const settings = raw.settings ?? {}, messages: string[] = [], item: Omit<Instance, 'id'> = { name: name(raw.name), version: raw.game_version, loader: loader as Instance['loader'], ramGB: clampRam(settings.memory?.max), group: typeof raw.group === 'string' ? raw.group.slice(0, 40) : 'Importiert' };
+    const settings = raw.settings ?? {}, messages: string[] = [], item: Omit<Instance, 'id'> = { name: name(raw.name), version: raw.game_version, loader: loader as Instance['loader'], baseMods:!!raw.selected_norisk_pack_id, ramGB: clampRam(settings.memory?.max), group: typeof raw.group === 'string' ? raw.group.slice(0, 40) : 'Importiert' };
     if (settings.use_overwrite_loader_version === true)
         item.loaderVersion = settings.overwrite_loader_version ?? raw.loader_version;
     else if (raw.loader_version)
@@ -118,6 +119,7 @@ async function noRiskFiles(plan: Plan, archive: ProfileArchive) {
         }
         reserved.add(target.toLowerCase());
         plan.targets.set(original.toLowerCase(), target);
+        if(!active&&mod.enabled!==false)(plan.autoDisabled??=[]).push(path.posix.basename(target));
         if (!active)
             plan.messages.push(original + ' wurde wie im Quellprofil inaktiv übernommen.');
         const embedded = archive.entries.find(e => !e.isDirectory && e.entryName.startsWith('overrides/') && path.posix.basename(e.entryName).toLowerCase().replace(/\.disabled$/, '') === original.toLowerCase().replace(/\.disabled$/, ''));
@@ -156,7 +158,7 @@ async function readPlan(archive: ProfileArchive): Promise<Plan> {
         if (raw.format === 'scarrix-profile' && raw.schema === 1) {
             validateArchiveEntries(archive.entries);
             const p = raw.profile;
-            plan.item = { ...base, name: name(p?.name), version: p?.version, loader: p?.loader, loaderVersion: p?.loaderVersion, ramGB: clampRam(typeof p?.ramGB === 'number' ? p.ramGB * 1024 : undefined), group: p?.group, icon: p?.icon, window: p?.window, jvmArgs: p?.jvmArgs, quickPlayWorld: p?.quickPlayWorld, favorite: p?.favorite, color: p?.color };
+            plan.item = { ...base, name: name(p?.name), version: p?.version, loader: p?.loader, loaderVersion: p?.loaderVersion, baseMods:p?.baseMods, ramGB: clampRam(typeof p?.ramGB === 'number' ? p.ramGB * 1024 : undefined), group: p?.group, icon: p?.icon, window: p?.window, jvmArgs: p?.jvmArgs, quickPlayWorld: p?.quickPlayWorld, favorite: p?.favorite, color: p?.color };
         }
         else {
             const parsed = noRiskProfile(raw);
@@ -265,6 +267,7 @@ export async function importProfileArchive(input?: string, internal = false) {
             }
             if (plan.kind !== 'scarrix')
                 await reconcileImportedMods(stage, plan.item, plan.messages);
+            if(plan.item.baseMods){const basis=await prepareBaseMods(plan.item,stage,{ignoredDisabled:plan.autoDisabled});plan.messages.push(...basis.messages,...basis.installed.map(n=>'Scarrix-Basis ergänzt: '+n));}
             if (plan.messages.length)
                 fs.writeFileSync(path.join(stage, 'scarrix-import-report.json'), JSON.stringify({ format: plan.kind, messages: plan.messages }, null, 2));
             fs.renameSync(stage, destination);

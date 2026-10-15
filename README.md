@@ -298,3 +298,7 @@ Profilbearbeitung, Import/Export, Java-Automatik, installierte Mods, Download-An
 - Darstellung geprüft bei 780×560 und 720×440 logischen Pixeln sowie 150 Prozent App-Skalierung. Vollständige Anmeldung und echter Minecraft-/Modpack-Start bleiben bis zur Microsoft-Freigabe zu prüfen.
 
 Details: [Komfortfunktionen und Grenzen](docs/QUALITY-FEATURES.md).
+
+## Scarrix-Basis für Fabric
+
+Neue Fabric-Profile erhalten automatisch passende Bibliotheken und Leistungs-Mods. Vorhandene Profile können sie über **Basis ergänzen** installieren; die automatische Ergänzung ist pro Profil unter **Installation** schaltbar. Native NoRisk-Profile mit zusätzlichem Basispaket werden beim Import berücksichtigt. Passende eigene Mods und deaktivierte Dateien bleiben erhalten. Details, Projekte und Grenzen: [Scarrix-Basis](docs/BASE-MODS.md).

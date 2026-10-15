@@ -1,6 +1,7 @@
 import path from 'node:path';
 import type {Instance} from './types';
 export function validateProfileOptions(item:Instance) {
+ if(item.baseMods!==undefined&&typeof item.baseMods!=='boolean')throw Error('Scarrix-Basis muss ein- oder ausgeschaltet sein.');
  if(item.favorite!==undefined&&typeof item.favorite!=='boolean')throw Error('Favorit ungültig.');
  if(item.color!==undefined&&!['red','blue','purple','gold'].includes(item.color))throw Error('Profilfarbe ungültig.');
  if(item.preferredAccountId!==undefined&&!/^[a-f0-9]{32}$/i.test(item.preferredAccountId))throw Error('Bevorzugtes Konto ungültig.');

@@ -1,3 +1,4 @@
+import {prepareProfileBase} from './base-mods';
 import {minecraftRequests} from './minecraft-downloads';
 import {installFabricProfile,selectFabricLoader} from './fabric-install';
 import {modPreflight} from './mod-preflight';
@@ -84,7 +85,7 @@ async function doStartGame(modeId: string, notify: (message: string) => void): P
     const cfg = getConfig();
     const mode = cfg.modes.find(m => m.id === modeId);
     if (!mode) throw new Error('Dieser Spielmodus ist nicht konfiguriert.');
-    const check=modPreflight(cfg.activeInstanceId);if(!check.canLaunch)throw Error('Mod-Prüfung: '+check.issues.filter(i=>i.severity==='error').map(i=>i.file+': '+i.message).join(' · ')+' Öffne im Profil die Mod-Prüfung.');
+    let check=modPreflight(cfg.activeInstanceId);if(cfg.instances.find(i=>i.id===cfg.activeInstanceId)?.baseMods===true&&!check.issues.some(i=>i.severity==='error'&&i.code!=='missing-dependency')){await prepareProfileBase(cfg.activeInstanceId);check=modPreflight(cfg.activeInstanceId);}if(!check.canLaunch)throw Error('Mod-Prüfung: '+check.issues.filter(i=>i.severity==='error').map(i=>i.file+': '+i.message).join(' · ')+' Öffne im Profil die Mod-Prüfung.');
     const preferred=cfg.instances.find(i=>i.id===cfg.activeInstanceId)?.preferredAccountId;
     if(preferred&&getPublicProfile()?.id!==preferred){const {switchAccount}=await import('./auth');await switchAccount(preferred);}
     await restoreSession();

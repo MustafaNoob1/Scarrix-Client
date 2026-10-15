@@ -53,7 +53,7 @@ export async function profileExportTree(id: unknown): Promise<ExportEntry[]> { c
     await walk(root, ''); return output.sort((a, b) => a.path.localeCompare(b.path)); }
 export function exportFileName(value: unknown) { if (typeof value !== 'string' || !value.trim() || value.length > 100 || /[<>:"/\\|?*\x00-\x1f\x7f]/.test(value) || /[. ]$/.test(value) || /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(value) || value === '.' || value === '..')
     throw Error('Bitte einen gültigen Export-Dateinamen eingeben.'); return value.trim().replace(/\.(scarrixpack|mrpack|zip)$/i, ''); }
-export function portableProfile(item: ReturnType<typeof find>) { return { name: item.name, version: item.version, loader: item.loader, loaderVersion: item.loaderVersion, ramGB: item.ramGB, group: item.group, icon: item.icon, window: item.window, jvmArgs: item.jvmArgs, quickPlayWorld: item.quickPlayWorld, favorite: item.favorite, color: item.color }; }
+export function portableProfile(item: ReturnType<typeof find>) { return { baseMods: item.baseMods, name: item.name, version: item.version, loader: item.loader, loaderVersion: item.loaderVersion, ramGB: item.ramGB, group: item.group, icon: item.icon, window: item.window, jvmArgs: item.jvmArgs, quickPlayWorld: item.quickPlayWorld, favorite: item.favorite, color: item.color }; }
 async function loaderVersion(item: ReturnType<typeof find>) { if (item.loader === 'vanilla')
     return undefined; if (item.loaderVersion)
     return item.loaderVersion; if (item.loader === 'fabric') {

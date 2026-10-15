@@ -1,3 +1,4 @@
+import {prepareProfileBase} from './base-mods';
 import {startDiscordPresence,stopDiscordPresence,updateDiscordPresence,discordPresenceState} from './discord-presence';
 import {listAccounts,switchAccount,removeAccount} from './auth';
 import {forgetAllSavedAccounts} from './account-vault';
@@ -89,6 +90,7 @@ function handlers() {
   handle('diagnostics:analyze',()=>analyzeDiagnostics());
   handle('catalog:modpack',(_e,id,version)=>enqueueDownload('Modpack installieren',()=>installCatalogModpack(id,version)));
   handle('profiles:contents',(_e,id,kind,world)=>profileContents(id,kind,world));
+  handle('profiles:base',(_e,id)=>enqueueDownload('Scarrix-Basis ergänzen',async()=>{const r=await prepareProfileBase(id,true);return r.installed.length?r.installed.join(', ')+' installiert.':r.messages.join(' · ')||'Scarrix-Basis ist vollständig.';}));
   handle('profiles:preflight',(_e,id)=>modPreflight(id));
   handle('profiles:overview',(_e,id)=>profileOverview(id));
   handle('profiles:toggle',(_e,id,kind,name,enabled,world)=>toggleProfileContent(id,kind,name,enabled===true,world));
@@ -144,7 +146,7 @@ function handlers() {
   handle('system:memory', () => memoryInfo());
   handle('minecraft:versions', () => officialVersions());
   handle('app:version', () => app.getVersion());
-  handle('config:save', async (_e, config: Config) => {const saved=await saveConfig(config);if(!saved.launcher.rememberAccount){forgetMicrosoftAccount();forgetAllSavedAccounts();}startDiscordPresence();return publicConfig(saved);});
+  handle('config:save', async (_e, config: Config) => {const before=getConfig();const saved=await saveConfig(config);for(const item of saved.instances)if(item.loader==='fabric'&&item.baseMods===true&&!before.instances.some(i=>i.id===item.id)){try{enqueueDownload('Scarrix-Basis · '+item.name,async()=>{const r=await prepareProfileBase(item.id);return r.installed.length?r.installed.join(', ')+' installiert.':'Scarrix-Basis geprüft.';});}catch{notice('Profil erstellt. Die Basis kann nach der laufenden Warteschlange über „Basis ergänzen“ vorbereitet werden.');}}if(!saved.launcher.rememberAccount){forgetMicrosoftAccount();forgetAllSavedAccounts();}startDiscordPresence();return publicConfig(saved);});
   handle('auth:accounts',()=>listAccounts());
   handle('auth:switch',(_e,id)=>{assertIdle();return switchAccount(id);});
   handle('auth:remove',(_e,id)=>{assertIdle();return removeAccount(id);});
