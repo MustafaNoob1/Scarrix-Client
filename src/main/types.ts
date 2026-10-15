@@ -7,7 +7,7 @@ export interface Config {
   github: { owner: string; repo: string; privateRepo?: boolean };
   modrinth: { userAgent: string };
   curseforge: { apiKey: string };
-  launcher: { showNews?:boolean;skinSize?:'small'|'medium'|'large';quickProfileId?:string;onboardingDone?:boolean; theme: 'red' | 'blue' | 'purple' | 'gold'; rememberAccount?: boolean; rotateSkin?: boolean; animations?: boolean; backgroundMotion?: 'on' | 'off' | 'system'; background?: 'grid' | 'glow' | 'plain' | 'aurora' | 'stars' | 'nebula' | 'embers' | 'matrix' | 'horizon' };
+  launcher: { discordPresence?:boolean;showNews?:boolean;skinSize?:'small'|'medium'|'large';quickProfileId?:string;onboardingDone?:boolean; theme: 'red' | 'blue' | 'purple' | 'gold'; rememberAccount?: boolean; rotateSkin?: boolean; animations?: boolean; backgroundMotion?: 'on' | 'off' | 'system'; background?: 'grid' | 'glow' | 'plain' | 'aurora' | 'stars' | 'nebula' | 'embers' | 'matrix' | 'horizon' };
   instances: Instance[];
   activeInstanceId: string;
   language: 'de' | 'en';

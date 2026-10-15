@@ -60,6 +60,7 @@
       "package.json"
     ],
     "extraResources": [
+      { "from": "discord-presence.json", "to": "discord-presence.json" },
       { "from": "licenses", "to": "licenses" },
       { "from": "src/renderer/assets/BRAND-ICONS.md", "to": "licenses/BRAND-ICONS.md" },
       {

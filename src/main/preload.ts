@@ -5,6 +5,7 @@ const listen = (channel: string, cb: (data: any) => void) => {
   return () => ipcRenderer.removeListener(channel, listener);
 };
 contextBridge.exposeInMainWorld('scarrix', {
+  discord:{state:()=>ipcRenderer.invoke('discord:state'),page:(page:string)=>ipcRenderer.invoke('discord:page',page)},
   queue:{list:()=>ipcRenderer.invoke('queue:list'),cancel:(id:string)=>ipcRenderer.invoke('queue:cancel',id),retry:(id:string)=>ipcRenderer.invoke('queue:retry',id)},onQueue:(cb:(data:unknown)=>void)=>listen('queue:state',cb),
   friends:{get:()=>ipcRenderer.invoke('friends:get'),preferences:(value:unknown)=>ipcRenderer.invoke('friends:preferences',value),add:(name:string)=>ipcRenderer.invoke('friends:add',name),remove:(id:string)=>ipcRenderer.invoke('friends:remove',id)},
   windowControl: (action: 'state'|'minimize'|'maximize'|'close') => ipcRenderer.invoke('window:control',action),

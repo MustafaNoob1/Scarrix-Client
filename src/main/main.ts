@@ -1,3 +1,4 @@
+import {startDiscordPresence,stopDiscordPresence,updateDiscordPresence,discordPresenceState} from './discord-presence';
 import {listAccounts,switchAccount,removeAccount} from './auth';
 import {forgetAllSavedAccounts} from './account-vault';
 import {assertIdle} from './operations';
@@ -49,6 +50,7 @@ function createWindow(): void {
     webPreferences: { preload: path.join(__dirname, 'preload.js'), nodeIntegration: false, contextIsolation: true, sandbox: false }
   });
   watchWindowState(window);
+  startDiscordPresence();
   if(savedWindow.maximized)window.maximize();
   window.setMenuBarVisibility(false);
   window.webContents.setWindowOpenHandler(({ url }) => {
@@ -67,6 +69,8 @@ function handle(channel:string, action:(event:Electron.IpcMainInvokeEvent,...arg
   ipcMain.handle(channel, async(event,...args)=>{try{return await action(event,...args);}catch(error){try{recordError(error);}catch{}if(['game:prepare','game:start','java:install','mods:install','update:check'].includes(channel))stepStatus(friendlyError(error),'error');throw new Error(friendlyError(error));}});
 }
 function handlers() {
+  handle('discord:state',()=>discordPresenceState());
+  handle('discord:page',(event,page)=>{if(event.sender.id!==window.webContents.id)throw Error('Fenster nicht freigegeben.');return updateDiscordPresence(page);});
   handle('friends:get',()=>friendsSnapshot());
   handle('friends:preferences',(_e,value)=>saveFriendPreferences(value));
   handle('friends:add',(_e,name)=>addLocalContact(name));
@@ -140,7 +144,7 @@ function handlers() {
   handle('system:memory', () => memoryInfo());
   handle('minecraft:versions', () => officialVersions());
   handle('app:version', () => app.getVersion());
-  handle('config:save', async (_e, config: Config) => {const saved=await saveConfig(config);if(!saved.launcher.rememberAccount){forgetMicrosoftAccount();forgetAllSavedAccounts();}return publicConfig(saved);});
+  handle('config:save', async (_e, config: Config) => {const saved=await saveConfig(config);if(!saved.launcher.rememberAccount){forgetMicrosoftAccount();forgetAllSavedAccounts();}startDiscordPresence();return publicConfig(saved);});
   handle('auth:accounts',()=>listAccounts());
   handle('auth:switch',(_e,id)=>{assertIdle();return switchAccount(id);});
   handle('auth:remove',(_e,id)=>{assertIdle();return removeAccount(id);});
@@ -189,5 +193,6 @@ app.whenReady().then(() => {
   handlers(); createWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 }).catch(err => console.error(err));
-app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+app.on('before-quit',()=>stopDiscordPresence());
+app.on('window-all-closed', () => {stopDiscordPresence(); if (process.platform !== 'darwin') app.quit(); });
 

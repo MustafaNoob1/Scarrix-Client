@@ -16,7 +16,7 @@ export interface Config {
   minecraft: { version: string; loader: 'vanilla' | 'fabric' | 'forge' | 'quilt'; loaderVersion?: string; javaPath: string; ramGB: number };
   microsoft: { clientId: string }; github: { owner: string; repo: string; privateRepo?: boolean };
   modrinth: { userAgent: string }; curseforge: { apiKey: string };
-  launcher: { showNews?:boolean;skinSize?:'small'|'medium'|'large';quickProfileId?:string;onboardingDone?:boolean; theme: 'red' | 'blue' | 'purple' | 'gold'; rememberAccount?: boolean; rotateSkin?: boolean; animations?: boolean; backgroundMotion?: 'on' | 'off' | 'system'; background?: 'grid' | 'glow' | 'plain' | 'aurora' | 'stars' | 'nebula' | 'embers' | 'matrix' | 'horizon' };
+  launcher: { discordPresence?:boolean;showNews?:boolean;skinSize?:'small'|'medium'|'large';quickProfileId?:string;onboardingDone?:boolean; theme: 'red' | 'blue' | 'purple' | 'gold'; rememberAccount?: boolean; rotateSkin?: boolean; animations?: boolean; backgroundMotion?: 'on' | 'off' | 'system'; background?: 'grid' | 'glow' | 'plain' | 'aurora' | 'stars' | 'nebula' | 'embers' | 'matrix' | 'horizon' };
   instances: Instance[];
   activeInstanceId: string;
   language: 'de' | 'en'; modes: Mode[]; news: { title: string; text: string }[];
@@ -33,7 +33,9 @@ export interface MediaItem {name:string;modified:number;bytes:number|null;image?
 export interface DiagnosticAnalysis {diagnosis:NonNullable<GameSession['diagnosis']>|null;errors:string[];report:string;message:string}
 export interface FriendPreferences {status:'online'|'away'|'busy'|'invisible';showServer:boolean;allowRequests:boolean;allowInvites:boolean;notifications:boolean}
 export interface FriendsSnapshot {connected:false;contacts:Array<{id:string;name:string;added:number}>;preferences:FriendPreferences;requests:never[]}
+export interface DiscordPresenceState {status:'disabled'|'unconfigured'|'waiting'|'connecting'|'connected'|'error';message:string;page:string}
 export interface Api {
+  discord:{state():Promise<DiscordPresenceState>;page(page:'play'|'profiles'|'mods'|'skins'|'capes'|'settings'):Promise<DiscordPresenceState>};
   friends:{get():Promise<FriendsSnapshot>;preferences(value:FriendPreferences):Promise<FriendsSnapshot>;add(name:string):Promise<FriendsSnapshot>;remove(id:string):Promise<FriendsSnapshot>};
   queue:{list():Promise<QueueJob[]>;cancel(id:string):Promise<QueueJob[]>;retry(id:string):Promise<QueueJob[]>};onQueue(cb:(jobs:QueueJob[])=>void):()=>void;
   catalog:{modpack(id:string,version:string):Promise<QueueJob>;search(source:string,query:{term:string;kind:ContentKind|'modpack';version?:string;loader?:string;category?:string;sort?:string;offset?:number}):Promise<{items:CatalogItem[];total:number}>;categories(kind:ContentKind|'modpack'):Promise<Array<{id:string;name:string}>>;versions(source:string,id:string,filter?:{gameVersion?:string;loader?:string}):Promise<CatalogVersion[]>;targets(source:string,id:string,version:string|null,kind:ContentKind):Promise<CatalogTarget[]>;install(source:string,id:string,instance:string,version:string|null,kind:ContentKind,world?:string):Promise<QueueJob>};
