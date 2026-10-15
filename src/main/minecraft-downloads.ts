@@ -20,7 +20,16 @@ export function createMinecraftDownloads() {
     connect: { timeout: 30000, autoSelectFamily: true, autoSelectFamilyAttemptTimeout: 250 },
     headersTimeout: 60000, bodyTimeout: 60000
   }) });
-  return {agent:new LimitedDownloads(base.retryHandler,base.rangePolicy,base.dispatcher,base.checkpointHandler)};
+  const retryHandler: typeof base.retryHandler = {async retry(url,attempt,error) {
+    // Electron can surface raw TLS/socket errors instead of Undici SocketError.
+    if(['ECONNRESET','ETIMEDOUT','EAI_AGAIN','ECONNREFUSED'].includes(String(error?.code))) {
+      if(attempt>=3)return false;
+      await new Promise(resolve=>setTimeout(resolve,(attempt+1)*1000));
+      return true;
+    }
+    return base.retryHandler.retry(url,attempt,error);
+  }};
+  return {agent:new LimitedDownloads(retryHandler,base.rangePolicy,base.dispatcher,base.checkpointHandler)};
 }
 export const minecraftDownloads = createMinecraftDownloads();
 
