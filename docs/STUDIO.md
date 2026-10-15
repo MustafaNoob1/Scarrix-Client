@@ -109,3 +109,12 @@ Jeder Spielstart prüft vor Anmeldung und Downloads die aktivierten Mod-Dateien.
 
 Die Analyse ist begrenzt: Forge-TOML-Abhängigkeiten, Java-Regeln, alternative Fabric-Nested-Versionauflösung und Laufzeit-Konflikte prüft weiterhin der Modloader. Unbekannte Versionsregeln liefern einen Hinweis. Der Launcher behebt Konflikte nicht durch eigenständiges Löschen oder Deaktivieren. Nach einem erkannten Spielabsturz öffnet sich ein Assistent mit der vorhandenen Log-Diagnose, konkreten Schritten sowie Verweisen auf Instanzen/Logs und Profile. Normales Beenden und vom Benutzer gestoppte Prozesse lösen keinen Crash-Dialog aus.
 
+
+## Einstellungen, Sprache und Suche
+
+Die Einstellungsnavigation ist in Allgemein (Sprache, Akzentfarbe, Verhalten, Downloads & Oberfläche), Hintergrund, Erweitert (Java und Updates) sowie Debug (Fehlerdiagnose und Info) gegliedert. Unterpunkte springen innerhalb der Seite zum passenden Abschnitt. Die Suche arbeitet über alle Einträge, übersetzte Namen und feste Synonyme, ignoriert Großschreibung und Akzente und öffnet den gewählten Treffer direkt. Nicht vorhandene Funktionen wie Clip-Aufnahme werden nicht als leere Schaltflächen angezeigt. Minecraft-Einstellungen bleiben in den Profilen.
+
+Das Sprachmenü bietet Deutsch, Englisch, Polnisch, Französisch, Italienisch, Türkisch und Portugiesisch mit gebündelten SVG-Flaggen. Auswahl per Maus, Pfeiltasten, Anfangsbuchstabe, Home/End und Enter; Escape verwirft nur die offene Auswahl. Das Menü passt sich der Fensterhöhe an und wird über der Oberfläche dargestellt, damit es in kleinen Fenstern nicht abgeschnitten wird. Die Auswahl wird gespeichert, im Hauptprozess geprüft und auch im HTML-lang-Attribut gesetzt.
+
+Übersetzt sind die Launcher-Navigation, zentrale Aktionen sowie die Launcher-Einstellungen einschließlich Suchergebnissen und Hintergrundbeschreibungen. Es sind lokale Sprachpakete, kein Übersetzungsdienst. Profilnamen, eingegebene Texte, Mod-/Nachrichten-Inhalte und Logs werden nicht verändert. Andere Detaildialoge und technische Meldungen können weiterhin die ursprüngliche Sprache verwenden. Unbekannte Sprachcodes werden beim Lesen auf Deutsch zurückgesetzt und beim Speichern abgelehnt.
+

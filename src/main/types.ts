@@ -1,3 +1,4 @@
+import type {Language} from './languages';
 export interface Mode { id: string; name: string; address: string; port: number; group?: string }
 export interface Instance { id: string; name: string; version: string; loader: 'vanilla' | 'fabric' | 'forge'; loaderVersion?: string; ramGB: number;favorite?:boolean;color?:'red'|'blue'|'purple'|'gold';preferredAccountId?:string;group?:string;sharedGroup?:boolean;quickPlayWorld?:string;javaPath?:string;jvmArgs?:string[];window?:{width:number;height:number;fullscreen:boolean};icon?:string }
 export interface Config {
@@ -10,7 +11,7 @@ export interface Config {
   launcher: { discordPresence?:boolean;showNews?:boolean;skinSize?:'small'|'medium'|'large';quickProfileId?:string;onboardingDone?:boolean; theme: 'red' | 'blue' | 'purple' | 'gold'; rememberAccount?: boolean; rotateSkin?: boolean; animations?: boolean; backgroundMotion?: 'on' | 'off' | 'system'; background?: 'grid' | 'glow' | 'plain' | 'aurora' | 'stars' | 'nebula' | 'embers' | 'matrix' | 'horizon' };
   instances: Instance[];
   activeInstanceId: string;
-  language: 'de' | 'en';
+  language: Language;
   modes: Mode[];
   news: { title: string; text: string }[];
 }

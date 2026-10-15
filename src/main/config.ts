@@ -1,3 +1,4 @@
+import {validLanguage} from './languages';
 import { app } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -78,7 +79,7 @@ export function getConfig(): Config {
   const selected = instances.find(item => item.id === custom.activeInstanceId) ?? instances[0];
   const theme = ['red', 'blue', 'purple', 'gold'].includes(custom.launcher?.theme ?? '') ? custom.launcher!.theme : 'red';
   return {
-    ...combined, instances, activeInstanceId: selected.id, launcher: { ...homeOptions(custom.launcher??defaults.launcher), rememberAccount: custom.launcher?.rememberAccount !== false, theme, rotateSkin: custom.launcher?.rotateSkin !== false, animations: custom.launcher?.animations !== false, backgroundMotion: ['on','off','system'].includes(custom.launcher?.backgroundMotion ?? '') ? custom.launcher?.backgroundMotion : 'on', background: ['grid','glow','plain','aurora','stars','nebula','embers','matrix','horizon'].includes(custom.launcher?.background ?? '') ? custom.launcher!.background : 'grid' },
+    ...combined, language:validLanguage(custom.language)?custom.language:'de', instances, activeInstanceId: selected.id, launcher: { ...homeOptions(custom.launcher??defaults.launcher), rememberAccount: custom.launcher?.rememberAccount !== false, theme, rotateSkin: custom.launcher?.rotateSkin !== false, animations: custom.launcher?.animations !== false, backgroundMotion: ['on','off','system'].includes(custom.launcher?.backgroundMotion ?? '') ? custom.launcher?.backgroundMotion : 'on', background: ['grid','glow','plain','aurora','stars','nebula','embers','matrix','horizon'].includes(custom.launcher?.background ?? '') ? custom.launcher!.background : 'grid' },
     minecraft: { ...combined.minecraft, version: selected.version, loader: selected.loader, loaderVersion: selected.loaderVersion, ramGB: selected.ramGB }
   };
 }
@@ -88,7 +89,7 @@ export async function saveConfig(value: Config, internal = false): Promise<Confi
   // The renderer can only update launcher preferences and selected Minecraft instances.
   // Microsoft credentials, API keys and server endpoints stay under main-process control.
   const existing = getConfig();
-  if (!['de', 'en'].includes(value.language)) throw new Error('Ungültige Sprache.');
+  if (!validLanguage(value.language)) throw new Error('Ungültige Sprache.');
   if (!['red', 'blue', 'purple', 'gold'].includes(value.launcher?.theme)) throw new Error('Unbekanntes Farbschema.');
   if (!Array.isArray(value.instances) || value.instances.length < 1 || value.instances.length > 16) throw new Error('Maximal 16 Instanzen sind erlaubt.');
   const needsVersions = value.instances.some(item => !existing.instances.some(old => old.id === item.id && old.version === item.version));

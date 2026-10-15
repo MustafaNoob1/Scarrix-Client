@@ -1,3 +1,4 @@
+import type {Language} from '../main/languages';
 export interface LauncherUpdateState {status:'idle'|'checking'|'available'|'downloading'|'ready'|'current'|'manual'|'disabled'|'error';version:string|null;message:string;canDownload:boolean;percent:number|null}
 export interface ProfileContent {filename:string;name:string;version:string;icon?:string;enabled:boolean;size:number;kind:ContentKind;world?:string;update?:{project:string;version:string;number:string}}
 export interface ModPreflight {profileId:string;checked:number;canLaunch:boolean;issues:Array<{severity:'error'|'warning';file:string;message:string}>;note:string}
@@ -19,7 +20,7 @@ export interface Config {
   launcher: { discordPresence?:boolean;showNews?:boolean;skinSize?:'small'|'medium'|'large';quickProfileId?:string;onboardingDone?:boolean; theme: 'red' | 'blue' | 'purple' | 'gold'; rememberAccount?: boolean; rotateSkin?: boolean; animations?: boolean; backgroundMotion?: 'on' | 'off' | 'system'; background?: 'grid' | 'glow' | 'plain' | 'aurora' | 'stars' | 'nebula' | 'embers' | 'matrix' | 'horizon' };
   instances: Instance[];
   activeInstanceId: string;
-  language: 'de' | 'en'; modes: Mode[]; news: { title: string; text: string }[];
+  language: Language; modes: Mode[]; news: { title: string; text: string }[];
 }
 export interface ModHit { id: string; name: string; description: string; downloads: number; source: 'modrinth' | 'curseforge'; icon?: string }
 export interface SavedImage { id: string; name: string; dataUrl: string; added: string; model?:'classic'|'slim';favorite?:boolean }
