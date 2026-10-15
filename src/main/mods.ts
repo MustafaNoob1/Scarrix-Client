@@ -1,3 +1,4 @@
+import {fileFabricNamespaceIssue} from './fabric-compatibility';
 import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
@@ -91,6 +92,7 @@ function managedMod(filename:string) {
 }
 export function toggleMod(filename:string,enabled:boolean) {
   assertIdle();const file=managedMod(filename);
+  const minecraft=getConfig().minecraft;if(enabled&&minecraft?.loader==='fabric'){const problem=fileFabricNamespaceIssue(file,minecraft.version);if(problem)throw Error(problem);}
   const dest=enabled?file.replace(/\.disabled$/,''):file.endsWith('.disabled')?file:file+'.disabled';
   if(file!==dest){if(fs.existsSync(dest))throw new Error('Eine Mod-Datei mit diesem Namen existiert bereits.');fs.renameSync(file,dest);}
   return installedMods();

@@ -27,3 +27,13 @@ Für Profilimport, Profilexport und Profilkopien gibt es kein pauschales MB-/GB-
 CRC32 und tatsächliche entpackte Dateigrößen werden bei der Extraktion geprüft. Verzeichniswechsel, Links, Gerätepfade, doppelte Pfade, vertrauliche Launcher-Verzeichnisse und ausführbare Betriebssystemdateien bleiben gesperrt. Diese Prüfungen werden durch das Entfernen der pauschalen Größenlimits nicht abgeschaltet. Die getrennte lokale Sicherungsfunktion behält ihre bisherigen Schutzlimits.
 
 Prüfung: `npm test` enthält native Profilimporte, deaktivierte Dateien, Versionsordner, Loader-Anpassung, Referenzdownloads, CRC-Fehler und ZIP64-Roundtrips. `node scripts/check-large-profile.cjs` streamt zusätzlich 4 GiB + 17 Byte und prüft die vollständigen Daten per SHA-512, ohne eine große Rohdatei abzulegen.
+
+## Fabric-Namensräume ab Minecraft 26.1
+
+Minecraft 26.1 und neuer verwenden zur Laufzeit `official`, ältere Veröffentlichungen `intermediary`. Eine alte Mod mit dem Minecraft-Prädikat `>=1.21.9` kann mathematisch auch 26.2 erfüllen und trotzdem nicht zu dessen Klassen und Mixins passen. Der Header ihrer Access-Widener-/Class-Tweaker-Datei liefert hier einen eindeutigen Konflikt.
+
+Scarrix prüft diesen Header beim Import, beim Aktivieren einer Mod und vor dem Spielstart. Externe Importe behalten betroffene Dateien deaktiviert und unverändert. Bei bestehenden Profilen erklärt die Startprüfung die konkrete Mod und die benötigte Spielgeneration. Auch eingebettete, tatsächlich ausgewählte Fabric-Abhängigkeiten werden geprüft. Eine ältere eingebettete Kopie, deren Mod-ID bereits durch eine eigenständige Mod bereitgestellt wird, wird nicht fälschlich als ausgewählt behandelt. Die Prüfung kann nicht alle Bytecode- und Mixin-Konflikte vorhersagen; der Modloader bleibt dafür zuständig.
+
+Eine andere Versionsnummer oder ein manuell geänderter Namespace-Header konvertiert keine Mod. Benötigt wird eine vom Autor für die Spielversion veröffentlichte Datei oder ein Profil für die ursprüngliche Spielversion. Die Absturzdiagnose erklärt bestehende `Namespace ... does not match current runtime namespace`-Fehler entsprechend.
+
+Beim Vergleich mit NoRisk ist die tatsächlich geladene Liste entscheidend. Dessen [Mod-Auflösung](https://github.com/NoRiskClient/noriskclient-launcher/blob/v3/src-tauri/src/minecraft/downloads/mod_resolver.rs) überspringt Profil-Mods mit nicht passender `game_versions`-Liste, sofern kein expliziter Versions-Override gesetzt wurde. Ein aktivierter Eintrag in einer Profilbibliothek bedeutet daher nicht zwingend, dass dessen JAR in jedem Minecraft-Profil geladen wird. Diese Beobachtung ist eine Verhaltensreferenz; Scarrix übernimmt keinen NoRisk-Quellcode.

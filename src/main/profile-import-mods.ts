@@ -1,3 +1,4 @@
+import {fabricNamespaceIssue} from './fabric-compatibility';
 import fs from 'node:fs';
 import path from 'node:path';
 import semver from 'semver';
@@ -17,14 +18,16 @@ export function fabricRangeMatches(version: string, range: unknown): boolean | n
     if (semver.satisfies(value, parsed, { includePrerelease: true }))
         return true;
 } return unknown ? null : false; }
-async function metadata(file: string) { const archive = await openProfileArchive(file); try {
+async function metadata(file: string, version: string) { const archive = await openProfileArchive(file); try {
     const entry = archive.entry('fabric.mod.json');
     if (!entry)
         return null;
     const data = JSON.parse((await archive.read(entry, 1024 * 1024)).toString('utf8'));
     if (typeof data.id !== 'string' || typeof data.version !== 'string')
         throw Error('Mod-Metadaten fehlen.');
-    return data;
+    let namespaceIssue:string|null=null;
+    if(typeof data.accessWidener==='string'){const tweaker=archive.entry(data.accessWidener);if(!tweaker)throw Error('Class-Tweaker-Datei fehlt.');namespaceIssue=fabricNamespaceIssue(version,(await archive.read(tweaker,1024*1024)).toString('utf8').split(/\r?\n/,1)[0]);}
+    return {data,namespaceIssue};
 }
 finally {
     archive.close();
@@ -48,9 +51,11 @@ export async function reconcileImportedMods(root: string, item: Instance, messag
     } fs.renameSync(from, to); messages.push(file + ' deaktiviert: ' + reason + '. Die Datei bleibt im Profil erhalten.'); }
     for (const file of fs.readdirSync(folder).filter(n => /\.jar$/i.test(n))) {
         try {
-            const data = await metadata(path.join(folder, file));
-            if (!data)
+            const result = await metadata(path.join(folder, file),item.version);
+            if (!result)
                 continue;
+            const {data,namespaceIssue}=result;
+            if(namespaceIssue){disable(file,namespaceIssue);continue;}
             if (data.environment === 'server') {
                 disable(file, 'nur für Server vorgesehen');
                 continue;
