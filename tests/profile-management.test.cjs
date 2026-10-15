@@ -1,11 +1,12 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),os=require('node:os'),AdmZip=require('adm-zip');
 const load=require('./load-main.cjs');
-test('profile archive traversal, links, unexpected paths and size bombs are rejected',()=>{
+test('profile archive traversal, links, unexpected paths and invalid sizes are rejected',()=>{
  const api=load('profile-files',{'electron':{},'./config':{},'./java':{archiveSafe:n=>n&&!n.startsWith('/')&&!n.includes('\\')&&!n.includes(':')&&!n.split('/').includes('..')}});
  const entry=(entryName,size=1,attr=0)=>({entryName,header:{size},attr});
  for(const bad of ['files/mods/../../outside.jar','C:/escape','files/auth/token.json','settings.json'])assert.throws(()=>api.validateArchiveEntries([entry(bad)]));
  assert.throws(()=>api.validateArchiveEntries([entry('files/mods/link.jar',1,0xa000<<16)]));
- assert.throws(()=>api.validateArchiveEntries([entry('files/mods/big.jar',1024**3+1)]));
+ api.validateArchiveEntries([entry('files/mods/big.jar',5*1024**3)]);
+ assert.throws(()=>api.validateArchiveEntries([entry('files/mods/big.jar',Number.MAX_SAFE_INTEGER+1)]));
  assert.throws(()=>api.validateArchiveEntries([entry('files/mods/A.jar'),entry('files/mods/a.jar')]));
  api.validateArchiveEntries([entry('profile.json'),entry('files/mods/test.jar')]);
 });

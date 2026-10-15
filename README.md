@@ -293,7 +293,7 @@ Profilbearbeitung, Import/Export, Java-Automatik, installierte Mods, Download-An
 
 - Anmeldung merken mit Systemverschlüsselung und stiller Kontowiederherstellung; lokale Zugangsdaten werden bei Abmelden entfernt.
 - Minecraft-Logs mit Hinweisen auf RAM-, Java-, Mod-, Grafik- und Dateifehler. Unklare Ursachen werden als unklar gekennzeichnet.
-- Modrinth `.mrpack`-Import unter Meine Profile, mit SHA1/SHA512, begrenzten Downloads und neuem Profil. Vanilla/Fabric/Forge unterstützt; Quilt/NeoForge werden vor dem Import klar abgewiesen. Die Loader-Version eines Packs bleibt festgelegt.
+- Profilimport für ScarrixPack, native NoRisk-Profile, Modrinth und CurseForge-ZIP. Große Dateien werden ohne feste MB-/GB-Grenze mit ZIP64 gestreamt. Details zu Dateiprüfung, Mod-Aktivierung und CurseForge-Zugriff: [Profilimport](docs/PROFILE-IMPORT.md). Vanilla/Fabric/Forge unterstützt; andere Loader werden klar abgewiesen.
 - Fenstergröße, Position und Maximierungszustand bleiben erhalten; getrennte Monitore und kleine Arbeitsflächen werden berücksichtigt.
 - Darstellung geprüft bei 780×560 und 720×440 logischen Pixeln sowie 150 Prozent App-Skalierung. Vollständige Anmeldung und echter Minecraft-/Modpack-Start bleiben bis zur Microsoft-Freigabe zu prüfen.
 

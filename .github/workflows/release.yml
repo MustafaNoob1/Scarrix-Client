@@ -88,4 +88,4 @@ jobs:
             echo "Release already exists; published update files remain immutable."
             exit 0
           fi
-          gh release create "$tag" release-assets/* --target "$GITHUB_SHA" --title "Scarrix Client ${base} Preview #${GITHUB_RUN_NUMBER}" --prerelease --notes "Öffentliche Preview. Windows EXE, macOS DMG/ZIP, Linux AppImage/DEB. Microsoft-Freigabe steht aus. In-App-Installation nur bei vorhandener, gültiger scarrix-update.sig. Installer haben kein kostenpflichtiges Authenticode-Zertifikat; Windows kann SmartScreen anzeigen."
+          gh release create "$tag" release-assets/* --target "$GITHUB_SHA" --title "Scarrix Client ${base} Preview #${GITHUB_RUN_NUMBER}" --prerelease --notes "Öffentliche Preview. Windows EXE, macOS DMG/ZIP, Linux AppImage/DEB. Microsoft-Anmeldung integriert. In-App-Installation nur bei vorhandener, gültiger scarrix-update.sig. Installer haben kein kostenpflichtiges Authenticode-Zertifikat; Windows kann SmartScreen anzeigen."
