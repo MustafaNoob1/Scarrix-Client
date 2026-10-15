@@ -42,8 +42,9 @@ const de = {
 
 function AccountFace({skin}:{skin?:string}) {const {tr}=useI18n();
   const canvas=React.useRef<HTMLCanvasElement>(null);
-  useEffect(()=>{let active=true;const context=canvas.current?.getContext('2d');context?.clearRect(0,0,32,32);if(!skin)return;const image=new Image();image.onload=()=>{if(!active||!context)return;context.imageSmoothingEnabled=false;context.drawImage(image,8,8,8,8,0,0,32,32);context.drawImage(image,40,8,8,8,0,0,32,32);};image.src=skin;return()=>{active=false;};},[skin]);
-  return <span className="account-face">{skin?<canvas ref={canvas} width={32} height={32}/>:<ScarrixMark decorative/>}</span>;
+  const [loaded,setLoaded]=useState(false);
+  useEffect(()=>{let active=true;const context=canvas.current?.getContext('2d');setLoaded(false);setLoaded(false);context?.clearRect(0,0,32,32);if(!skin)return;const image=new Image();image.crossOrigin='anonymous';image.crossOrigin='anonymous';image.onload=()=>{if(!active||!context)return;context.imageSmoothingEnabled=false;const scale=image.width/64;context.drawImage(image,8*scale,8*scale,8*scale,8*scale,0,0,32,32);context.drawImage(image,40*scale,8*scale,8*scale,8*scale,0,0,32,32);setLoaded(true);};image.src=skin;return()=>{active=false;};},[skin]);
+  return <span className="account-face"><canvas ref={canvas} width={32} height={32} hidden={!loaded}/>{!loaded&&<ScarrixMark decorative/>}</span>;
 }
 function App() {
   const [gameSessions,setGameSessions]=useState<GameSession[]>([]);

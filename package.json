@@ -21,6 +21,7 @@
     "@azure/msal-node": "^3.7.0",
     "@azure/msal-node-extensions": "^5.5.2",
     "@xmcl/core": "2.13.0",
+    "@xmcl/file-transfer": "1.0.6",
     "@xmcl/installer": "5.4.0",
     "@xmcl/user": "4.4.2",
     "adm-zip": "^0.6.1",
@@ -32,7 +33,8 @@
     "react-dom": "^19.0.0",
     "semver": "^7.8.5",
     "skinview3d": "^3.4.2",
-    "tar": "^7.5.22"
+    "tar": "^7.5.22",
+    "undici": "6.0.1"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.8",
@@ -60,9 +62,18 @@
       "package.json"
     ],
     "extraResources": [
-      { "from": "discord-presence.json", "to": "discord-presence.json" },
-      { "from": "licenses", "to": "licenses" },
-      { "from": "src/renderer/assets/BRAND-ICONS.md", "to": "licenses/BRAND-ICONS.md" },
+      {
+        "from": "discord-presence.json",
+        "to": "discord-presence.json"
+      },
+      {
+        "from": "licenses",
+        "to": "licenses"
+      },
+      {
+        "from": "src/renderer/assets/BRAND-ICONS.md",
+        "to": "licenses/BRAND-ICONS.md"
+      },
       {
         "from": "config.json",
         "to": "config.json"

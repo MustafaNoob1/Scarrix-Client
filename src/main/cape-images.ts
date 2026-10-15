@@ -10,11 +10,27 @@ function dimensions(data:Buffer){
 }
 function image(data:Buffer){const info=dimensions(data);if(info.width<1||info.height<1||info.width>2048||info.height>2048)throw new Error('Cape-Bild darf maximal 2048×2048 Pixel groß sein.');let png:PNG;if(info.kind==='png'){try{png=PNG.sync.read(data,{checkCRC:true});}catch{throw new Error('Die PNG-Datei ist beschädigt. Bitte erneut als PNG exportieren.');}}else{const decoded=nativeImage.createFromBuffer(data);if(decoded.isEmpty())throw new Error('Die JPG-Datei ist beschädigt oder wird nicht unterstützt.');const size=decoded.getSize();if(size.width!==info.width||size.height!==info.height)throw new Error('Die Bildgröße ist ungültig.');png=PNG.sync.read(decoded.toPNG(),{checkCRC:true});}return {png,kind:info.kind};}
 function pixel(source:PNG,x:number,y:number,target:PNG,tx:number,ty:number){const from=(y*source.width+x)*4,to=(ty*target.width+tx)*4;source.data.copy(target.data,to,from,from+4);}
-export function normalizeCape(data:Buffer):{bytes:Buffer;message:string}{const {png,kind}=image(data);const out=new PNG({width:64,height:32});out.data.fill(0);let message='Cape-Textur importiert.';
- if(png.width===64&&png.height===32){return {bytes:kind==='png'?data:PNG.sync.write(png),message:kind==='png'?message:'JPG-Cape in PNG umgewandelt.'};}
- if(png.width===22&&png.height===17){for(let y=0;y<17;y++)for(let x=0;x<22;x++)pixel(png,x,y,out,x,y);message='Alte 22×17-Cape-Textur auf 64×32 erweitert.';}
- else if(png.width>=64&&png.width===png.height*2){for(let y=0;y<32;y++)for(let x=0;x<64;x++)pixel(png,Math.floor(x*png.width/64),Math.floor(y*png.height/32),out,x,y);message='Cape-Textur auf 64×32 Pixel angepasst.';}
- else{for(let y=0;y<16;y++)for(let x=0;x<10;x++){const sx=Math.min(png.width-1,Math.floor((x+.5)*png.width/10)),sy=Math.min(png.height-1,Math.floor((y+.5)*png.height/16));pixel(png,sx,sy,out,1+x,1+y);pixel(png,sx,sy,out,12+x,1+y);}for(let y=1;y<=16;y++){pixel(out,1,y,out,0,y);pixel(out,10,y,out,11,y);}for(let x=1;x<=10;x++){pixel(out,x,1,out,x,0);pixel(out,x,16,out,x+10,0);}message='Bildmotiv für Vorder- und Rückseite des Capes auf 64×32 Pixel angepasst.';}
- return {bytes:PNG.sync.write(out),message};}
-export function capeTemplate(){const png=new PNG({width:64,height:32});png.data.fill(0);const fill=(x:number,y:number,w:number,h:number,color:number[])=>{for(let py=y;py<y+h;py++)for(let px=x;px<x+w;px++){const i=(py*64+px)*4;for(let c=0;c<4;c++)png.data[i+c]=color[c];}};fill(1,1,10,16,[217,44,69,255]);fill(12,1,10,16,[105,33,61,255]);fill(0,1,1,16,[70,82,106,255]);fill(11,1,1,16,[70,82,106,255]);fill(1,0,10,1,[250,127,135,255]);fill(11,0,10,1,[52,57,74,255]);return PNG.sync.write(png);}
-export async function saveCapeTemplate(){const chosen=await dialog.showSaveDialog({defaultPath:'Scarrix-Cape-Vorlage.png',filters:[{name:'PNG-Cape-Vorlage',extensions:['png']}]});if(chosen.canceled||!chosen.filePath)return 'Vorlagen-Download abgebrochen.';const destination=/\.png$/i.test(chosen.filePath)?chosen.filePath:chosen.filePath+'.png';fs.writeFileSync(destination,capeTemplate(),{mode:0o600});return 'Cape-Vorlage gespeichert: '+destination+' · 64×32 Pixel. Rot = Vorderseite, Dunkelrot = Rückseite, schmale Streifen = Kanten. Transparente Fläche frei lassen.';}
+// HD atlases retain their original detail; motifs use the same UV layout at up to 32x resolution.
+export function normalizeCape(data:Buffer):{bytes:Buffer;message:string}{
+ const {png,kind}=image(data);
+ if(png.width>=64&&png.width%64===0&&png.width===png.height*2)return {bytes:kind==='png'?data:PNG.sync.write(png),message:`Cape-Textur mit ${png.width}×${png.height} Pixeln importiert.`};
+ if(png.width===22&&png.height===17){const out=new PNG({width:64,height:32});out.data.fill(0);for(let y=0;y<17;y++)for(let x=0;x<22;x++)pixel(png,x,y,out,x,y);return {bytes:PNG.sync.write(out),message:'Alte 22×17-Cape-Textur auf 64×32 erweitert.'};}
+ const scale=Math.min(32,Math.max(8,Math.ceil(Math.max(png.width/10,png.height/16))));
+ const out=new PNG({width:64*scale,height:32*scale});out.data.fill(0);
+ const width=10*scale,height=16*scale;
+ for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+  const sx=Math.max(0,Math.min(png.width-1,(x+.5)*png.width/width-.5)),sy=Math.max(0,Math.min(png.height-1,(y+.5)*png.height/height-.5));
+  const x0=Math.floor(sx),y0=Math.floor(sy),fx=sx-x0,fy=sy-y0;
+  for(let c=0;c<4;c++){
+   const read=(px:number,py:number)=>png.data[(Math.min(png.height-1,py)*png.width+Math.min(png.width-1,px))*4+c];
+   const value=Math.round((read(x0,y0)*(1-fx)+read(x0+1,y0)*fx)*(1-fy)+(read(x0,y0+1)*(1-fx)+read(x0+1,y0+1)*fx)*fy);
+   out.data[((scale+y)*out.width+scale+x)*4+c]=value;
+   out.data[((scale+y)*out.width+12*scale+x)*4+c]=value;
+  }
+ }
+ for(let y=0;y<height;y++)for(let x=0;x<scale;x++){pixel(out,scale,scale+y,out,x,scale+y);pixel(out,11*scale-1,scale+y,out,11*scale+x,scale+y);}
+ for(let y=0;y<scale;y++)for(let x=0;x<width;x++){pixel(out,scale+x,scale,out,scale+x,y);pixel(out,scale+x,17*scale-1,out,11*scale+x,y);}
+ return {bytes:PNG.sync.write(out),message:`Bildmotiv als HD-Cape (${out.width}×${out.height} Pixel, Motiv ${width}×${height}) importiert.`};
+}
+export function capeTemplate(){const scale=16;const png=new PNG({width:64*scale,height:32*scale});png.data.fill(0);const fill=(x:number,y:number,w:number,h:number,color:number[])=>{for(let py=y*scale;py<(y+h)*scale;py++)for(let px=x*scale;px<(x+w)*scale;px++){const i=(py*png.width+px)*4;for(let c=0;c<4;c++)png.data[i+c]=color[c];}};fill(1,1,10,16,[217,44,69,255]);fill(12,1,10,16,[105,33,61,255]);fill(0,1,1,16,[70,82,106,255]);fill(11,1,1,16,[70,82,106,255]);fill(1,0,10,1,[250,127,135,255]);fill(11,0,10,1,[52,57,74,255]);return PNG.sync.write(png);}
+export async function saveCapeTemplate(){const chosen=await dialog.showSaveDialog({defaultPath:'Scarrix-Cape-Vorlage.png',filters:[{name:'PNG-Cape-Vorlage',extensions:['png']}]});if(chosen.canceled||!chosen.filePath)return 'Vorlagen-Download abgebrochen.';const destination=/\.png$/i.test(chosen.filePath)?chosen.filePath:chosen.filePath+'.png';fs.writeFileSync(destination,capeTemplate(),{mode:0o600});return 'Cape-Vorlage gespeichert: '+destination+' · 1024×512 Pixel (Motiv 160×256). Rot = Vorderseite, Dunkelrot = Rückseite, schmale Streifen = Kanten. Transparente Fläche frei lassen.';}

@@ -11,3 +11,5 @@ Alte Clients bis 0.4.1 einmal manuell auf 0.5 aktualisieren. Danach funktioniere
 Die Signatur authentifiziert die Metadaten und den vollständigen Installer. Ein Authenticode-Zertifikat ist dafür nicht erforderlich; Windows SmartScreen kann bei einer Erstinstallation weiterhin eine Meldung anzeigen.
 Bei Schlüsselwechsel müssen bestehende Clients erst mit dem alten Schlüssel eine Version mit dem neuen Vertrauen erhalten. Nicht einfach den öffentlichen Schlüssel austauschen.
 Release-Dateien nach Veröffentlichung nicht ändern. Eine neue Version veröffentlichen.
+
+„Update anwenden & neu starten“ ist die ausdrückliche Installationsaktion. Nach Signatur-/Dateiprüfung und Prüfung auf laufende Spiele/Operationen wird quitAndInstall(true, true) direkt aufgerufen, ohne zusätzliche native Bestätigungsbox. Der Download selbst oder ein App-Start installiert nichts automatisch.

@@ -13,8 +13,8 @@ export function checkPng(data: Buffer, cape: boolean): void {
   if (!data.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) throw new Error('Nur echte PNG-Dateien sind erlaubt.');
   if (data.toString('ascii', 12, 16) !== 'IHDR') throw new Error('Fehlerhafter PNG-Header.');
   const width = data.readUInt32BE(16), height = data.readUInt32BE(20);
-  const valid = cape ? ((width === 64 && height === 32) || (width === 22 && height === 17)) : (width === 64 && (height === 64 || height === 32));
-  if (!valid) throw new Error(cape ? 'Cape-Vorschau muss 64×32 oder 22×17 Pixel haben.' : 'Skin muss 64×64 oder 64×32 Pixel haben.');
+  const valid = cape ? ((width >= 64 && width <= 2048 && width % 64 === 0 && width === height * 2) || (width === 22 && height === 17)) : (width === 64 && (height === 64 || height === 32));
+  if (!valid) throw new Error(cape ? 'Cape-Textur muss ein 64×32-Atlas oder ein HD-Vielfaches bis 2048×1024 sein.' : 'Skin muss 64×64 oder 64×32 Pixel haben.');
   const decoded = nativeImage.createFromBuffer(data);
   if (decoded.isEmpty() || decoded.getSize().width !== width || decoded.getSize().height !== height) throw new Error('PNG ist beschädigt oder konnte nicht gelesen werden.');
 }

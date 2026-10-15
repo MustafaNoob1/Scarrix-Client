@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import { autoUpdater, NsisUpdater } from 'electron-updater';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -87,10 +87,5 @@ export async function downloadLauncherUpdate(win:BrowserWindow):Promise<string>{
     updateProgress=progressReporter('Launcher-Update herunterladen');await autoUpdater.downloadUpdate();return 'Update heruntergeladen und geprüft.';
   }catch(error){publish('error',error instanceof Error?error.message:String(error));throw error;}finally{checking=false;}
 }
-export async function installLauncherUpdate(win:BrowserWindow){target=win;if(!downloaded)throw new Error('Bitte zuerst ein geprüftes Update herunterladen.');assertIdle();await promptRestart();return 'Update bereit zur Installation.';}
+export async function installLauncherUpdate(win:BrowserWindow){target=win;if(!downloaded)throw new Error('Bitte zuerst ein geprüftes Update herunterladen.');assertIdle();if(win.isDestroyed())throw new Error('Launcher-Fenster wurde geschlossen.');autoUpdater.quitAndInstall(true,true);return 'Update wird angewendet und der Launcher neu gestartet.';}
 let updateProgress=progressReporter('Launcher-Update herunterladen');
-async function promptRestart(){
-  if(!target||target.isDestroyed())return;
-  const result=await dialog.showMessageBox(target,{type:'info',title:'Launcher aktualisieren',message:'Geprüftes Update im Hintergrund anwenden und den Launcher neu starten?',buttons:['Jetzt neu starten','Später'],defaultId:0,cancelId:1});
-  if(result.response===0&&downloaded){assertIdle();autoUpdater.quitAndInstall(true,true);}
-}

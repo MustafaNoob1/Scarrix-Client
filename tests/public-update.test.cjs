@@ -21,22 +21,22 @@ function setup({signed=true,tamper=false,restart=false,changedMetadata=false}={}
   async downloadUpdate(){this.downloaded=true;const error=await this.verifyUpdateCodeSignature([],file);if(error)throw Error(error);await this.events['update-downloaded']();}
   quitAndInstall(...args){this.install=args;}
  }
- let prompts=0;const updater=new Updater();
+ let prompts=0,blocked=false;const updater=new Updater();
  if(tamper)fs.writeFileSync(file,'tampered installer');
  const mocks={process:{...process,resourcesPath:dir,platform:'win32',arch:'x64'},'electron':{app:{isPackaged:true,getVersion:()=> '0.5.0-beta.1'},dialog:{showMessageBox:async()=>{prompts++;return {response:restart?0:1};}}},
-  'electron-updater':{autoUpdater:updater,NsisUpdater:Updater},
+  'electron-updater':{autoUpdater:updater,NsisUpdater:Updater},'./operations':{assertIdle:()=>{if(blocked)throw Error('Bitte beende zuerst Minecraft.');}},
   'node:fs':{...fs,readFileSync:(p,...args)=>String(p).endsWith('update-channel.json')?JSON.stringify({enabled:true,publicKey}):fs.readFileSync(p,...args)},
   fetch:async url=>{const body=url.includes('api.github.com')?JSON.stringify(release):bodies[url.split('/').pop()];const response=new Response(body);Object.defineProperty(response,'url',{value:url});return response;}
  };
- return {api:load('public-updater',mocks),updater,get prompts(){return prompts;},win:{isDestroyed:()=>false,webContents:{send:()=>{}}},cleanup:()=>fs.rmSync(dir,{recursive:true,force:true})};
+ return {api:load('public-updater',mocks),updater,block:()=>{blocked=true;},get prompts(){return prompts;},win:{isDestroyed:()=>false,webContents:{send:()=>{}}},cleanup:()=>fs.rmSync(dir,{recursive:true,force:true})};
 }
-test('signed public update applies silently and relaunches after explicit confirmation',async()=>{
+test('signed public update applies silently and relaunches on the explicit apply button without a second dialog',async()=>{
  const s=setup({restart:true});try{await s.api.checkForUpdate(s.win);assert.equal(s.updater.downloaded,undefined);await s.api.downloadLauncherUpdate(s.win);assert.equal(s.updater.install,undefined);await s.api.installLauncherUpdate(s.win);assert.deepEqual(s.updater.install,[true,true]);assert.equal(s.updater.autoInstallOnAppQuit,false);assert.equal(s.updater.allowDowngrade,false);assert.equal(s.updater.disableDifferentialDownload,false);assert.equal(s.updater.feed.useMultipleRangeRequest,false);}finally{s.cleanup();}
 });
 test('unsigned releases and altered installers cannot install',async()=>{
  for(const opts of [{signed:false},{tamper:true}]){const s=setup(opts);try{if(opts.signed===false)await assert.rejects(s.api.checkForUpdate(s.win));else{await s.api.checkForUpdate(s.win);await assert.rejects(s.api.downloadLauncherUpdate(s.win));}assert.equal(s.updater.install,undefined);}finally{s.cleanup();}}
 });
-test('later leaves verified update ready without restarting',async()=>{
+test('a downloaded update stays ready until the apply button is pressed',async()=>{
  const s=setup();try{await s.api.checkForUpdate(s.win);await s.api.downloadLauncherUpdate(s.win);assert.equal(s.updater.downloaded,true);assert.equal(s.prompts,0);assert.equal(s.updater.install,undefined);await s.api.checkForUpdate(s.win);assert.equal(s.updater.install,undefined);}finally{s.cleanup();}
 });
 test('metadata changed between signature check and SDK fetch cannot download or install',async()=>{
@@ -50,4 +50,5 @@ test('manifest signature rejects a different signing key and changed payload',()
 });
 
 test('startup and repeated manual checks only discover updates without downloads or restart prompts',async()=>{const s=setup();try{await s.api.checkForUpdate(s.win,false);assert.equal(s.api.updateState().status,'available');assert.equal(s.api.updateState().canDownload,true);assert.equal(s.updater.downloaded,undefined);assert.equal(s.updater.feed,undefined);assert.equal(s.prompts,0);assert.equal(s.updater.autoDownload,false);assert.equal(s.updater.autoInstallOnAppQuit,false);await s.api.checkForUpdate(s.win);assert.equal(s.updater.downloaded,undefined);assert.equal(s.prompts,0);}finally{s.cleanup();}});
-test('download and installation require their own explicit actions and a verified available update',async()=>{const s=setup();try{await assert.rejects(s.api.downloadLauncherUpdate(s.win),/zuerst nach Updates/);await assert.rejects(s.api.installLauncherUpdate(s.win),/zuerst/);await s.api.checkForUpdate(s.win);await s.api.downloadLauncherUpdate(s.win);assert.equal(s.api.updateState().status,'ready');assert.equal(s.api.updateState().canDownload,false);assert.equal(s.prompts,0);await s.api.checkForUpdate(s.win,false);assert.equal(s.prompts,0);await s.api.installLauncherUpdate(s.win);assert.equal(s.prompts,1);assert.equal(s.updater.install,undefined);}finally{s.cleanup();}});
+test('download and installation require their own explicit actions and a verified available update',async()=>{const s=setup();try{await assert.rejects(s.api.downloadLauncherUpdate(s.win),/zuerst nach Updates/);await assert.rejects(s.api.installLauncherUpdate(s.win),/zuerst/);await s.api.checkForUpdate(s.win);await s.api.downloadLauncherUpdate(s.win);assert.equal(s.api.updateState().status,'ready');assert.equal(s.api.updateState().canDownload,false);assert.equal(s.prompts,0);await s.api.checkForUpdate(s.win,false);assert.equal(s.prompts,0);await s.api.installLauncherUpdate(s.win);assert.equal(s.prompts,0);assert.deepEqual(s.updater.install,[true,true]);}finally{s.cleanup();}});
+test('apply still rejects running games and closed windows without starting installation',async()=>{for(const closed of [true,false]){const s=setup();try{await s.api.checkForUpdate(s.win);await s.api.downloadLauncherUpdate(s.win);if(closed)s.win.isDestroyed=()=>true;else s.block();await assert.rejects(s.api.installLauncherUpdate(s.win),closed?/Fenster/:/Minecraft/);assert.equal(s.updater.install,undefined);assert.equal(s.prompts,0);}finally{s.cleanup();}}});

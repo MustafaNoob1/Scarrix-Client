@@ -1,4 +1,6 @@
+import {minecraftRequests} from './minecraft-downloads';
 import {modPreflight} from './mod-preflight';
+import {minecraftDownloads} from './minecraft-downloads';
 import { memoryInfo } from './memory';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -31,23 +33,23 @@ async function doPrepare(notify: (message: string) => void) {
     fs.mkdirSync(mcRoot, { recursive: true });
     fs.mkdirSync(gameRoot, { recursive: true });
     const minecraft = cfg.minecraft;
-    const versions = (await getVersionList()).versions;
+    const versions = (await getVersionList(minecraftRequests)).versions;
     const vanilla = versions.find(v => v.id === minecraft.version && v.type === 'release');
     if (!vanilla) throw new Error('Minecraft-Version nicht im offiziellen Manifest gefunden.');
     notify(`Prüfe Minecraft ${minecraft.version} …`);
-    await runInstallerTask(installTask(vanilla, mcRoot), 'Minecraft-Dateien herunterladen');
+    await runInstallerTask(installTask(vanilla, mcRoot, minecraftDownloads), 'Minecraft-Dateien herunterladen');
     let launchVersion = minecraft.version;
     if (minecraft.loader === 'fabric') {
       stepStatus('Fabric installieren');
       notify('Installiere Fabric …');
-      const loaders = await getLoaderArtifactListFor(minecraft.version);
+      const loaders = await getLoaderArtifactListFor(minecraft.version,minecraftRequests);
       const selected = minecraft.loaderVersion ? loaders.find(l=>l.loader.version===minecraft.loaderVersion) : loaders[0];
       if (!selected) throw new Error('Keine Fabric-Version verfügbar.');
       launchVersion = await installFabric(selected, mcRoot);
     } else if (minecraft.loader === 'forge') {
       stepStatus('Forge installieren');
       notify('Installiere Forge …');
-      const list = await getForgeVersionList({ minecraft: minecraft.version });
+      const list = await getForgeVersionList({ minecraft: minecraft.version,...minecraftRequests });
       const selected = minecraft.loaderVersion ? list.versions?.find(l=>l.version===minecraft.loaderVersion) : list.versions?.[0];
       if (!selected) throw new Error('Kein Forge-Loader für diese Version gefunden.');
       launchVersion = await installForge(selected, mcRoot, { java: javaPath });
@@ -55,7 +57,7 @@ async function doPrepare(notify: (message: string) => void) {
       throw new Error('Quilt-Installation ist noch nicht implementiert. Wähle vorerst Vanilla, Fabric oder Forge.');
     }
     const resolved = await Version.parse(mcRoot, launchVersion);
-    await runInstallerTask(installDependenciesTask(resolved), 'Bibliotheken und Spieldaten prüfen');
+    await runInstallerTask(installDependenciesTask(resolved, minecraftDownloads), 'Bibliotheken und Spieldaten prüfen');
   return { resolved, gameRoot, mcRoot, javaPath };
 }
 let preparing: ReturnType<typeof doPrepare> | null = null;
