@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
-import { archivePath, portableProfilePath, checkedSize, sumSizes } from './profile-policy';
+import { archivePath, privateProfilePath, portableProfilePath, checkedSize, sumSizes } from './profile-policy';
 import { progressReporter, downloadSignal, assertDownloadActive } from './downloads';
 const hosts = new Set(['cdn.modrinth.com', 'github.com', 'raw.githubusercontent.com', 'gitlab.com', 'release-assets.githubusercontent.com', 'objects.githubusercontent.com', 'edge.forgecdn.net', 'mediafilez.forgecdn.net']);
 export function safePackUrl(value: string) { const url = new URL(value); if (url.protocol !== 'https:' || url.username || url.password || (url.port && url.port !== '443') || !hosts.has(url.hostname) || /\s/.test(value))
@@ -44,7 +44,7 @@ export function validatePackArchive(entries: Array<{
     if (name !== 'modrinth.index.json' && !['overrides', 'client-overrides', 'server-overrides'].includes(name.split('/')[0]))
         throw Error('Unbekannte Datei im Profilarchiv.');
     if (name !== 'modrinth.index.json' && name.includes('/'))
-        safePackPath(name.slice(name.indexOf('/') + 1));
+        {const relative=name.slice(name.indexOf('/')+1);if(!privateProfilePath(relative))safePackPath(relative);}
 } return sumSizes(entries.map(e => e.header.size)); }
 export async function downloadPackFile(file: PackFile, destination: string, label: string) { let last: unknown; for (const source of file.downloads) {
     try {

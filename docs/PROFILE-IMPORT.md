@@ -8,7 +8,7 @@ Für einen vollständigen NoRisk-Profilexport empfiehlt sich `.noriskpack`: Die 
 
 Mods, Resourcepacks, Konfigurationen, Welten, Karten und andere portable Dateien unter `overrides` werden übernommen. NoRisk-Modordner für die gewählte Spielversion werden in den normalen Mods-Ordner überführt. Andere Versionsordner bleiben außerhalb des aktiven Mods-Ordners erhalten. Inaktive Mods, Mods für andere Spielversionen und ältere doppelte Fabric-Mod-IDs bleiben als deaktivierte Dateien erhalten. Bei doppelten IDs wird die neueste lokal erkennbare Version verwendet. Lokale Metadaten können nicht alle Laufzeitkonflikte vorhersagen; vor dem Spielstart bleibt die Mod-Prüfung aktiv.
 
-Anpassungen stehen im Profilordner in `scarrix-import-report.json`. Fremde Kontozuordnungen, Zugangsdaten und Java-Programmpfade werden nicht übernommen. Java wird für die Minecraft-Version ausgewählt; portable GC-Optionen werden geprüft. RAM wird an den eigenen physischen Systemspeicher angepasst.
+Anpassungen stehen im Profilordner in `scarrix-import-report.json`. Fremde Kontozuordnungen, Zugangsdaten und Java-Programmpfade werden nicht übernommen. Entbehrliche Cache- und fremde Launcher-Verzeichnisse in externen Overrides werden mit einem Hinweis ausgelassen, statt den gesamten Profilimport zu verhindern. Java wird für die Minecraft-Version ausgewählt; portable GC-Optionen werden geprüft. RAM wird an den eigenen physischen Systemspeicher angepasst.
 
 ## Download-Verweise und Formate
 

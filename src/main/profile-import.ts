@@ -8,7 +8,7 @@ import { officialVersions } from './versions';
 import { exclusive } from './operations';
 import { assertDownloadActive, downloadSignal, stepStatus } from './downloads';
 import { openProfileArchive, ProfileArchive, requireProfileSpace, ProfileArchiveEntry } from './profile-archive';
-import { archivePath, portableProfilePath, checkedSize, sumSizes } from './profile-policy';
+import { archivePath, privateProfilePath, portableProfilePath, checkedSize, sumSizes } from './profile-policy';
 import { parsePack, validatePackArchive, downloadPackFile, safePackPath, safePackUrl, PackFile } from './modpack';
 import { validateArchiveEntries } from './profile-files';
 import { validateProfileOptions } from './profile-options';
@@ -199,7 +199,7 @@ function targetPath(plan: Plan, entry: ProfileArchiveEntry) { let relative: stri
     relative = entry.entryName.slice(plan.prefix.length);
 else if (plan.kind === 'modrinth' && entry.entryName.startsWith('client-overrides/'))
     relative = entry.entryName.slice(17); if (!relative || entry.isDirectory)
-    return null; relative = safePackPath(relative); if (plan.kind === 'norisk' && relative.startsWith('mods/')) {
+    return null; if(privateProfilePath(relative)){plan.messages.push('Nicht portable Launcher-/Cache-Datei ausgelassen: '+relative);return null;}relative = safePackPath(relative); if (plan.kind === 'norisk' && relative.startsWith('mods/')) {
     const basename = path.posix.basename(relative).toLowerCase(), mapped = plan.targets.get(basename) ?? plan.targets.get(basename.replace(/\.disabled$/, ''));
     if (mapped)
         return basename.endsWith('.disabled') && !mapped.endsWith('.disabled') ? mapped + '.disabled' : mapped;

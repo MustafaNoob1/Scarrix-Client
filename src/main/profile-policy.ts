@@ -9,9 +9,12 @@ export function archivePath(value: unknown, directory = false): string {
         throw Error('Unsicherer Dateipfad im Profilarchiv.');
     return name;
 }
+export function privateProfilePath(value: string): boolean {
+    return privateRoots.has(value.split('/')[0].toLowerCase());
+}
 export function portableProfilePath(value: unknown): string {
     const name = archivePath(value);
-    if (privateRoots.has(name.split('/')[0].toLowerCase()) || /\.(exe|dll|bat|cmd|ps1|vbs|lnk|com|scr)(?:\.disabled)?$/i.test(name))
+    if (privateProfilePath(name) || /\.(exe|dll|bat|cmd|ps1|vbs|lnk|com|scr)(?:\.disabled)?$/i.test(name))
         throw Error('Nicht portable oder vertrauliche Profildatei.');
     return name;
 }
