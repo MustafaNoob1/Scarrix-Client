@@ -13,9 +13,10 @@
     "predev": "tsc -p tsconfig.main.json",
     "dev": "concurrently -k \"vite --host 127.0.0.1\" \"wait-on http://127.0.0.1:5173 && cross-env SCARRIX_DEV_SERVER=http://127.0.0.1:5173 electron .\"",
     "typecheck": "tsc --noEmit -p tsconfig.renderer.json && tsc --noEmit -p tsconfig.main.json",
-    "build": "tsc -p tsconfig.main.json && vite build",
+    "build": "node scripts/check-bundled-mod.cjs && tsc -p tsconfig.main.json && vite build",
     "dist": "npm run build && electron-builder",
-    "test": "node --test tests/*.test.cjs"
+    "test": "node --test tests/*.test.cjs",
+    "mod:bundle": "node scripts/bundle-scarrix-mod.cjs"
   },
   "dependencies": {
     "@azure/msal-node": "^3.7.0",
@@ -93,6 +94,10 @@
       {
         "from": "community-channel.json",
         "to": "community-channel.json"
+      },
+      {
+        "from": "assets/mods",
+        "to": "scarrix-mods"
       }
     ],
     "directories": {

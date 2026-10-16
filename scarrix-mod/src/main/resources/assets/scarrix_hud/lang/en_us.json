@@ -1,0 +1,17 @@
+{
+  "key.category.scarrix_hud.menu": "Scarrix Client",
+  "key.scarrix_hud.menu": "Open Scarrix menu",
+  "scarrix.subtitle": "Make your HUD your own",
+  "scarrix.fps": "FPS counter",
+  "scarrix.coordinates": "Coordinates",
+  "scarrix.keys": "Key display",
+  "scarrix.background": "Panel background",
+  "scarrix.position": "Position",
+  "scarrix.corner.0": "Top left",
+  "scarrix.corner.1": "Top right",
+  "scarrix.corner.2": "Bottom left",
+  "scarrix.corner.3": "Bottom right",
+  "scarrix.preview": "HUD preview",
+  "scarrix.reset": "Reset",
+  "scarrix.save_error": "Save failed. Check config folder access."
+}

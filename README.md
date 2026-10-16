@@ -4,14 +4,18 @@
 
 Der Launcher ist als **Electron + TypeScript + React**-Projekt aufgebaut und stellt eine Benutzeroberfläche mit Startseite, Serverstatus, Microsoft-Anmeldung, Mod-Browser, Skin-Bibliothek, offiziellem Cape-Wechsel und Einstellungen bereit.
 
-> **Status: öffentliche 0.6.0-Preview.** Die Release-Pipeline prüft Tests, TypeScript und Installer für Windows, macOS und Linux. Die Minecraft-Services-Freigabe der App steht noch aus; ein erfolgreicher Microsoft-Login allein ermöglicht deshalb noch keinen bestätigten Minecraft-Start. Microsoft, Mojang und Scarrix.net haben den Client nicht offiziell bestätigt.
+> **Status: öffentliche 0.6.0-Preview.** Die Release-Pipeline prüft Tests, TypeScript und Installer für Windows, macOS und Linux. Die Minecraft-Services-Freigabe wurde erteilt; Microsoft-Anmeldung und ein echter Minecraft-26.2-Start wurden geprüft. Microsoft, Mojang und Scarrix.net haben den Client nicht offiziell bestätigt.
 
 Installer: [GitHub-Releases](https://github.com/MustafaNoob1/scarrix-client/releases). Die neue Profil-Auswahl, der Inhaltskatalog sowie Skin-/Cape-Dialoge sind in [Studio und Community-Capes](docs/STUDIO.md) beschrieben, einschließlich der noch fehlenden gehosteten Cape-Anbindung.
+
+## Eigene Ingame-Mod: Scarrix HUD
+
+Für Fabric 26.2 ergänzt die aktivierte Scarrix-Basis jetzt unsere eigene HUD-Mod: FPS, Koordinaten und Tastenanzeige. Menü mit rechter Umschalttaste (in Minecraft umbelegbar) oder über **SCARRIX HUD** im Haupt-/Pausenmenü. Alle Anzeigen sind einzeln schaltbar, mit Vorschau und vier Bildschirmpositionen. [Bedienung, unterstützte Version und Build](scarrix-mod/README.md).
 
 ## Voraussetzungen
 
 - **Node.js 22** (inkl. npm); Git optional; Terminal/PowerShell und Texteditor wie VS Code.
-- **Java 21** für viele Minecraft-1.21-Versionen (bei anderen Versionen können andere Java-Versionen nötig sein).
+- **Java 25** für Minecraft 26.2, **Java 21** für viele Minecraft-1.21-Versionen (bei anderen Versionen können andere Java-Versionen nötig sein).
 - Internet für die erstmaligen Downloads, ein **Microsoft-Konto mit Minecraft: Java Edition** für den regulären Spielstart.
 - Eine Microsoft Entra **Application (Client) ID** und ggf. Freigabe durch Minecraft Services (siehe [detaillierte Microsoft-Anleitung](docs/MICROSOFT-LOGIN.md)).
 - **CurseForge API-Key** optional; für Modrinth ist keiner nötig.

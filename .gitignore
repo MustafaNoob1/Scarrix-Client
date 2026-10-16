@@ -11,4 +11,8 @@ config.local.json
 qa-runtime/
 *.pem
 work/
+scarrix-mod/.gradle/
+scarrix-mod/build/
+scarrix-mod/run/
+assets/mods/
 

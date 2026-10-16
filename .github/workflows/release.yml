@@ -9,7 +9,37 @@ concurrency:
   group: scarrix-public-release
   cancel-in-progress: true
 jobs:
+  scarrix-mod:
+    name: Scarrix HUD (Minecraft 26.2)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '9.7.1'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: gradle -p scarrix-mod build --no-daemon --console plain
+      - run: npm run mod:bundle
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scarrix-hud-bundle
+          path: assets/mods/*
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scarrix-installer-mod
+          path: scarrix-mod/build/libs/*.jar
+          if-no-files-found: error
   build:
+    needs: scarrix-mod
     strategy:
       fail-fast: false
       matrix:
@@ -26,6 +56,10 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libsecret-1-dev
       - run: npm ci --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          name: scarrix-hud-bundle
+          path: assets/mods
       - name: Install prepared cape-service test dependencies
         run: npm ci --prefix community-capes-server --ignore-scripts --no-audit --no-fund
       - name: Stamp unique preview version

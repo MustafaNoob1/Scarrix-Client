@@ -1,0 +1,17 @@
+{
+  "key.category.scarrix_hud.menu": "Scarrix Client",
+  "key.scarrix_hud.menu": "Scarrix-Menü öffnen",
+  "scarrix.subtitle": "Dein HUD. Dein Stil.",
+  "scarrix.fps": "FPS-Anzeige",
+  "scarrix.coordinates": "Koordinaten",
+  "scarrix.keys": "Tastenanzeige",
+  "scarrix.background": "Panel-Hintergrund",
+  "scarrix.position": "Position",
+  "scarrix.corner.0": "Oben links",
+  "scarrix.corner.1": "Oben rechts",
+  "scarrix.corner.2": "Unten links",
+  "scarrix.corner.3": "Unten rechts",
+  "scarrix.preview": "HUD-Vorschau",
+  "scarrix.reset": "Zurücksetzen",
+  "scarrix.save_error": "Speichern fehlgeschlagen. Ordnerzugriff prüfen."
+}

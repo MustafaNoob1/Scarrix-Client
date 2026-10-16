@@ -331,5 +331,5 @@ export async function prepareBaseMods(item: Instance, root: string, options: {
 export async function prepareProfileBase(idValue: unknown, force = false) { const { profilePath } = await import('./profile-files'); const { checkedPath } = await import('./profile-backups'); const cfg = getConfig(), original = cfg.instances.find(i => i.id === idValue); if (!original)
     throw Error('Profil nicht gefunden.'); if (force && original.loader !== 'fabric')
     throw Error('Die Scarrix-Basis ist für Fabric-Profile verfügbar.'); const item = { ...original }; if (force && item.loader === 'fabric')
-    item.baseMods = true; const report = await prepareBaseMods(item, checkedPath(profilePath(item)), { refresh: force }); if (item.baseMods !== original.baseMods || item.loaderVersion !== original.loaderVersion)
+    item.baseMods = true; const root = checkedPath(profilePath(item)); const report = await prepareBaseMods(item, root, { refresh: force }); const { installScarrixHud } = await import('./scarrix-mod'); const hud = await installScarrixHud(item, root); if(hud) report.messages.push(hud); if (item.baseMods !== original.baseMods || item.loaderVersion !== original.loaderVersion)
     await saveConfig({ ...cfg, instances: cfg.instances.map(i => i.id === item.id ? item : i) }, true); return report; }
