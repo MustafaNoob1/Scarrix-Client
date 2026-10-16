@@ -7,19 +7,21 @@ import java.util.*;
 
 final class HudOverlay {
     static int width(HudModule module) {
-        var mc=Minecraft.getInstance();
-        return switch(module) {
-            case FPS -> Math.max(66,mc.font.width(mc.getFps()+" FPS")+16);
-            case COORDINATES -> mc.font.width(coordinates())+16;
-            case KEYS -> 88;
-            case DIRECTION -> ScarrixHud.settings.get(module).compassWidth;
-        };
+        if(module==HudModule.DIRECTION)return ScarrixHud.settings.get(module).compassWidth;
+        if(module==HudModule.KEYS)return 88;
+        if(module==HudModule.ARMOR)return 112;
+        if(module==HudModule.INVENTORY)return 170;
+        if(module==HudModule.CROSSHAIR){var o=ScarrixHud.settings.get(module);return 2*(o.crosshairGap+o.crosshairSize+o.crosshairThickness+2);}
+        return Math.min(230,Math.max(66,HudData.lines(module).stream().mapToInt(Minecraft.getInstance().font::width).max().orElse(60)+16+(module==HudModule.HELD_ITEM||module==HudModule.SHIELD?20:0)));
     }
-    static int height(HudModule module) { return switch(module) { case FPS,COORDINATES -> 24; case KEYS -> 80; case DIRECTION -> 38; }; }
+    static int height(HudModule module) {
+        return switch(module) {case KEYS -> 80;case DIRECTION -> 38;case ARMOR -> 94;case INVENTORY -> 62;case CROSSHAIR -> width(module);default -> 12+12*Math.max(1,HudData.lines(module).size());};
+    }
     static HudLayout.Box bounds(HudModule module) {
         var mc=Minecraft.getInstance(); var o=ScarrixHud.settings.get(module);
         double scale=scale(module);
         int w=(int)Math.ceil(width(module)*scale),h=(int)Math.ceil(height(module)*scale);
+        if(module==HudModule.CROSSHAIR)return new HudLayout.Box((mc.getWindow().getGuiScaledWidth()-w)/2,(mc.getWindow().getGuiScaledHeight()-h)/2,w,h);
         return new HudLayout.Box(HudLayout.pixel(mc.getWindow().getGuiScaledWidth(),w,o.x),HudLayout.pixel(mc.getWindow().getGuiScaledHeight(),h,o.y),w,h);
     }
     private static double scale(HudModule module) { var mc=Minecraft.getInstance(); return HudLayout.fittedScale(ScarrixHud.settings.get(module).scale,mc.getWindow().getGuiScaledWidth(),mc.getWindow().getGuiScaledHeight(),width(module),height(module)); }
@@ -27,11 +29,12 @@ final class HudOverlay {
         var mc=Minecraft.getInstance();
         if(!editing && (mc.player==null || mc.gui.screen()!=null || mc.gui.hud.isHidden())) return;
         for(HudModule module:HudModule.values()) {
-            var o=ScarrixHud.settings.get(module); if(!o.enabled) continue;
+            var o=ScarrixHud.settings.get(module); if(!o.enabled || !module.overlay()) continue;
+            if(module==HudModule.CROSSHAIR && !editing && !VisualHooks.crosshair())continue;
             var box=bounds(module); int w=width(module),h=height(module);
             g.pose().pushMatrix(); g.pose().translate(box.x(),box.y()); g.pose().scale((float)scale(module),(float)scale(module));
-            if(o.background==1) g.fill(0,0,w,h,0xC010121A);
-            if(o.background==2) g.outline(0,0,w,h,0xFF000000|o.accentColor);
+            if(o.background==1 && module!=HudModule.CROSSHAIR) g.fill(0,0,w,h,0xC010121A);
+            if(o.background==2 && module!=HudModule.CROSSHAIR) g.outline(0,0,w,h,0xFF000000|o.accentColor);
             int color=0xFF000000|o.textColor;
             switch(module) {
                 case FPS -> g.text(mc.font,mc.getFps()+" FPS",8,8,color,false);
@@ -42,6 +45,14 @@ final class HudOverlay {
                     key(g,mc.options.keyJump,6,54,76,true,o);
                 }
                 case DIRECTION -> compass(g,w,o);
+                case ARMOR -> armor(g,o);
+                case INVENTORY -> inventory(g,o);
+                case CROSSHAIR -> crosshair(g,o);
+                default -> {
+                    var lines=HudData.lines(module);int offset=module==HudModule.HELD_ITEM||module==HudModule.SHIELD?20:0;
+                    if(offset>0){var item=module==HudModule.SHIELD?HudData.shield():HudData.held();g.item(item,5,5);if(o.showNumbers)g.itemDecorations(mc.font,item,5,5);}
+                    for(int i=0;i<lines.size();i++)g.text(mc.font,mc.font.plainSubstrByWidth(lines.get(i),w-16-offset),8+offset,6+i*12,color,false);
+                }
             }
             g.pose().popMatrix();
             if(editing) g.outline(box.x(),box.y(),box.width(),box.height(),0xB0FF354E);
@@ -77,4 +88,25 @@ final class HudOverlay {
             if(!label.isEmpty() && x-mc.font.width(label)/2>=0 && x+mc.font.width(label)/2<w) g.text(mc.font,label,x-mc.font.width(label)/2,28,color,false);
         }
     }
+    private static void armor(GuiGraphicsExtractor g,HudSettings.ModuleOptions o) {
+        var mc=Minecraft.getInstance();for(int i=0;i<4;i++) {
+            var stack=mc.player==null?net.minecraft.world.item.ItemStack.EMPTY:mc.player.getItemBySlot(HudData.ARMOR[i]);
+            g.item(stack,5,4+i*22);if(o.showNumbers)g.itemDecorations(mc.font,stack,5,4+i*22);
+            g.text(mc.font,HudData.durability(stack),26,8+i*22,0xFF000000|o.textColor,false);
+        }
+    }
+    private static void inventory(GuiGraphicsExtractor g,HudSettings.ModuleOptions o) {
+        var mc=Minecraft.getInstance();for(int i=0;i<27;i++) {
+            int x=4+(i%9)*18,y=4+(i/9)*18;g.fill(x,y,x+17,y+17,0x35000000|o.textColor);
+            var stack=mc.player==null?net.minecraft.world.item.ItemStack.EMPTY:mc.player.getInventory().getItem(i+9);
+            g.item(stack,x,y);if(o.showNumbers)g.itemDecorations(mc.font,stack,x,y);
+        }
+    }
+    private static void crosshair(GuiGraphicsExtractor g,HudSettings.ModuleOptions o) {
+        int c=width(HudModule.CROSSHAIR)/2,gap=o.crosshairGap,n=o.crosshairSize,t=o.crosshairThickness,color=0xFF000000|o.textColor;
+        int[][] bars={{c-gap-n,c-t/2,c-gap,c-t/2+t},{c+gap+1,c-t/2,c+gap+n+1,c-t/2+t},{c-t/2,c-gap-n,c-t/2+t,c-gap},{c-t/2,c+gap+1,c-t/2+t,c+gap+n+1}};
+        for(int[] b:bars) {if(o.crosshairOutline)g.fill(b[0]-1,b[1]-1,b[2]+1,b[3]+1,0xFF000000);g.fill(b[0],b[1],b[2],b[3],color);}
+        if(o.crosshairDot) {if(o.crosshairOutline)g.fill(c-1,c-1,c+t+1,c+t+1,0xFF000000);g.fill(c,c,c+t,c+t,0xFF000000|o.accentColor);}
+    }
+
 }

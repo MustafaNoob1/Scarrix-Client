@@ -11,7 +11,8 @@ import java.util.Map;
 /** Local, per-profile settings. Legacy 0.1 fields are migrated without losing disabled choices. */
 public final class HudSettings {
     private static final Gson JSON = new GsonBuilder().setPrettyPrinting().create();
-    public int schema = 2;
+    public int schema = 3;
+    public long playedSeconds;
     public boolean fps = true, coordinates = true, keys = true, background = true;
     public int corner = 0, margin = 8;
     public Map<String, ModuleOptions> modules;
@@ -22,17 +23,24 @@ public final class HudSettings {
         public int compassWidth = 220, fieldOfView = 120;
         public boolean intercardinal = true, ticks = true, heading = true, fade = true;
         public boolean degreeNumbers = false, degreeSign = true;
+        public boolean showNumbers = true;
+        public double zoomFactor = 4;
+        public int crosshairSize = 5, crosshairGap = 3, crosshairThickness = 1;
+        public boolean crosshairDot = false, crosshairOutline = true;
         public void normalize() {
             x=HudLayout.clamp(x,0,1); y=HudLayout.clamp(y,0,1); scale=HudLayout.clamp(scale,0.5,2);
+            zoomFactor=HudLayout.clamp(zoomFactor,2,10);
+            crosshairSize=Math.max(1,Math.min(16,crosshairSize)); crosshairGap=Math.max(0,Math.min(12,crosshairGap)); crosshairThickness=Math.max(1,Math.min(4,crosshairThickness));
             background=Math.max(0,Math.min(2,background)); textColor &= 0xFFFFFF; accentColor &= 0xFFFFFF;
             compassWidth=Math.max(120,Math.min(360,compassWidth)); fieldOfView=Math.max(60,Math.min(180,fieldOfView));
         }
     }
     public static ModuleOptions defaults(HudModule module) {
         ModuleOptions o=new ModuleOptions();
-        o.enabled=module!=HudModule.DIRECTION;
+        o.enabled=module.enabledByDefault();
         o.x=module==HudModule.DIRECTION ? 0.5 : 0.015;
-        o.y=switch(module) { case FPS -> 0.02; case COORDINATES -> 0.15; case KEYS -> 0.37; case DIRECTION -> 0.025; };
+        o.y=switch(module) { case FPS -> 0.02; case COORDINATES -> 0.15; case KEYS -> 0.37; case DIRECTION -> 0.025; default -> 0.06+(module.ordinal()%6)*0.14; };
+        if(module.ordinal()>3) o.x=0.98;
         return o;
     }
     public ModuleOptions get(HudModule module) { if(modules==null) normalize(); return modules.get(module.id); }
@@ -46,14 +54,14 @@ public final class HudSettings {
             ModuleOptions o=modules.get(module.id);
             if(o==null) { o=defaults(module); modules.put(module.id,o); }
             if(legacy) {
-                o.enabled=switch(module) {case FPS -> fps; case COORDINATES -> coordinates; case KEYS -> keys; case DIRECTION -> false;};
+                o.enabled=switch(module) {case FPS -> fps; case COORDINATES -> coordinates; case KEYS -> keys; default -> false;};
                 o.background=background?1:0;
                 if(corner%2==1) o.x=1-o.x;
                 if(corner>=2) o.y=1-o.y;
             }
             o.normalize();
         }
-        schema=2;
+        schema=3; playedSeconds=Math.max(0,Math.min(3155760000L,playedSeconds));
     }
     public static HudSettings load(Path file) throws IOException {
         if (!Files.exists(file)) { HudSettings result=new HudSettings(); result.normalize(); return result; }

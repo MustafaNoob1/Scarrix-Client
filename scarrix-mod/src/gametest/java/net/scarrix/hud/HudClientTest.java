@@ -54,6 +54,55 @@ public final class HudClientTest implements FabricClientGameTest {
                 screen.mouseClicked(new MouseButtonEvent(cosmetics.getX()+18,cosmetics.getY()+15,new MouseButtonInfo(0,0)),false);
             });
             ctx.waitForScreen(CommunityScreen.class);
+            // Scrolling and categories must expose real modules further down the larger list.
+            ctx.setScreen(()->new ModScreen(null));
+            ctx.clickScreenButton(Component.translatable("scarrix.category.visual").getString());
+            ctx.waitTicks(3); ctx.takeScreenshot("scarrix-visual-modules");
+            ctx.runOnClient(mc->{
+                long visible=mc.gui.screen().children().stream().filter(w->w instanceof AbstractWidget a&&a.visible&&a.getMessage().getString().equals("…")).count();
+                require(visible==3,"Visual category must contain zoom, crosshair and hurt-camera modules");
+            });
+            ctx.clickScreenButton(Component.translatable("scarrix.category.all").getString());
+            ctx.runOnClient(mc->{var s=(ModScreen)mc.gui.screen();s.mouseScrolled(s.left+20,s.top+100,0,-20);});
+            ctx.waitTicks(15);ctx.takeScreenshot("scarrix-modules-scrolled");
+            ctx.runOnClient(mc->{
+                require(mc.gui.screen().children().stream().anyMatch(w->w instanceof AbstractWidget a&&a.visible&&a.getMessage().getString().startsWith(Component.translatable(HudModule.NO_HURT_CAM.title).getString())),"Last module cannot be reached by scrolling");
+            });
+            // The displays consume actual client inventory/effect data, never sample values in a world.
+            ctx.runOnClient(mc->{
+                mc.player.getInventory().setItem(0,new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND,16));
+                mc.player.getInventory().setItem(9,new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND,32));
+                require(HudData.lines(HudModule.ITEM_COUNTER).getFirst().endsWith("48"),"Item counter does not sum matching stacks");
+                mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.CHEST,new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND_CHESTPLATE));
+                mc.player.setItemSlot(net.minecraft.world.entity.EquipmentSlot.OFFHAND,new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.SHIELD));
+                mc.player.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.SPEED,600,1));
+                require(!HudData.shield().isEmpty(),"Shield HUD did not read equipped shield");
+                require(HudData.lines(HudModule.POTIONS).stream().anyMatch(s->s.contains("2")),"Effect level is missing");
+                require(HudData.lines(HudModule.PING).getFirst().endsWith("—"),"Singleplayer invents a server ping");
+                require(!HudData.lines(HudModule.BIOME).isEmpty()&&!HudData.lines(HudModule.LIGHT).isEmpty(),"World readouts are missing");
+            });
+            ctx.setScreen(()->null);
+            ctx.runOnClient(mc->{ScarrixHud.settings.get(HudModule.ZOOM).enabled=true;ScarrixHud.settings.get(HudModule.NO_HURT_CAM).enabled=true;});
+            ctx.waitTicks(3);float fov=ctx.computeOnClient(mc->mc.gameRenderer.mainCamera().getFov());
+            int fovOption=ctx.computeOnClient(mc->mc.options.fov().get());
+            ctx.getInput().holdKey(InputConstants.KEY_C);ctx.waitTicks(4);
+            ctx.runOnClient(mc->require(mc.gameRenderer.mainCamera().getFov()<fov*0.6,"Zoom did not reduce the rendered field of view"));
+            ctx.takeScreenshot("scarrix-zoom");ctx.getInput().releaseKey(InputConstants.KEY_C);ctx.waitTicks(4);
+            ctx.runOnClient(mc->{require(mc.gameRenderer.mainCamera().getFov()>fov*0.9,"Zoom did not restore field of view");require(mc.options.fov().get()==fovOption,"Zoom modified the saved FOV option");ScarrixHud.settings.get(HudModule.CPS).enabled=true;});
+            ctx.getInput().pressMouse(0);ctx.getInput().pressMouse(1);
+            ctx.runOnClient(mc->require(VisualHooks.CLICKS.count(0,System.nanoTime())>0&&VisualHooks.CLICKS.count(1,System.nanoTime())>0,"CPS missed physical clicks"));
+            // Render every overlay once, including a centered custom crosshair, with all runtime data present.
+            for(HudModule module:HudModule.values())if(module.overlay()){
+                ctx.runOnClient(mc->{for(var m:HudModule.values())ScarrixHud.settings.get(m).enabled=m==module;});ctx.waitTicks(1);
+            }
+            ctx.takeScreenshot("scarrix-custom-crosshair");
+            ctx.runOnClient(mc->{
+                for(var m:HudModule.values())ScarrixHud.settings.get(m).enabled=false;
+                HudModule[] examples={HudModule.ARMOR,HudModule.HELD_ITEM,HudModule.POTIONS,HudModule.INVENTORY,HudModule.CPS,HudModule.LIGHT};
+                for(int i=0;i<examples.length;i++){var o=ScarrixHud.settings.get(examples[i]);o.enabled=true;o.x=i%2==0?0.02:0.98;o.y=0.03+(i/2)*0.32;o.scale=0.8;}
+            });
+            ctx.waitTicks(2);ctx.takeScreenshot("scarrix-extra-huds");
+            ctx.runOnClient(mc->{for(var m:HudModule.values())ScarrixHud.settings.get(m).enabled=m.enabledByDefault()||m==HudModule.DIRECTION;});
             ctx.setScreen(() -> new HudPreview(new ModScreen(null)));
             ctx.runOnClient(mc -> {
                 var editor=mc.gui.screen(); var box=HudOverlay.bounds(HudModule.DIRECTION);

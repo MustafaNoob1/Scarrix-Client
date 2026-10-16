@@ -20,7 +20,7 @@ abstract class ScarrixScreen extends Screen {
     }
     protected void hud(GuiGraphicsExtractor g,int x,int y) {
         g.nextStratum(); HudOverlay.render(g,true);
-        for(HudModule m:HudModule.values()) if(ScarrixHud.settings.get(m).enabled && HudOverlay.bounds(m).contains(x,y)) {
+        for(HudModule m:HudModule.values()) if(m.draggable() && ScarrixHud.settings.get(m).enabled && HudOverlay.bounds(m).contains(x,y)) {
             g.setTooltipForNextFrame(font,Component.translatable("scarrix.drag_hint"),x,y); break;
         }
         if(saveFailed) g.centeredText(font,Component.translatable("scarrix.save_error"),width/2,4,ScarrixHud.RED);
@@ -29,7 +29,7 @@ abstract class ScarrixScreen extends Screen {
         HudModule[] modules=HudModule.values();
         for(int i=modules.length-1;i>=0;i--) {
             HudModule m=modules[i]; var box=HudOverlay.bounds(m);
-            if(!ScarrixHud.settings.get(m).enabled || !box.contains(event.x(),event.y())) continue;
+            if(!m.draggable() || !ScarrixHud.settings.get(m).enabled || !box.contains(event.x(),event.y())) continue;
             if(event.button()==1) { minecraft.gui.setScreen(new ModuleScreen(this,m)); return true; }
             if(event.button()==0) { dragging=m; dragX=event.x()-box.x(); dragY=event.y()-box.y(); setFocused(null); return true; }
         }

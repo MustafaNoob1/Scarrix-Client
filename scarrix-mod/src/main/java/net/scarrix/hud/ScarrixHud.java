@@ -24,13 +24,19 @@ public final class ScarrixHud implements ClientModInitializer {
     static final Logger LOG=LoggerFactory.getLogger("Scarrix HUD");
     static final Path FILE=FabricLoader.getInstance().getConfigDir().resolve("scarrix-hud.json");
     static HudSettings settings=new HudSettings();
-    static KeyMapping menu;
+    static KeyMapping menu,zoom;
+    static final long startedAt=System.nanoTime();
+    private long lastTick=System.nanoTime(),saveSeconds;
+    private double fractionalSeconds;
+    private boolean loadedSettings;
     static final int RED=0xFFFF354E,WHITE=0xFFEAF0FA,MUTED=0xFF9BA8BE;
     @Override public void onInitializeClient() {
-        try { settings=HudSettings.load(FILE); } catch(IOException ex) { settings.normalize(); LOG.warn("Could not load HUD settings",ex); }
+        try { settings=HudSettings.load(FILE);loadedSettings=true; } catch(IOException ex) { settings.normalize(); LOG.warn("Could not load HUD settings",ex); }
         var category=KeyMapping.Category.register(Identifier.fromNamespaceAndPath("scarrix_hud","menu"));
         menu=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.scarrix_hud.menu",InputConstants.Type.KEYSYM,InputConstants.KEY_RSHIFT,category));
+        zoom=KeyMappingHelper.registerKeyMapping(new KeyMapping("key.scarrix_hud.zoom",InputConstants.Type.KEYSYM,InputConstants.KEY_C,category));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            long now=System.nanoTime(); if(client.player!=null&&client.level!=null&&!client.isPaused()){fractionalSeconds+=Math.min(1,(now-lastTick)/1e9);if(fractionalSeconds>=1){long seconds=(long)fractionalSeconds;fractionalSeconds-=seconds;settings.playedSeconds+=seconds;saveSeconds+=seconds;if(saveSeconds>=60&&loadedSettings){saveSeconds=0;try{settings.save(FILE);}catch(IOException ex){LOG.warn("Could not save playtime",ex);}}}}lastTick=now;
             while(menu.consumeClick()) if(client.gui.screen()==null && client.player!=null) client.gui.setScreen(new HudMenu(null));
         });
         ScreenEvents.AFTER_INIT.register((client,screen,width,height) -> {
@@ -40,6 +46,7 @@ public final class ScarrixHud implements ClientModInitializer {
             }
         });
         HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT,Identifier.fromNamespaceAndPath("scarrix_hud","overlay"),(g,d) -> HudOverlay.render(g,false));
+        net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents.CLIENT_STOPPING.register(client -> {try{if(loadedSettings)settings.save(FILE);}catch(IOException ex){LOG.warn("Could not save HUD settings",ex);}});
         LOG.info("Scarrix HUD ready: modular HUD and drag editor. Open with the configured Scarrix menu key.");
     }
     static void render(GuiGraphicsExtractor g,boolean preview) { HudOverlay.render(g,preview); }

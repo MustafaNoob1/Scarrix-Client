@@ -1,0 +1,1 @@
+{"required":true,"package":"net.scarrix.hud.mixin","compatibilityLevel":"JAVA_25","client":["CameraMixin","GameRendererMixin","HudMixin","MouseHandlerMixin"],"injectors":{"defaultRequire":1}}

@@ -1,9 +1,9 @@
 const fs = require('node:fs'), path = require('node:path'), crypto = require('node:crypto'), Zip = require('adm-zip');
 const root = path.resolve(__dirname, '..'), libs = path.join(root, 'scarrix-mod/build/libs');
-const filename = 'scarrix-hud-0.2.0+26.2.jar', source = path.join(libs, filename);
+const filename = 'scarrix-hud-0.3.0+26.2.jar', source = path.join(libs, filename);
 if (!fs.existsSync(source)) throw Error('Build Scarrix HUD first: Gradle 9.7.1, Java 25, gradle -p scarrix-mod build');
 const bytes = fs.readFileSync(source), zip = new Zip(bytes), mod = JSON.parse(zip.readAsText('fabric.mod.json'));
-if (mod.id !== 'scarrix_hud' || mod.version !== '0.2.0+26.2' || mod.depends.minecraft !== '26.2' || mod.environment !== 'client') throw Error('Invalid Scarrix HUD artifact');
+if (mod.id !== 'scarrix_hud' || mod.version !== '0.3.0+26.2' || mod.depends.minecraft !== '26.2' || mod.environment !== 'client') throw Error('Invalid Scarrix HUD artifact');
 const target = path.join(root, 'assets/mods'); fs.mkdirSync(target, {recursive:true});
 for(const name of fs.readdirSync(target)) if(/^scarrix-hud-[\w.+-]+\.jar$/.test(name) && name!==filename) fs.unlinkSync(path.join(target,name));
 fs.writeFileSync(path.join(target, filename), bytes);

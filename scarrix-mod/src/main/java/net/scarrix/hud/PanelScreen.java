@@ -17,7 +17,7 @@ abstract class PanelScreen extends ScarrixScreen {
     }
     protected void panel(GuiGraphicsExtractor g) {
         g.fill(left-48,top,left-4,top+panelHeight,0xE9171820); g.outline(left-48,top,44,panelHeight,0xFF383944);
-        g.fill(left,top,left+panelWidth,top+panelHeight,0xE9181922); g.outline(left,top,panelWidth,panelHeight,0xFF383944);
+        g.fill(left,top,left+panelWidth,top+panelHeight,0xD9181922); g.outline(left,top,panelWidth,panelHeight,0xFF383944);
         g.fill(left,top+32,left+panelWidth,top+33,0xFF383944);
         g.fill(left,top+panelHeight-22,left+panelWidth,top+panelHeight-21,0xFF383944);
         String footer=Component.translatable("scarrix.local").getString();

@@ -41,11 +41,17 @@ final class ModuleScreen extends PanelScreen {
         addRenderableWidget(new ScarrixButton(left+panelWidth-74,top+7,64,Component.translatable("scarrix.reset"),b -> { ScarrixHud.settings.reset(module); persist(); rebuildWidgets(); }));
         int contentStart=children().size();
         var o=options();
+        if(module==HudModule.NO_HURT_CAM)return;
+        if(module==HudModule.ZOOM) {
+            slider("scarrix.zoom_factor",0,2,10,o.zoomFactor,v->o.zoomFactor=v,false);
+            return;
+        }
         slider("scarrix.scale",0,0.5,2,o.scale,v -> o.scale=v,false);
-        addRenderableWidget(new ScarrixButton(left+12,row(1),panelWidth-24,Component.translatable("scarrix.background").append(": ").append(Component.translatable("scarrix.background."+o.background)),b -> {
+        if(module==HudModule.CROSSHAIR)toggle("scarrix.crosshair_outline",row(1),()->o.crosshairOutline,()->o.crosshairOutline=!o.crosshairOutline);
+        else addRenderableWidget(new ScarrixButton(left+12,row(1),panelWidth-24,Component.translatable("scarrix.background").append(": ").append(Component.translatable("scarrix.background."+o.background)),b -> {
             o.background=(o.background+1)%3; persist(); b.setMessage(Component.translatable("scarrix.background").append(": ").append(Component.translatable("scarrix.background."+o.background)));
         }));
-        color("scarrix.text_color",2,false); color("scarrix.accent_color",3,true);
+        color(module==HudModule.INVENTORY?"scarrix.slot_color":"scarrix.text_color",2,false); color("scarrix.accent_color",3,true);
         if(module==HudModule.DIRECTION) {
             slider("scarrix.compass_width",4,120,360,o.compassWidth,v -> o.compassWidth=(int)Math.round(v),true);
             slider("scarrix.fov",5,60,180,o.fieldOfView,v -> o.fieldOfView=(int)Math.round(v),true);
@@ -56,13 +62,21 @@ final class ModuleScreen extends PanelScreen {
             toggle("scarrix.degree_numbers",row(10),() -> o.degreeNumbers,() -> o.degreeNumbers=!o.degreeNumbers);
             toggle("scarrix.degree_sign",row(11),() -> o.degreeSign,() -> o.degreeSign=!o.degreeSign);
         }
+        if(module==HudModule.CROSSHAIR) {
+            slider("scarrix.crosshair_size",4,1,16,o.crosshairSize,v->o.crosshairSize=(int)Math.round(v),true);
+            slider("scarrix.crosshair_gap",5,0,12,o.crosshairGap,v->o.crosshairGap=(int)Math.round(v),true);
+            slider("scarrix.crosshair_thickness",6,1,4,o.crosshairThickness,v->o.crosshairThickness=(int)Math.round(v),true);
+            toggle("scarrix.crosshair_dot",row(7),()->o.crosshairDot,()->o.crosshairDot=!o.crosshairDot);
+        }
+        if(module==HudModule.INVENTORY || module==HudModule.HELD_ITEM || module==HudModule.ARMOR || module==HudModule.SHIELD)
+            toggle("scarrix.item_numbers",row(4),()->o.showNumbers,()->o.showNumbers=!o.showNumbers);
         // Keep invisible rows out of hit testing and keyboard navigation as well as rendering.
         for(int i=contentStart;i<children().size();i++) if(children().get(i) instanceof net.minecraft.client.gui.components.AbstractWidget widget) {
             boolean visible=widget.getY()>=top+52 && widget.getY()+widget.getHeight()<=top+panelHeight-25;
             widget.visible=visible; widget.active=visible;
         }
     }
-    private int count() { return module==HudModule.DIRECTION?12:4; }
+    private int count() { return switch(module) {case DIRECTION->12;case CROSSHAIR->8;case ZOOM->1;case NO_HURT_CAM->0;case INVENTORY,HELD_ITEM,ARMOR,SHIELD->5;default->4;}; }
     @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical) {
         if(x>=left && x<left+panelWidth && y>=top+33 && y<top+panelHeight-22) {
             int max=Math.max(0,count()-Math.max(1,(panelHeight-80)/26)),next=Math.max(0,Math.min(max,scroll-(int)Math.signum(vertical)));
@@ -80,8 +94,8 @@ final class ModuleScreen extends PanelScreen {
         panel(g);
         Component description=Component.translatable(module.description);
         g.text(font,font.plainSubstrByWidth(description.getString(),panelWidth-24),left+12,top+39,ScarrixHud.MUTED,false);
-        for(int i:new int[]{2,3}) if(row(i)>=top+52 && row(i)+20<=top+panelHeight-25) {
-            String text=Component.translatable(i==2?"scarrix.text_color":"scarrix.accent_color").getString();
+        for(int i:new int[]{2,3}) if(module.overlay() && row(i)>=top+52 && row(i)+20<=top+panelHeight-25) {
+            String text=Component.translatable(i==2?(module==HudModule.INVENTORY?"scarrix.slot_color":"scarrix.text_color"):"scarrix.accent_color").getString();
             g.text(font,font.plainSubstrByWidth(text,panelWidth-220),left+114,row(i)+6,ScarrixHud.MUTED,false);
         }
         int visible=Math.max(1,(panelHeight-80)/26);
