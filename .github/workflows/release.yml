@@ -27,6 +27,19 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - run: gradle -p scarrix-mod build --no-daemon --console plain
+      - name: Prepare virtual display for Minecraft client tests
+        run: sudo apt-get update && sudo apt-get install -y xvfb libgl1-mesa-dri libglx-mesa0
+      - name: Exercise Scarrix menus and HUD dragging in Minecraft
+        run: xvfb-run -a gradle -p scarrix-mod runClientGameTest --no-daemon --console plain
+      - name: Store Minecraft client test screenshots and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scarrix-hud-tests
+          path: |
+            scarrix-mod/build/run/clientGameTest/screenshots
+            scarrix-mod/build/run/clientGameTest/logs
+            scarrix-mod/build/test-results
       - run: npm run mod:bundle
       - uses: actions/upload-artifact@v4
         with:

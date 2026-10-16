@@ -10,7 +10,7 @@ Installer: [GitHub-Releases](https://github.com/MustafaNoob1/scarrix-client/rele
 
 ## Eigene Ingame-Mod: Scarrix HUD
 
-Für Fabric 26.2 ergänzt die aktivierte Scarrix-Basis jetzt unsere eigene HUD-Mod: FPS, Koordinaten und Tastenanzeige. Menü mit rechter Umschalttaste (in Minecraft umbelegbar) oder über **SCARRIX HUD** im Haupt-/Pausenmenü. Alle Anzeigen sind einzeln schaltbar, mit Vorschau und vier Bildschirmpositionen. [Bedienung, unterstützte Version und Build](scarrix-mod/README.md).
+Für Fabric 26.2 ergänzt die aktivierte Scarrix-Basis jetzt unsere eigene HUD-Mod: FPS, Koordinaten, Tastenanzeige und Direction HUD. Menü mit rechter Umschalttaste (in Minecraft umbelegbar) oder über **SCARRIX** im Haupt-/Pausenmenü. Alle Anzeigen sind einzeln schaltbar, mit Suche, eigenen Einstellungen und frei verschiebbaren Positionen. [Bedienung, unterstützte Version und Build](scarrix-mod/README.md).
 
 ## Voraussetzungen
 

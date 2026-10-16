@@ -1,19 +1,19 @@
 package net.scarrix.hud;
 
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
-final class HudPreview extends Screen {
-    private final Screen parent;
-    HudPreview(Screen parent) { super(Component.translatable("scarrix.preview")); this.parent = parent; }
+final class HudPreview extends ScarrixScreen {
+    HudPreview(Screen parent) { super(Component.translatable("scarrix.edit_hud"),parent); }
     @Override protected void init() {
-        addRenderableWidget(new ScarrixButton((width - 120) / 2, height - 28, 120, Component.translatable("gui.back"), b -> onClose()));
+        addRenderableWidget(new ScarrixButton(width/2-125,height-28,120,Component.translatable("gui.back"),b -> onClose()));
+        addRenderableWidget(new ScarrixButton(width/2+5,height-28,120,Component.translatable("scarrix.reset_positions"),b -> {
+            for(HudModule m:HudModule.values()) { var d=HudSettings.defaults(m); var o=ScarrixHud.settings.get(m); o.x=d.x; o.y=d.y; } persist();
+        }));
     }
-    @Override public void extractRenderState(GuiGraphicsExtractor g, int x, int y, float delta) {
-        super.extractRenderState(g, x, y, delta);
-        ScarrixHud.render(g, true);
+    @Override public void extractRenderState(GuiGraphicsExtractor g,int x,int y,float delta) {
+        g.centeredText(font,Component.translatable("scarrix.drag_hint"),width/2,height-44,ScarrixHud.WHITE);
+        super.extractRenderState(g,x,y,delta); hud(g,x,y);
     }
-    @Override public void onClose() { minecraft.gui.setScreen(parent); }
 }

@@ -2,7 +2,7 @@ plugins {
     id 'net.fabricmc.fabric-loom' version '1.18.4'
 }
 
-version = '0.1.0+26.2'
+version = '0.2.0+26.2'
 group = 'net.scarrix'
 
 dependencies {
@@ -26,6 +26,15 @@ processResources {
     from('../assets/icons/icon.png') { into 'assets/scarrix_hud' }
 }
 test { useJUnitPlatform() }
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = 'scarrix-hud-test'
+        enableGameTests = false
+        enableClientGameTests = true
+        eula = true
+    }
+}
 jar { from('../LICENSE') { rename { 'LICENSE_scarrix' } } }
 tasks.withType(AbstractArchiveTask).configureEach {
     preserveFileTimestamps = false
